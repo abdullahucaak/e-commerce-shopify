@@ -159,7 +159,7 @@ const subscribe = async () => {
 <style scoped>
     .footer{
         background-color: #4C4C6D;
-        width: 100vw;
+        width: 100%;
         height: auto;
     }
     .footer .f-container{
