@@ -1,30 +1,68 @@
 <template>
-    <RouterLink :to="{name:'product-page', params: { id: product.id } }">
-        <div class="bs-item">
-            <div class="product-img" :style="{ 'background-image':`url(/images/${product.photo[0]})`}">
+  <RouterLink
+    :to="{
+      name: 'product-page',
+      params: { handle: product.handle }
+    }"
+  >
+    <div class="bs-item">
+      <div
+        class="product-img"
+        :style="{
+          backgroundImage: `url(${product.featuredImage?.url || ''})`
+        }"
+      ></div>
 
-            </div>
-            <div class="product-img-2" :style="{ 'background-image':`url(/images/${product.photo[1]})`}">
+      <div
+        class="product-img-2"
+        :style="{
+          backgroundImage: `url(${product.images?.nodes?.[1]?.url || product.featuredImage?.url || ''})`
+        }"
+      ></div>
 
-            </div>
-            <div class="product-name">
-                {{ product.name }}
-            </div>
-            <div class="product-price">
-                ${{ product.price }}
-            </div>
-        </div>
-    </RouterLink>
+      <div class="product-name">
+        {{ product.title }}
+      </div>
+
+      <div class="product-price">
+        {{ formattedPrice }}
+      </div>
+    </div>
+  </RouterLink>
 </template>
+
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
-    product:{
-        type:Object,
-        required:false
-    }
+  product: {
+    type: Object,
+    required: true
+  }
+})
+
+const formattedPrice = computed(() => {
+  const money = props.product.priceRange?.minVariantPrice
+
+  if (!money) {
+    return ''
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: money.currencyCode
+  }).format(Number(money.amount))
 })
 </script>
 <style scoped>
+.product-name{
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    margin-top: 5px;
+    letter-spacing: 0.8px;
+    color: #313c55;
+    font-weight: 500;
+}
 .bs-item{
     width: 100%;
     height: auto;

@@ -8,7 +8,7 @@
             <div class="banner-message">
                 <div class="bm-inner">
                     <div class="bm-title">
-                        Meet Assam Golden Tippy SELAM V2.
+                        Meet Assam Golden Tippy
                     </div>
                     <div class="bm-content">
                         A new, limited quantity, golden tipped black tea for the spring.
@@ -21,9 +21,13 @@
             We source organic and biodynamic teas, directly from people and planet-friendly farms in India.
         </div>
         <div class="content c-best-selling">
-            <div class="bs-title">Best Selling Teas:</div>
+            <div class="bs-title">Best Selling Products:</div>
             <div class="bs-item-container">
-                <Product :product="product" v-for="product in productStore.bestSellingProducts" :key="product.id"/>
+                <Product
+                    v-for="product in productStore.bestSellingProducts"
+                    :key="product.id"
+                    :product="product"
+                />
             </div>
             <div class="bs-footer">
                 <RouterLink :to="{name:'shop' }"><button class="btn bs-btn">VIEW ALL</button></RouterLink>
@@ -34,17 +38,12 @@
 </template>
 
 <script setup>
-/* components */
-import Footer from '../components/Footer.vue'
-import Navigation from '../components/Navigation.vue'
-import Product from '../components/Product.vue'
-/* pinia */
-import { useProductStore } from '../stores/productStore';
-const productStore = useProductStore()
+    import Footer from '../components/Footer.vue'
+    import Navigation from '../components/Navigation.vue'
+    import Product from '../components/Product.vue'
+    import { useProductStore } from '../stores/productStore'
 
-console.log(productStore.isBarsAnimationWorked)
-
-
+    const productStore = useProductStore()
 </script>
 
 <style scoped>

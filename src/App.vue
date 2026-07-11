@@ -1,18 +1,19 @@
 <script setup>
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
-/* pinia */
-import { useProductStore } from './stores/productStore';
+import { useProductStore } from './stores/productStore'
+
 const productStore = useProductStore()
 
-/* getProducts */
-productStore.getProducts() 
-
+onMounted(async () => {
+  try {
+    await productStore.getProducts()
+  } catch (error) {
+    console.error('Failed to initialize Shopify products:', error)
+  }
+})
 </script>
 
 <template>
-
   <RouterView />
 </template>
-<style scoped>
-
-</style>

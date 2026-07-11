@@ -20,38 +20,68 @@
          </div>
       </div>
       <div class="s-products-container">
-         <div v-if="productStore.loading">Loading tasks...</div>
-         <Product :product="product" v-for="product in sortedProducts" :key="product.id"/>
+         <div v-if="productStore.loading">
+         Loading products...
+         </div>
+
+         <div v-else-if="productStore.error">
+         {{ productStore.error }}
+         </div>
+
+         <Product
+         v-else
+         v-for="product in sortedProducts"
+         :key="product.id"
+         :product="product"
+         />
       </div>
       <Footer/>
    </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-/* components */
+import { computed, ref } from 'vue'
 import Footer from '../components/Footer.vue'
 import Navigation from '../components/Navigation.vue'
 import Product from '../components/Product.vue'
-/* pinia */
-import { useProductStore } from '../stores/productStore';
+import { useProductStore } from '../stores/productStore'
+
 const productStore = useProductStore()
-
-
-
-/* sortBy */
-let sortBy = ref('featured');
+const sortBy = ref('featured')
 
 const sortedProducts = computed(() => {
-   if (sortBy.value === 'low-to-high') {
-      return productStore.products.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-   } else if (sortBy.value === 'high-to-low') {
-      return productStore.products.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-   } else if (sortBy.value === 'featured') {
-      return productStore.products.sort((a, b) => parseFloat(a.id) - parseFloat(b.id))
-   }
-   return productStore.products;
-});
+  const products = [...productStore.products]
+
+  if (sortBy.value === 'low-to-high') {
+    return products.sort((firstProduct, secondProduct) => {
+      const firstPrice = Number(
+        firstProduct.priceRange?.minVariantPrice?.amount || 0
+      )
+
+      const secondPrice = Number(
+        secondProduct.priceRange?.minVariantPrice?.amount || 0
+      )
+
+      return firstPrice - secondPrice
+    })
+  }
+
+  if (sortBy.value === 'high-to-low') {
+    return products.sort((firstProduct, secondProduct) => {
+      const firstPrice = Number(
+        firstProduct.priceRange?.minVariantPrice?.amount || 0
+      )
+
+      const secondPrice = Number(
+        secondProduct.priceRange?.minVariantPrice?.amount || 0
+      )
+
+      return secondPrice - firstPrice
+    })
+  }
+
+  return products
+})
 </script>
 
 <style scoped>

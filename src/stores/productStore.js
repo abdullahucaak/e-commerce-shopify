@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { shopifyFetch } from '../services/shopify'
 import { defineStore } from 'pinia'
 
 export const useProductStore = defineStore('productStore', {
@@ -17,15 +18,16 @@ export const useProductStore = defineStore('productStore', {
     giftCardCodeInput: "",
     priceBeforeDiscount: null,
     finalPrice: null,
-    newId: null
+    newId: null,
+    selectedProduct: null,
   }),
   getters: { /* computed */
     /* shop-page | how many products are */
     totalProducts:(state) => {
     return state.products.length 
     },
-    bestSellingProducts: (state) => {
-      return state.products.filter((product) => product.bestSelling)
+    bestSellingProducts: state => {
+      return state.products.slice(0, 8)
     },
     /* calculate subtotal */
     calculateSubtotal:(state) => {
@@ -37,41 +39,214 @@ export const useProductStore = defineStore('productStore', {
     }
   },
   actions:{
-    /* get Products with JSON */
-    async getProducts() {
-      console.log('getProducts called, current products:', this.products.length)
-      
-      // Eğer ürünler zaten yüklenmişse ve boş değilse, tekrar yükleme
-      if (this.products && this.products.length > 0) {
-        console.log('Products already loaded, returning existing products')
-        return this.products;
+    /* get Products with Shopify API */
+   async getProducts() {
+      if (this.products.length > 0) {
+        return this.products
       }
 
-      this.loading = true;
-      this.error = null;
-      
-      try {
-        console.log('Fetching products from API...')
-        const response = await axios.get('http://localhost:3000/products');
-        
-        if (response.data && Array.isArray(response.data)) {
-          // ID'leri number tipine dönüştür
-          this.products = response.data.map(product => ({
-            ...product,
-            id: Number(product.id)
-          }));
-          console.log('Products fetched and processed:', this.products)
-          return this.products;
-        } else {
-          throw new Error('Invalid data format received from server');
+      this.loading = true
+      this.error = null
+
+      const query = `
+        query GetProducts($first: Int!) {
+          products(
+            first: $first
+            sortKey: BEST_SELLING
+          ) {
+            nodes {
+              id
+              handle
+              title
+              description
+              descriptionHtml
+              availableForSale
+              tags
+
+              featuredImage {
+                url
+                altText
+                width
+                height
+              }
+
+              images(first: 10) {
+                nodes {
+                  url
+                  altText
+                  width
+                  height
+                }
+              }
+
+              priceRange {
+                minVariantPrice {
+                  amount
+                  currencyCode
+                }
+
+                maxVariantPrice {
+                  amount
+                  currencyCode
+                }
+              }
+
+              variants(first: 20) {
+                nodes {
+                  id
+                  title
+                  availableForSale
+
+                  price {
+                    amount
+                    currencyCode
+                  }
+
+                  image {
+                    url
+                    altText
+                  }
+
+                  selectedOptions {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+          }
         }
+      `
+
+      try {
+        const data = await shopifyFetch(query, {
+          first: 50
+        })
+
+        this.products = data?.products?.nodes || []
+
+        return this.products
       } catch (error) {
-        console.error('Error fetching products:', error);
-        this.error = error.message;
-        this.products = [];
-        throw error;
+        console.error('Failed to fetch Shopify products:', error)
+
+        this.error =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch Shopify products.'
+
+        this.products = []
+
+        throw error
       } finally {
-        this.loading = false;
+        this.loading = false
+      }
+    },
+    async getProductByHandle(handle) {
+      if (!handle) {
+        this.selectedProduct = null
+        throw new Error('Product handle is missing.')
+      }
+
+      this.loading = true
+      this.error = null
+
+      const query = `
+        query GetProductByHandle($handle: String!) {
+          productByHandle(handle: $handle) {
+            id
+            handle
+            title
+            description
+            descriptionHtml
+            availableForSale
+            tags
+
+            featuredImage {
+              url
+              altText
+              width
+              height
+            }
+
+            images(first: 20) {
+              nodes {
+                url
+                altText
+                width
+                height
+              }
+            }
+
+            priceRange {
+              minVariantPrice {
+                amount
+                currencyCode
+              }
+
+              maxVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+
+            options {
+              id
+              name
+              values
+            }
+
+            variants(first: 100) {
+              nodes {
+                id
+                title
+                availableForSale
+
+                price {
+                  amount
+                  currencyCode
+                }
+
+                compareAtPrice {
+                  amount
+                  currencyCode
+                }
+
+                image {
+                  url
+                  altText
+                }
+
+                selectedOptions {
+                  name
+                  value
+                }
+              }
+            }
+          }
+        }
+      `
+
+      try {
+        const data = await shopifyFetch(query, {
+          handle
+        })
+
+        this.selectedProduct = data?.productByHandle || null
+
+        return this.selectedProduct
+      } catch (error) {
+        console.error('Failed to fetch Shopify product:', error)
+
+        this.error =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch Shopify product.'
+
+        this.selectedProduct = null
+
+        throw error
+      } finally {
+        this.loading = false
       }
     },
     /* get cartProducts with JSON */

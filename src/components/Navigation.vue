@@ -109,7 +109,7 @@ import { onClickOutside } from '@vueuse/core'
 import { useProductStore } from '../stores/productStore'
 const productStore = useProductStore()
 
-productStore.getCartProducts()
+//productStore.getCartProducts()
 
 /* localStorage */
 onMounted(()=>{
