@@ -1,4 +1,72 @@
 <template>
+  <!-- Recently added product panel -->
+  <div
+    v-if="isAddedToCart"
+    class="view-cart"
+    :class="{
+      'slide-in': isOpenCart,
+      'slide-out': !isOpenCart
+    }"
+  >
+    <div class="view-cart-inner">
+      <div class="title">
+        <div class="title-inner">
+          JUST ADDED TO YOUR CART
+        </div>
+
+        <div class="cross">
+          <i
+            class="fa-solid fa-xmark"
+            @click="hideCartPanel"
+          ></i>
+        </div>
+      </div>
+
+      <div
+        v-if="recentlyAddedLine"
+        class="middle"
+      >
+        <div
+          class="little-img"
+          :style="{
+            backgroundImage: `url('${recentlyAddedImageUrl}')`
+          }"
+        ></div>
+
+        <div class="product-name">
+          {{ recentlyAddedLine.merchandise.product.title }}
+        </div>
+
+        <div class="quantity">
+          Qty: {{ recentlyAddedQuantity }}
+        </div>
+      </div>
+
+      <div class="view-cart-button">
+        <RouterLink :to="{ name: 'cart' }">
+          <button
+            type="button"
+            class="cart-button"
+          >
+            VIEW CART
+            <span>
+              ( {{ productStore.cartTotalQuantity }} )
+            </span>
+          </button>
+        </RouterLink>
+      </div>
+
+      <RouterLink :to="{ name: 'shop' }">
+        <div
+          class="continue-shopping"
+          @click="hideCartPanel"
+        >
+          Continue Shopping
+        </div>
+      </RouterLink>
+    </div>
+  </div>
+
   <Navigation />
 
   <div
@@ -91,9 +159,10 @@
               <button
                 type="button"
                 class="p-btn-1 add-to-card"
-                disabled
+                :disabled="isAddToCartDisabled"
+                @click="handleAddToCart"
               >
-                ADD TO CART
+                {{ addToCartButtonText }}
               </button>
 
               <button
@@ -103,6 +172,13 @@
               >
                 BUY WITH <i class="fa-brands fa-apple-pay fa-2xl"></i>
               </button>
+
+              <p
+                v-if="cartMessage"
+                :class="['cart-message', cartMessageType]"
+              >
+                {{ cartMessage }}
+              </p>
             </div>
           </div>
 
@@ -143,6 +219,12 @@ const productStore = useProductStore()
 
 const activeImageUrl = ref('')
 const quantity = ref(1)
+const cartMessage = ref('')
+const cartMessageType = ref('success')
+const isAddedToCart = ref(false)
+const isOpenCart = ref(false)
+const recentlyAddedVariantId = ref('')
+const recentlyAddedQuantity = ref(0)
 
 const currentProduct = computed(() => {
   return productStore.selectedProduct
@@ -165,6 +247,53 @@ const productImages = computed(() => {
   return currentProduct.value?.images?.nodes || []
 })
 
+const selectedVariant = computed(() => {
+  const variants = currentProduct.value?.variants?.nodes || []
+
+  return (
+    variants.find(variant => variant.availableForSale) ||
+    variants[0] ||
+    null
+  )
+})
+
+const recentlyAddedLine = computed(() => {
+  return (
+    productStore.cartLines.find(line => {
+      return line.merchandise?.id === recentlyAddedVariantId.value
+    }) || null
+  )
+})
+
+const recentlyAddedImageUrl = computed(() => {
+  return (
+    recentlyAddedLine.value?.merchandise?.image?.url ||
+    recentlyAddedLine.value?.merchandise?.product?.featuredImage?.url ||
+    currentProduct.value?.featuredImage?.url ||
+    ''
+  )
+})
+
+const isAddToCartDisabled = computed(() => {
+  return (
+    productStore.isAddingToCart ||
+    !currentProduct.value?.availableForSale ||
+    !selectedVariant.value?.availableForSale
+  )
+})
+
+const addToCartButtonText = computed(() => {
+  if (productStore.isAddingToCart) {
+    return 'ADDING...'
+  }
+
+  if (!currentProduct.value?.availableForSale) {
+    return 'SOLD OUT'
+  }
+
+  return 'ADD TO CART'
+})
+
 const loadProduct = async () => {
   const handle = route.params.handle
 
@@ -183,6 +312,47 @@ const loadProduct = async () => {
 
 const selectImage = imageUrl => {
   activeImageUrl.value = imageUrl
+}
+
+const handleAddToCart = async () => {
+  cartMessage.value = ''
+
+  if (!selectedVariant.value?.id) {
+    cartMessageType.value = 'error'
+    cartMessage.value = 'This product does not have an available variant.'
+    return
+  }
+
+  quantity.value = Math.max(1, Number(quantity.value) || 1)
+
+  try {
+    await productStore.addToCart(
+      selectedVariant.value.id,
+      quantity.value
+    )
+
+    recentlyAddedVariantId.value = selectedVariant.value.id
+    recentlyAddedQuantity.value = quantity.value
+    isAddedToCart.value = true
+    isOpenCart.value = true
+
+    cartMessageType.value = 'success'
+    cartMessage.value = 'Product added to cart.'
+  } catch (error) {
+    console.error('Failed to add product to cart:', error)
+    cartMessageType.value = 'error'
+    cartMessage.value =
+      productStore.cartError ||
+      'The product could not be added to the cart.'
+  }
+}
+
+const hideCartPanel = () => {
+  isOpenCart.value = false
+
+  window.setTimeout(() => {
+    isAddedToCart.value = false
+  }, 499)
 }
 
 onMounted(loadProduct)
@@ -370,8 +540,9 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout h1 {
+  text-transform: capitalize;
   font-weight: 400;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
 
 .main .main-inner .main-inner-right .payout .product-stars {
@@ -436,6 +607,30 @@ watch(
   border: solid #1b9c85 0.5px;
   color: white;
   transition: 0.6s;
+}
+
+.main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:disabled:hover {
+  background-color: white;
+  color: #1b9c85;
+}
+
+.cart-message {
+  margin: 4px 0 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.cart-message.success {
+  color: #1b9c85;
+}
+
+.cart-message.error {
+  color: #dc3545;
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .apple-pay {

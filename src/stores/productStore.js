@@ -1,46 +1,126 @@
-import axios from 'axios';
-import { shopifyFetch } from '../services/shopify'
+import axios from 'axios'
 import { defineStore } from 'pinia'
+import { shopifyFetch } from '../services/shopify'
+
+const CART_ID_STORAGE_KEY = 'shopifyCartId'
+
+const CART_FIELDS = `
+  fragment CartFields on Cart {
+    id
+    checkoutUrl
+    totalQuantity
+
+    cost {
+      subtotalAmount {
+        amount
+        currencyCode
+      }
+      totalAmount {
+        amount
+        currencyCode
+      }
+    }
+
+    lines(first: 100) {
+      nodes {
+        id
+        quantity
+
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+        }
+
+        merchandise {
+          ... on ProductVariant {
+            id
+            title
+            availableForSale
+
+            price {
+              amount
+              currencyCode
+            }
+
+            image {
+              url
+              altText
+            }
+
+            product {
+              id
+              handle
+              title
+
+              featuredImage {
+                url
+                altText
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
+const getUserErrorMessage = userErrors => {
+  if (!userErrors?.length) {
+    return null
+  }
+
+  return userErrors
+    .map(error => error.message)
+    .filter(Boolean)
+    .join(', ')
+}
 
 export const useProductStore = defineStore('productStore', {
   state: () => ({
     products: [],
-    cartProducts:[],
-    cartProductsLS:[], /* localStorage */
-    orders:[],
-    order:[], /* localStorage */
-    completedOrders:[],
-    loading:false,
+    selectedProduct: null,
+
+    cart: null,
+    cartLoading: false,
+    cartError: null,
+    isAddingToCart: false,
+
+    orders: [],
+    order: [],
+    completedOrders: [],
+
+    loading: false,
     error: null,
+
     shippingMethodView: false,
     discountView: false,
     isSubmitGiftCardCode: false,
-    giftCardCodeInput: "",
+    giftCardCodeInput: '',
     priceBeforeDiscount: null,
     finalPrice: null,
-    newId: null,
-    selectedProduct: null,
+    newId: null
   }),
-  getters: { /* computed */
-    /* shop-page | how many products are */
-    totalProducts:(state) => {
-    return state.products.length 
-    },
-    bestSellingProducts: state => {
-      return state.products.slice(0, 8)
-    },
-    /* calculate subtotal */
-    calculateSubtotal:(state) => {
-      let subtotal = 0
-      for( const p of state.cartProductsLS ){
-        subtotal += Number(p.totalPrice)
-      }
-      return subtotal
-    }
+
+  getters: {
+    totalProducts: state => state.products.length,
+
+    bestSellingProducts: state => state.products.slice(0, 8),
+
+    cartLines: state => state.cart?.lines?.nodes || [],
+
+    cartTotalQuantity: state => state.cart?.totalQuantity || 0,
+
+    cartSubtotal: state => state.cart?.cost?.subtotalAmount || null,
+
+    cartTotal: state => state.cart?.cost?.totalAmount || null,
+
+    checkoutUrl: state => state.cart?.checkoutUrl || ''
   },
-  actions:{
-    /* get Products with Shopify API */
-   async getProducts() {
+
+  actions: {
+    async getProducts() {
       if (this.products.length > 0) {
         return this.products
       }
@@ -50,10 +130,7 @@ export const useProductStore = defineStore('productStore', {
 
       const query = `
         query GetProducts($first: Int!) {
-          products(
-            first: $first
-            sortKey: BEST_SELLING
-          ) {
+          products(first: $first, sortKey: BEST_SELLING) {
             nodes {
               id
               handle
@@ -141,6 +218,7 @@ export const useProductStore = defineStore('productStore', {
         this.loading = false
       }
     },
+
     async getProductByHandle(handle) {
       if (!handle) {
         this.selectedProduct = null
@@ -249,101 +327,407 @@ export const useProductStore = defineStore('productStore', {
         this.loading = false
       }
     },
-    /* get cartProducts with JSON */
-    async getCartProducts() {
-      this.loading = true;
-      try {
-        const response = await axios.get('http://localhost:3000/cartProducts');
-    
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch cart products.');
-        }
-    
-        this.cartProducts = response.data;
-        this.loading = false;
-      } catch (error) {
-        console.error(error);
+
+    getStoredCartId() {
+      return localStorage.getItem(CART_ID_STORAGE_KEY)
+    },
+
+    storeCartId(cartId) {
+      if (cartId) {
+        localStorage.setItem(CART_ID_STORAGE_KEY, cartId)
       }
     },
-    /* get orders with JSON */
-    async getOrders() {
-      this.loading = true;
+
+    clearStoredCart() {
+      localStorage.removeItem(CART_ID_STORAGE_KEY)
+      this.cart = null
+    },
+
+    async initializeCart() {
+      const cartId = this.getStoredCartId()
+
+      if (!cartId) {
+        this.cart = null
+        return null
+      }
+
       try {
-        const response = await axios.get('http://localhost:3000/orders');
-    
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch orders.');
-        }
-    
-        this.orders = response.data;
-        this.loading = false;
+        return await this.getCart(cartId)
       } catch (error) {
-        console.error(error);
+        console.error('Failed to restore Shopify cart:', error)
+        this.clearStoredCart()
+        return null
       }
     },
-    /* get orders with JSON */
-    async getCompletedOrders() {
-      this.loading = true;
-      try {
-        const response = await axios.get('http://localhost:3000/completedOrders');
-    
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch completedOrders.');
+
+    async getCart(cartId = this.getStoredCartId()) {
+      if (!cartId) {
+        this.cart = null
+        return null
+      }
+
+      this.cartLoading = true
+      this.cartError = null
+
+      const query = `
+        ${CART_FIELDS}
+
+        query GetCart($cartId: ID!) {
+          cart(id: $cartId) {
+            ...CartFields
+          }
         }
-    
-        this.completedOrders = response.data;
-        this.loading = false;
+      `
+
+      try {
+        const data = await shopifyFetch(query, {
+          cartId
+        })
+
+        if (!data?.cart) {
+          this.clearStoredCart()
+          return null
+        }
+
+        this.cart = data.cart
+        this.storeCartId(data.cart.id)
+
+        return this.cart
       } catch (error) {
-        console.error(error);
+        console.error('Failed to fetch Shopify cart:', error)
+
+        this.cartError =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch Shopify cart.'
+
+        throw error
+      } finally {
+        this.cartLoading = false
       }
     },
-    /* add product to cart | CANCELED AFTER LOCALSTORAGE UPDATE  */
-/*     async addCartProduct(cartProduct){
-      const existingProduct = this.cartProducts.find( p => p.id === cartProduct.id)
-      if(existingProduct){
-         existingProduct.quantity += cartProduct.quantity
-         existingProduct.totalPrice = Number(existingProduct.price * existingProduct.quantity).toFixed(2);
-         try {
-          const patchRes = await axios.patch(
-            `http://localhost:3000/cartProducts/${cartProduct.id}`,
-            {
-              quantity: existingProduct.quantity,
-              totalPrice: existingProduct.totalPrice,
+
+    async createCart(merchandiseId, quantity = 1) {
+      if (!merchandiseId) {
+        throw new Error('A Shopify product variant is required.')
+      }
+
+      const mutation = `
+        ${CART_FIELDS}
+
+        mutation CreateCart($input: CartInput!) {
+          cartCreate(input: $input) {
+            cart {
+              ...CartFields
             }
-          );
-          if (!patchRes.ok) {
-            throw new Error('Failed to update cart product.');
+            userErrors {
+              field
+              message
+            }
           }
-        } catch (error) {
-          console.log(error);
         }
-      }else{
-        // Add it as a new item
-        this.cartProducts.push(cartProduct);        
-        try {
-          const res = await axios.post('http://localhost:3000/cartProducts', cartProduct);  
-          if (!res.ok) {
-            throw new Error('Failed to add product to cart.');
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      }
-      console.log("existingProduct:" + existingProduct)
-    } */
+      `
 
-   /* delete product from cart */
-    async deleteProduct(id){
-      this.cartProductsLS = this.cartProductsLS.filter( p => {
-        return p.id !== id
+      const data = await shopifyFetch(mutation, {
+        input: {
+          lines: [
+            {
+              merchandiseId,
+              quantity
+            }
+          ]
+        }
       })
-      localStorage.setItem('cartProducts', JSON.stringify(this.cartProductsLS));
 
-      
-/*    const res = await axios.delete(`http://localhost:3000/cartProducts/${id}`);
-      if (res.error) {
-        console.log(res.error);
-      } | CANCELED AFTER LOCALSTORAGE UPDATE */
+      const payload = data?.cartCreate
+      const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+
+      if (userErrorMessage) {
+        throw new Error(userErrorMessage)
+      }
+
+      if (!payload?.cart) {
+        throw new Error('Shopify did not return a cart.')
+      }
+
+      this.cart = payload.cart
+      this.storeCartId(payload.cart.id)
+
+      return this.cart
+    },
+
+    async addCartLines(cartId, merchandiseId, quantity = 1) {
+      const mutation = `
+        ${CART_FIELDS}
+
+        mutation AddCartLines(
+          $cartId: ID!
+          $lines: [CartLineInput!]!
+        ) {
+          cartLinesAdd(cartId: $cartId, lines: $lines) {
+            cart {
+              ...CartFields
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `
+
+      const data = await shopifyFetch(mutation, {
+        cartId,
+        lines: [
+          {
+            merchandiseId,
+            quantity
+          }
+        ]
+      })
+
+      const payload = data?.cartLinesAdd
+      const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+
+      if (userErrorMessage) {
+        throw new Error(userErrorMessage)
+      }
+
+      if (!payload?.cart) {
+        throw new Error('Shopify did not return the updated cart.')
+      }
+
+      this.cart = payload.cart
+      this.storeCartId(payload.cart.id)
+
+      return this.cart
+    },
+
+    async addToCart(merchandiseId, quantity = 1) {
+      const safeQuantity = Math.max(1, Number(quantity) || 1)
+
+      this.isAddingToCart = true
+      this.cartError = null
+
+      try {
+        const storedCartId = this.getStoredCartId()
+
+        if (!storedCartId) {
+          return await this.createCart(merchandiseId, safeQuantity)
+        }
+
+        try {
+          return await this.addCartLines(
+            storedCartId,
+            merchandiseId,
+            safeQuantity
+          )
+        } catch (error) {
+          console.warn(
+            'The stored cart could not be updated. Creating a new cart.',
+            error
+          )
+
+          this.clearStoredCart()
+          return await this.createCart(merchandiseId, safeQuantity)
+        }
+      } catch (error) {
+        console.error('Failed to add product to Shopify cart:', error)
+
+        this.cartError =
+          error instanceof Error
+            ? error.message
+            : 'Failed to add the product to the cart.'
+
+        throw error
+      } finally {
+        this.isAddingToCart = false
+      }
+    },
+
+    async updateCartLine(lineId, quantity) {
+      const cartId = this.getStoredCartId()
+      const safeQuantity = Math.max(1, Number(quantity) || 1)
+
+      if (!cartId || !lineId) {
+        throw new Error('Cart and line identifiers are required.')
+      }
+
+      this.cartLoading = true
+      this.cartError = null
+
+      const mutation = `
+        ${CART_FIELDS}
+
+        mutation UpdateCartLines(
+          $cartId: ID!
+          $lines: [CartLineUpdateInput!]!
+        ) {
+          cartLinesUpdate(cartId: $cartId, lines: $lines) {
+            cart {
+              ...CartFields
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `
+
+      try {
+        const data = await shopifyFetch(mutation, {
+          cartId,
+          lines: [
+            {
+              id: lineId,
+              quantity: safeQuantity
+            }
+          ]
+        })
+
+        const payload = data?.cartLinesUpdate
+        const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+
+        if (userErrorMessage) {
+          throw new Error(userErrorMessage)
+        }
+
+        if (!payload?.cart) {
+          throw new Error('Shopify did not return the updated cart.')
+        }
+
+        this.cart = payload.cart
+        this.storeCartId(payload.cart.id)
+
+        return this.cart
+      } catch (error) {
+        console.error('Failed to update Shopify cart line:', error)
+
+        this.cartError =
+          error instanceof Error
+            ? error.message
+            : 'Failed to update the cart item.'
+
+        throw error
+      } finally {
+        this.cartLoading = false
+      }
+    },
+
+    async removeCartLine(lineId) {
+      const cartId = this.getStoredCartId()
+
+      if (!cartId || !lineId) {
+        throw new Error('Cart and line identifiers are required.')
+      }
+
+      this.cartLoading = true
+      this.cartError = null
+
+      const mutation = `
+        ${CART_FIELDS}
+
+        mutation RemoveCartLines(
+          $cartId: ID!
+          $lineIds: [ID!]!
+        ) {
+          cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+            cart {
+              ...CartFields
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `
+
+      try {
+        const data = await shopifyFetch(mutation, {
+          cartId,
+          lineIds: [lineId]
+        })
+
+        const payload = data?.cartLinesRemove
+        const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+
+        if (userErrorMessage) {
+          throw new Error(userErrorMessage)
+        }
+
+        if (!payload?.cart) {
+          throw new Error('Shopify did not return the updated cart.')
+        }
+
+        this.cart = payload.cart
+
+        if (payload.cart.totalQuantity === 0) {
+          this.clearStoredCart()
+        } else {
+          this.storeCartId(payload.cart.id)
+        }
+
+        return this.cart
+      } catch (error) {
+        console.error('Failed to remove Shopify cart line:', error)
+
+        this.cartError =
+          error instanceof Error
+            ? error.message
+            : 'Failed to remove the cart item.'
+
+        throw error
+      } finally {
+        this.cartLoading = false
+      }
+    },
+
+    proceedToCheckout() {
+      if (!this.checkoutUrl) {
+        throw new Error('Shopify checkout URL is not available.')
+      }
+
+      window.location.href = this.checkoutUrl
+    },
+
+    async getOrders() {
+      this.loading = true
+
+      try {
+        const response = await axios.get('http://localhost:3000/orders')
+
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch orders.')
+        }
+
+        this.orders = response.data
+      } catch (error) {
+        console.error(error)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async getCompletedOrders() {
+      this.loading = true
+
+      try {
+        const response = await axios.get(
+          'http://localhost:3000/completedOrders'
+        )
+
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch completed orders.')
+        }
+
+        this.completedOrders = response.data
+      } catch (error) {
+        console.error(error)
+      } finally {
+        this.loading = false
+      }
     }
   }
 })

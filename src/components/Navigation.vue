@@ -60,17 +60,17 @@
                 <div v-for="product in productsFound" :key="product.id">
                   <RouterLink 
                     class="searched-product" 
-                    :to="{name:'product-page', params: { id: product.id} }"
+                    :to="{ name: 'product-page', params: { handle: product.handle } }"
                   >
                     <div 
                       class="sp-product-img"
-                      :style="{ 'background-image':`url(/images/${product.photo[0]}`}"
+                      :style="{ backgroundImage: `url('${product.featuredImage?.url || ''}')` }"
                     >
 
                     </div>
                     <div class="sp-content">
-                      <div class="sp-product-name">{{ product.name }}</div>
-                      <div class="sp-product-price"><small><bold> ${{ product.price }} </bold></small></div>
+                      <div class="sp-product-name">{{ product.title }}</div>
+                      <div class="sp-product-price"><small>{{ formatProductPrice(product) }}</small></div>
                     </div>
                   </RouterLink>
                   </div>
@@ -103,92 +103,81 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
-/* pinia */
 import { useProductStore } from '../stores/productStore'
+
 const productStore = useProductStore()
 
-//productStore.getCartProducts()
+const isSearchButtonOn = ref(false)
+const search = ref('')
+const isBarsOpen = ref(false)
+const isAnimationWorked = ref(false)
 
-/* localStorage */
-onMounted(()=>{
-  try {
-    const storedCartProducts = localStorage.getItem('cartProducts')
-    if(storedCartProducts){
-      productStore.cartProductsLS = JSON.parse(storedCartProducts)
-    } else {
-      productStore.cartProductsLS = []
-    }
-  } catch (error) {
-    console.error('localStorage parse error:', error)
-    productStore.cartProductsLS = []
-    localStorage.removeItem('cartProducts')
-  }
+onMounted(async () => {
+  await productStore.initializeCart()
 })
-/* localStorage */
 
-  /* search button */
-  const isSearchButtonOn = ref(false)
+const searchButtonOn = () => {
+  isSearchButtonOn.value = true
+  isBarsOpen.value = false
+}
 
-  const searchButtonOn = () =>{
-    isSearchButtonOn.value = true
+const searchButtonOff = () => {
+  isSearchButtonOn.value = false
+}
+
+onClickOutside(isSearchButtonOn, searchButtonOff)
+
+const productsFound = computed(() => {
+  const searchTerm = search.value.trim().toLowerCase()
+
+  if (!searchTerm) {
+    return []
+  }
+
+  return productStore.products
+    .filter(product => {
+      return product.title.toLowerCase().includes(searchTerm)
+    })
+    .slice(0, 5)
+})
+
+const formatProductPrice = product => {
+  const money = product.priceRange?.minVariantPrice
+
+  if (!money) {
+    return ''
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: money.currencyCode
+  }).format(Number(money.amount))
+}
+
+const openBars = () => {
+  isBarsOpen.value = true
+  isAnimationWorked.value = true
+}
+
+const hideToBars = () => {
+  setTimeout(() => {
+    isBarsOpen.value = false
+  }, 100)
+
+  isAnimationWorked.value = false
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 700) {
     isBarsOpen.value = false
   }
-  const searchButtonOff = () =>{
-    isSearchButtonOn.value = false
-  }
+})
 
-  onClickOutside(isSearchButtonOn, searchButtonOff)
-
-  /* search button - searching */
-  
-  const search = ref('')
-
-  const productsFound = computed(()=>{
-    if (search.value.length === 0) {
-      return [];
-    } else {
-      return productStore.products.filter((product) => {
-          return product.name.toLowerCase().includes(search.value.toLowerCase());
-      }).slice(0, 5);
-    }
-  })
-  
-
-/* vertical navbar */
-  const isBarsOpen = ref(false)
-  const isAnimationWorked = ref(false)
-
-
-/* open to vertical bars */
-  const openBars = () =>{
-    isBarsOpen.value = true
-    isAnimationWorked.value = true
-
-  }
-  /* hide to vertical bars */
-  const hideToBars = () =>{
-    setTimeout(() => {             
-      isBarsOpen.value = false
-    }, 100);                    /* code works 0.3 second after */
-    isAnimationWorked.value = false
-    
-}
-/* "If the page is above 700 pixels, do not display the vertical navbar." */
-window.addEventListener("resize", () => {
-    if (window.innerWidth > 700) {
-        isBarsOpen.value = false;
-    }
-});
-
-/* product number on cart */
 const totalProductNumberOnCart = computed(() => {
-        const sum = productStore.cartProductsLS.reduce((total, product) => total + product.quantity, 0);
-        return sum;
-    });
-
-
+  return productStore.cartTotalQuantity
+})
 </script>
 <style scoped>
   body{

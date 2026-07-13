@@ -1,82 +1,163 @@
 <template>
     <tr>
         <td class="cart-product-information">
-            <div 
-            class="cart-product-img"
-            :style="{ 'background-image':`url(/images/${cartProduct.photo}`}"
-            >
-                
-            </div>
+            <div
+                class="cart-product-img"
+                :style="{ backgroundImage: `url('${productImageUrl}')` }"
+            ></div>
+
             <div class="cart-product-name-wrapper">
-                <RouterLink 
-                    class="searched-product" 
-                    :to="{name:'product-page', params: { id: cartProduct.id} }"
+                <RouterLink
+                    class="searched-product"
+                    :to="{
+                        name: 'product-page',
+                        params: { handle: cartLine.merchandise.product.handle }
+                    }"
                 >
-                    <div class="cart-product-name"> {{ cartProduct.name }}</div>
+                    <div class="cart-product-name">
+                        {{ cartLine.merchandise.product.title }}
+                    </div>
                 </RouterLink>
-                <div class="remove" @click="productStore.deleteProduct(cartProduct.id)">Remove</div>
+
+                <div
+                    class="remove"
+                    @click="removeProduct"
+                >
+                    Remove
+                </div>
             </div>
         </td>
+
         <td>
-            <div class="cart-item-price"> ${{ cartProduct.price }}</div>
+            <div class="cart-item-price">
+                {{ formattedUnitPrice }}
+            </div>
         </td>
+
         <td>
             <div class="cart-quantity">
-                <input 
-                    v-model.number="cartProduct.quantity" 
-                    @input="updatePrice" 
+                <input
+                    v-model.number="localQuantity"
+                    @change="updateQuantity"
                     @click="$event.target.select()"
-                    class="cart-quantity-input" 
-                    type="number" 
-                    min="1" 
+                    class="cart-quantity-input"
+                    type="number"
+                    min="1"
                     step="1"
+                    :disabled="isUpdating"
                 >
             </div>
         </td>
+
         <td>
             <div class="cart-item-regular-price-group">
-                <span class="cart-item-regular-price">${{ cartProduct.totalPrice }}</span>
+                <span class="cart-item-regular-price">
+                    {{ formattedLineTotal }}
+                </span>
             </div>
+
             <div class="cart-quantity">
-                <input 
-                    v-model.number="cartProduct.quantity" 
-                    @input="updatePrice" 
+                <input
+                    v-model.number="localQuantity"
+                    @change="updateQuantity"
                     @click="$event.target.select()"
-                    class="cart-quantity-input q-input-smart-phone" 
-                    type="number" 
-                    min="1" 
+                    class="cart-quantity-input q-input-smart-phone"
+                    type="number"
+                    min="1"
                     step="1"
+                    :disabled="isUpdating"
                 >
             </div>
         </td>
     </tr>
 </template>
+
 <script setup>
-/* pinia */
+import { computed, ref, watch } from 'vue'
 import { useProductStore } from '../stores/productStore'
-const productStore = useProductStore()
 
 const props = defineProps({
-    cartProduct:{
+    cartLine: {
         type: Object,
-        required: false,
+        required: true
     }
 })
 
-const updatePrice = () => {
-    // Quantity'nin 1'den küçük olmasını engelle
-    if (props.cartProduct.quantity < 1) {
-        props.cartProduct.quantity = 1
+const productStore = useProductStore()
+
+const localQuantity = ref(props.cartLine.quantity)
+const isUpdating = ref(false)
+
+watch(
+    () => props.cartLine.quantity,
+    newQuantity => {
+        localQuantity.value = newQuantity
     }
-    
-    // Toplam fiyatı güncelle
-    props.cartProduct.totalPrice = Number(props.cartProduct.price * props.cartProduct.quantity).toFixed(2)
-    
-    // localStorage'ı güncelle
-    localStorage.setItem('cartProducts', JSON.stringify(productStore.cartProductsLS))
+)
+
+const productImageUrl = computed(() => {
+    return (
+        props.cartLine.merchandise.image?.url ||
+        props.cartLine.merchandise.product.featuredImage?.url ||
+        ''
+    )
+})
+
+const formatMoney = money => {
+    if (!money) {
+        return ''
+    }
+
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: money.currencyCode
+    }).format(Number(money.amount))
 }
 
+const formattedUnitPrice = computed(() => {
+    return formatMoney(props.cartLine.merchandise.price)
+})
+
+const formattedLineTotal = computed(() => {
+    return formatMoney(props.cartLine.cost?.totalAmount)
+})
+
+const updateQuantity = async () => {
+    const safeQuantity = Math.max(1, Number(localQuantity.value) || 1)
+
+    localQuantity.value = safeQuantity
+    isUpdating.value = true
+
+    try {
+        await productStore.updateCartLine(
+            props.cartLine.id,
+            safeQuantity
+        )
+    } catch (error) {
+        localQuantity.value = props.cartLine.quantity
+        console.error('Failed to update cart quantity:', error)
+    } finally {
+        isUpdating.value = false
+    }
+}
+
+const removeProduct = async () => {
+    if (isUpdating.value) {
+        return
+    }
+
+    isUpdating.value = true
+
+    try {
+        await productStore.removeCartLine(props.cartLine.id)
+    } catch (error) {
+        console.error('Failed to remove cart product:', error)
+    } finally {
+        isUpdating.value = false
+    }
+}
 </script>
+
 <style scoped>
 
 .main{
@@ -334,5 +415,6 @@ const updatePrice = () => {
         margin-left: 3px;
     }
 }
+
 
 </style>

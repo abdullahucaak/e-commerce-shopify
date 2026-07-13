@@ -1,19 +1,42 @@
 <template>
     <Navigation/>
     <div class="main">
-        <div v-if="productStore.cartProductsLS.length === 0" class="main-inner-cart-empty">
+        <div
+            v-if="productStore.cartLoading && !productStore.cart"
+            class="cart-status"
+        >
+            Loading cart...
+        </div>
+
+        <div
+            v-else-if="productStore.cartError"
+            class="cart-status cart-error"
+        >
+            { productStore.cartError }
+        </div>
+
+        <div
+            v-else-if="productStore.cartLines.length === 0"
+            class="main-inner-cart-empty"
+        >
             <div class="mice-inner">
                 <h1 class="your-cart">Your Cart</h1>
                 <div>Your Cart is Currently Empty</div>
-                <RouterLink :to="{name:'shop'}"><button> CONTINUE SHOPPING </button></RouterLink>
+                <RouterLink :to="{name:'shop'}">
+                    <button type="button"> CONTINUE SHOPPING </button>
+                </RouterLink>
             </div>
         </div>
+
         <div v-else class="main-inner">
             <div class="cart-header">
                 <h1>Your Cart</h1>
-                <RouterLink class="continue-shopping" :to="{name:'shop'}">Continue Shopping</RouterLink>
+                <RouterLink class="continue-shopping" :to="{name:'shop'}">
+                    Continue Shopping
+                </RouterLink>
             </div>
-            <form @submit="postOrders">
+
+            <form @submit.prevent="goToCheckout">
                 <table class="cart-table">
                     <thead class="t-heading">
                         <tr>
@@ -23,32 +46,57 @@
                             <th>TOTAL</th>
                         </tr>
                     </thead>
-                    <tbody v-for=" cartProduct in productStore.cartProductsLS" :key="cartProduct.id">
-                        <div v-if="productStore.loading">Loading tasks...</div>
-                        <CartProduct :cartProduct="cartProduct"/>
+
+                    <tbody
+                        v-for="cartLine in productStore.cartLines"
+                        :key="cartLine.id"
+                    >
+                        <CartProduct :cart-line="cartLine"/>
                     </tbody>
                 </table>
+
                 <div class="cart-footer">
                     <div class="cart-footer-inner">
                         <div class="f-left">
-                            <label style="display: block; margin-bottom: 20px; font-weight: 300;" for="">Add a note to your order</label>
-                            <textarea name="userNote" v-model="userNote" cols="40" rows="3"></textarea>
+                            <label
+                                style="display: block; margin-bottom: 20px; font-weight: 300;"
+                                for="order-note"
+                            >
+                                Add a note to your order
+                            </label>
+
+                            <textarea
+                                id="order-note"
+                                name="userNote"
+                                v-model="userNote"
+                                cols="40"
+                                rows="3"
+                            ></textarea>
                         </div>
+
                         <div class="f-right">
                             <div class="f-right-inner">
                                 <div class="cart-sub-total-wrapper">
                                     <div class="cart-sub-total">
                                         <span class="subtotal">Subtotal</span>
-                                        <span class="subtotal">${{ (productStore.calculateSubtotal).toFixed(2) }} USD</span>
+                                        <span class="subtotal">{{ formattedSubtotal }}</span>
                                     </div>
+
                                     <div class="cart-shipping-message">
                                         Taxes and shipping calculated at checkout
                                     </div>
                                 </div>
+
                                 <div class="cart-buttons-container">
                                     <div class="submit-control">
-                                        <input type="submit" name="checkout" value="Check Out">
+                                        <input
+                                            type="submit"
+                                            name="checkout"
+                                            :disabled="productStore.cartLoading || !productStore.checkoutUrl"
+                                            :value="productStore.cartLoading ? 'Updating...' : 'Check Out'"
+                                        >
                                     </div>
+
                                     <div class="additional-checkout-buttons">
                                         <ul>
                                             <li class="icons">
@@ -73,6 +121,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="how-did-you-hear">
                     <div class="head">How did you hear about us?</div>
                     <div class="options">
@@ -89,80 +138,53 @@
                 </div>
             </form>
         </div>
+
         <Footer/>
     </div>
 </template>
+
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-/* components */
+import { computed, onMounted, ref } from 'vue'
+
 import Footer from '../components/Footer.vue'
 import Navigation from '../components/Navigation.vue'
-import CartProduct from '../components/CartProduct.vue';
-/* import router */
-import router from '../router'
+import CartProduct from '../components/CartProduct.vue'
 
-/* pinia */
 import { useProductStore } from '../stores/productStore'
+
 const productStore = useProductStore()
-/* import axios */
-import axios from 'axios';
 
-/* getCompletedOrders with JSON */
-productStore.getCompletedOrders()
+const userNote = ref('')
+const howDidYouHear = ref('Please Make a Selection')
 
-onMounted(()=>{
- const storedCartProducts = localStorage.getItem('cartProducts')
-    if(storedCartProducts){
-        productStore.cartProductsLS = JSON.parse(storedCartProducts)
+const formattedSubtotal = computed(() => {
+    const money = productStore.cartSubtotal
+
+    if (!money) {
+        return '$0.00 USD'
     }
-    console.log("productStore.cartProductsLS: " + JSON.stringify(productStore.cartProductsLS))
+
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: money.currencyCode
+    }).format(Number(money.amount))
+
+    return `${formattedAmount} ${money.currencyCode}`
 })
 
-const userNote = ref("")
-const howDidYouHear = ref("Please Make a Selection")
-
-/* submit cart */
-const postOrders = (e) =>{
-    let newId;
-
-    if (productStore.completedOrders.length === 0) {
-        /* if completedOrders array is empty, assign newId to 1 */
-        newId = 1;
-    } else {
-        // If there is an order in the completedOrders array, find the largest id value of the orders in the array and create the next id value.
-        newId = Math.max(...productStore.completedOrders.map(item => item.id)) + 1;
-    }
-    productStore.newId = newId
-    console.log("productStore'daki new Id: " + productStore.newId)
-
-    const newOrder = reactive({
-        id:newId,
-        userNote: userNote.value,
-        howDidYouHear: howDidYouHear.value,
-        cartProducts: productStore.cartProductsLS,
-    })
-    
-    
-    /* posting to local storage function */
-    const post = async () =>{
-        localStorage.setItem('order', JSON.stringify(newOrder))
-        productStore.order = newOrder
-    }
-    /* delete from local storage and post to local storage new object*/
-    const deleteAndPost = async () =>{
-        localStorage.removeItem('order')
-        productStore.order = null /* We deleted an element starting from index zero. */
-        post()
-    }
-    
-    deleteAndPost()
-    /* routing */
-    router.push({ name: 'checkouts' })
-    
-    e.preventDefault()
-    
+const goToCheckout = () => {
+    productStore.proceedToCheckout()
 }
+
+onMounted(async () => {
+    try {
+        await productStore.initializeCart()
+    } catch (error) {
+        console.error('Failed to load Shopify cart:', error)
+    }
+})
 </script>
+
 <style scoped>
 .main{
     display: grid;
@@ -470,4 +492,18 @@ const postOrders = (e) =>{
 
 }
 
+
+
+/* Shopify cart status messages */
+.cart-status {
+    margin: 100px auto;
+    width: 60%;
+    padding: 100px 0;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.cart-error {
+    color: #dc3545;
+}
 </style>
