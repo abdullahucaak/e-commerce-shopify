@@ -150,7 +150,9 @@
                   class="q-input"
                   type="number"
                   min="1"
+                  :max="selectedVariant?.quantityAvailable || undefined"
                   step="1"
+                  :disabled="isAddToCartDisabled"
                 >
               </div>
             </div>
@@ -251,7 +253,10 @@ const selectedVariant = computed(() => {
   const variants = currentProduct.value?.variants?.nodes || []
 
   return (
-    variants.find(variant => variant.availableForSale) ||
+    variants.find(variant => (
+      variant.availableForSale &&
+      variant.quantityAvailable !== 0
+    )) ||
     variants[0] ||
     null
   )
@@ -278,7 +283,8 @@ const isAddToCartDisabled = computed(() => {
   return (
     productStore.isAddingToCart ||
     !currentProduct.value?.availableForSale ||
-    !selectedVariant.value?.availableForSale
+    !selectedVariant.value?.availableForSale ||
+    selectedVariant.value?.quantityAvailable === 0
   )
 })
 
@@ -287,7 +293,11 @@ const addToCartButtonText = computed(() => {
     return 'ADDING...'
   }
 
-  if (!currentProduct.value?.availableForSale) {
+  if (
+    !currentProduct.value?.availableForSale ||
+    !selectedVariant.value?.availableForSale ||
+    selectedVariant.value?.quantityAvailable === 0
+  ) {
     return 'SOLD OUT'
   }
 
@@ -324,6 +334,15 @@ const handleAddToCart = async () => {
   }
 
   quantity.value = Math.max(1, Number(quantity.value) || 1)
+
+  if (
+    selectedVariant.value.quantityAvailable !== null &&
+    quantity.value > selectedVariant.value.quantityAvailable
+  ) {
+    cartMessageType.value = 'error'
+    cartMessage.value = `Only ${selectedVariant.value.quantityAvailable} item(s) are currently available.`
+    return
+  }
 
   try {
     await productStore.addToCart(
@@ -513,9 +532,10 @@ watch(
 .main .main-inner .main-inner-left .big-img {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background-size: contain;
-  background-position: center;
+  background-size: cover;
+  background-position: center center;
   background-repeat: no-repeat;
+  overflow: hidden;
 }
 
 .main .main-inner .main-inner-left .other-images {
@@ -528,11 +548,12 @@ watch(
 .main .main-inner .main-inner-left .other-images .other-images-product {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background-size: contain;
-  background-position: center;
+  background-size: cover;
+  background-position: center center;
   background-repeat: no-repeat;
   border: 1px solid #ddd;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .main .main-inner .main-inner-right {
@@ -540,9 +561,8 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout h1 {
-  text-transform: capitalize;
   font-weight: 400;
-  margin-bottom: 4px;
+  margin-bottom: 20px;
 }
 
 .main .main-inner .main-inner-right .payout .product-stars {

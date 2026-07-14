@@ -12,7 +12,7 @@
             v-else-if="productStore.cartError"
             class="cart-status cart-error"
         >
-            { productStore.cartError }
+            {{ productStore.cartError }}
         </div>
 
         <div
@@ -34,6 +34,14 @@
                 <RouterLink class="continue-shopping" :to="{name:'shop'}">
                     Continue Shopping
                 </RouterLink>
+            </div>
+
+
+            <div
+                v-if="productStore.inventoryError"
+                class="cart-inventory-warning"
+            >
+                {{ productStore.inventoryError }}
             </div>
 
             <form @submit.prevent="goToCheckout">
@@ -172,8 +180,19 @@ const formattedSubtotal = computed(() => {
     return `${formattedAmount} ${money.currencyCode}`
 })
 
-const goToCheckout = () => {
-    productStore.proceedToCheckout()
+const goToCheckout = async () => {
+    productStore.inventoryError = null
+
+    try {
+        await productStore.proceedToCheckout()
+    } catch (error) {
+        window.alert(
+            productStore.inventoryError ||
+            (error instanceof Error
+                ? error.message
+                : 'Your cart inventory could not be verified.')
+        )
+    }
 }
 
 onMounted(async () => {
@@ -493,6 +512,14 @@ onMounted(async () => {
 }
 
 
+
+.cart-inventory-warning {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    background-color: #fff5f5;
+}
 
 /* Shopify cart status messages */
 .cart-status {

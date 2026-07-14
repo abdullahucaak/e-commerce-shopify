@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 import { shopifyFetch } from '../services/shopify'
 
 const CART_ID_STORAGE_KEY = 'shopifyCartId'
+const STOREFRONT_COUNTRY_CODE = import.meta.env.VITE_SHOPIFY_COUNTRY_CODE || 'US'
+const LEGACY_STORAGE_KEYS = ['cartProducts', 'order']
 
 const CART_FIELDS = `
   fragment CartFields on Cart {
@@ -38,6 +40,8 @@ const CART_FIELDS = `
             id
             title
             availableForSale
+            currentlyNotInStock
+            quantityAvailable
 
             price {
               amount
@@ -77,6 +81,29 @@ const getUserErrorMessage = userErrors => {
     .join(', ')
 }
 
+const getCartWarningMessage = warnings => {
+  if (!warnings?.length) {
+    return null
+  }
+
+  return warnings
+    .map(warning => warning.message)
+    .filter(Boolean)
+    .join(', ')
+}
+
+const isInvalidCartMessage = message => {
+  const normalizedMessage = String(message || '').toLowerCase()
+
+  return (
+    normalizedMessage.includes('cart does not exist') ||
+    normalizedMessage.includes('invalid cart') ||
+    normalizedMessage.includes('cart not found') ||
+    normalizedMessage.includes('could not find cart') ||
+    normalizedMessage.includes('cart is completed')
+  )
+}
+
 export const useProductStore = defineStore('productStore', {
   state: () => ({
     products: [],
@@ -85,6 +112,7 @@ export const useProductStore = defineStore('productStore', {
     cart: null,
     cartLoading: false,
     cartError: null,
+    inventoryError: null,
     isAddingToCart: false,
 
     orders: [],
@@ -129,7 +157,7 @@ export const useProductStore = defineStore('productStore', {
       this.error = null
 
       const query = `
-        query GetProducts($first: Int!) {
+        query GetProducts($first: Int!, $country: CountryCode!) @inContext(country: $country) {
           products(first: $first, sortKey: BEST_SELLING) {
             nodes {
               id
@@ -173,6 +201,8 @@ export const useProductStore = defineStore('productStore', {
                   id
                   title
                   availableForSale
+                  currentlyNotInStock
+                  quantityAvailable
 
                   price {
                     amount
@@ -197,7 +227,8 @@ export const useProductStore = defineStore('productStore', {
 
       try {
         const data = await shopifyFetch(query, {
-          first: 50
+          first: 50,
+          country: STOREFRONT_COUNTRY_CODE
         })
 
         this.products = data?.products?.nodes || []
@@ -229,7 +260,7 @@ export const useProductStore = defineStore('productStore', {
       this.error = null
 
       const query = `
-        query GetProductByHandle($handle: String!) {
+        query GetProductByHandle($handle: String!, $country: CountryCode!) @inContext(country: $country) {
           productByHandle(handle: $handle) {
             id
             handle
@@ -278,6 +309,8 @@ export const useProductStore = defineStore('productStore', {
                 id
                 title
                 availableForSale
+                  currentlyNotInStock
+                  quantityAvailable
 
                 price {
                   amount
@@ -306,7 +339,8 @@ export const useProductStore = defineStore('productStore', {
 
       try {
         const data = await shopifyFetch(query, {
-          handle
+          handle,
+          country: STOREFRONT_COUNTRY_CODE
         })
 
         this.selectedProduct = data?.productByHandle || null
@@ -328,6 +362,114 @@ export const useProductStore = defineStore('productStore', {
       }
     },
 
+    async getVariantInventory(variantId) {
+      if (!variantId) {
+        throw new Error('A Shopify product variant is required.')
+      }
+
+      const query = `
+        query GetVariantInventory($variantId: ID!, $country: CountryCode!) @inContext(country: $country) {
+          node(id: $variantId) {
+            ... on ProductVariant {
+              id
+              title
+              availableForSale
+              currentlyNotInStock
+              quantityAvailable
+
+              product {
+                title
+              }
+            }
+          }
+        }
+      `
+
+      const data = await shopifyFetch(query, {
+        variantId,
+        country: STOREFRONT_COUNTRY_CODE
+      })
+      const variant = data?.node
+
+      if (!variant?.id) {
+        throw new Error('The selected product variant is no longer available.')
+      }
+
+      return variant
+    },
+
+    async validateVariantInventory(variantId, requestedQuantity, existingQuantity = 0) {
+      const variant = await this.getVariantInventory(variantId)
+      const requested = Math.max(1, Number(requestedQuantity) || 1)
+      const desiredQuantity = Math.max(0, Number(existingQuantity) || 0) + requested
+
+      if (!variant.availableForSale || variant.quantityAvailable === 0) {
+        throw new Error(`${variant.product.title} is currently out of stock.`)
+      }
+
+      if (variant.quantityAvailable !== null && desiredQuantity > variant.quantityAvailable) {
+        throw new Error(`Only ${variant.quantityAvailable} item(s) of ${variant.product.title} are currently available.`)
+      }
+
+      return variant
+    },
+
+    async validateCartInventory() {
+      const lines = this.cartLines
+
+      if (!lines.length) {
+        throw new Error('Your cart is empty.')
+      }
+
+      const variantIds = lines.map(line => line.merchandise?.id).filter(Boolean)
+      const query = `
+        query GetCartInventory($variantIds: [ID!]!, $country: CountryCode!) @inContext(country: $country) {
+          nodes(ids: $variantIds) {
+            ... on ProductVariant {
+              id
+              availableForSale
+              currentlyNotInStock
+              quantityAvailable
+              product { title }
+            }
+          }
+        }
+      `
+
+      const data = await shopifyFetch(query, {
+        variantIds,
+        country: STOREFRONT_COUNTRY_CODE
+      })
+      const inventoryById = new Map((data?.nodes || []).filter(Boolean).map(variant => [variant.id, variant]))
+      const messages = []
+
+      for (const line of lines) {
+        const variant = inventoryById.get(line.merchandise?.id)
+        const title = line.merchandise?.product?.title || 'A product in your cart'
+
+        if (!variant || !variant.availableForSale || variant.quantityAvailable === 0) {
+          messages.push(`${title} is currently out of stock.`)
+          continue
+        }
+
+        if (variant.quantityAvailable !== null && line.quantity > variant.quantityAvailable) {
+          messages.push(`Only ${variant.quantityAvailable} item(s) of ${title} are currently available.`)
+        }
+      }
+
+      if (messages.length) {
+        throw new Error(messages.join(' '))
+      }
+
+      return true
+    },
+
+    clearLegacyCartStorage() {
+      LEGACY_STORAGE_KEYS.forEach(storageKey => {
+        localStorage.removeItem(storageKey)
+      })
+    },
+
     getStoredCartId() {
       return localStorage.getItem(CART_ID_STORAGE_KEY)
     },
@@ -344,6 +486,8 @@ export const useProductStore = defineStore('productStore', {
     },
 
     async initializeCart() {
+      this.clearLegacyCartStorage()
+
       const cartId = this.getStoredCartId()
 
       if (!cartId) {
@@ -372,7 +516,7 @@ export const useProductStore = defineStore('productStore', {
       const query = `
         ${CART_FIELDS}
 
-        query GetCart($cartId: ID!) {
+        query GetCart($cartId: ID!, $country: CountryCode!) @inContext(country: $country) {
           cart(id: $cartId) {
             ...CartFields
           }
@@ -381,10 +525,16 @@ export const useProductStore = defineStore('productStore', {
 
       try {
         const data = await shopifyFetch(query, {
-          cartId
+          cartId,
+          country: STOREFRONT_COUNTRY_CODE
         })
 
         if (!data?.cart) {
+          this.clearStoredCart()
+          return null
+        }
+
+        if (data.cart.totalQuantity === 0) {
           this.clearStoredCart()
           return null
         }
@@ -415,10 +565,15 @@ export const useProductStore = defineStore('productStore', {
       const mutation = `
         ${CART_FIELDS}
 
-        mutation CreateCart($input: CartInput!) {
+        mutation CreateCart($input: CartInput!, $country: CountryCode!) @inContext(country: $country) {
           cartCreate(input: $input) {
             cart {
               ...CartFields
+            }
+            warnings {
+              code
+              message
+              target
             }
             userErrors {
               field
@@ -429,7 +584,11 @@ export const useProductStore = defineStore('productStore', {
       `
 
       const data = await shopifyFetch(mutation, {
+        country: STOREFRONT_COUNTRY_CODE,
         input: {
+          buyerIdentity: {
+            countryCode: STOREFRONT_COUNTRY_CODE
+          },
           lines: [
             {
               merchandiseId,
@@ -441,9 +600,14 @@ export const useProductStore = defineStore('productStore', {
 
       const payload = data?.cartCreate
       const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+      const warningMessage = getCartWarningMessage(payload?.warnings)
 
       if (userErrorMessage) {
         throw new Error(userErrorMessage)
+      }
+
+      if (warningMessage) {
+        throw new Error(warningMessage)
       }
 
       if (!payload?.cart) {
@@ -463,10 +627,16 @@ export const useProductStore = defineStore('productStore', {
         mutation AddCartLines(
           $cartId: ID!
           $lines: [CartLineInput!]!
-        ) {
+          $country: CountryCode!
+        ) @inContext(country: $country) {
           cartLinesAdd(cartId: $cartId, lines: $lines) {
             cart {
               ...CartFields
+            }
+            warnings {
+              code
+              message
+              target
             }
             userErrors {
               field
@@ -478,6 +648,7 @@ export const useProductStore = defineStore('productStore', {
 
       const data = await shopifyFetch(mutation, {
         cartId,
+        country: STOREFRONT_COUNTRY_CODE,
         lines: [
           {
             merchandiseId,
@@ -488,9 +659,14 @@ export const useProductStore = defineStore('productStore', {
 
       const payload = data?.cartLinesAdd
       const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+      const warningMessage = getCartWarningMessage(payload?.warnings)
 
       if (userErrorMessage) {
         throw new Error(userErrorMessage)
+      }
+
+      if (warningMessage) {
+        throw new Error(warningMessage)
       }
 
       if (!payload?.cart) {
@@ -510,6 +686,14 @@ export const useProductStore = defineStore('productStore', {
       this.cartError = null
 
       try {
+        const existingLine = this.cartLines.find(line => line.merchandise?.id === merchandiseId)
+
+        await this.validateVariantInventory(
+          merchandiseId,
+          safeQuantity,
+          existingLine?.quantity || 0
+        )
+
         const storedCartId = this.getStoredCartId()
 
         if (!storedCartId) {
@@ -523,13 +707,21 @@ export const useProductStore = defineStore('productStore', {
             safeQuantity
           )
         } catch (error) {
+          if (!isInvalidCartMessage(error instanceof Error ? error.message : '')) {
+            throw error
+          }
+
           console.warn(
-            'The stored cart could not be updated. Creating a new cart.',
+            'The stored cart is no longer valid. Creating a new cart.',
             error
           )
 
           this.clearStoredCart()
-          return await this.createCart(merchandiseId, safeQuantity)
+
+          return await this.createCart(
+            merchandiseId,
+            safeQuantity
+          )
         }
       } catch (error) {
         console.error('Failed to add product to Shopify cart:', error)
@@ -556,16 +748,35 @@ export const useProductStore = defineStore('productStore', {
       this.cartLoading = true
       this.cartError = null
 
+      const currentLine = this.cartLines.find(line => line.id === lineId)
+
+      if (!currentLine?.merchandise?.id) {
+        this.cartLoading = false
+        throw new Error('The cart item could not be found.')
+      }
+
+      await this.validateVariantInventory(
+        currentLine.merchandise.id,
+        safeQuantity,
+        0
+      )
+
       const mutation = `
         ${CART_FIELDS}
 
         mutation UpdateCartLines(
           $cartId: ID!
           $lines: [CartLineUpdateInput!]!
-        ) {
+          $country: CountryCode!
+        ) @inContext(country: $country) {
           cartLinesUpdate(cartId: $cartId, lines: $lines) {
             cart {
               ...CartFields
+            }
+            warnings {
+              code
+              message
+              target
             }
             userErrors {
               field
@@ -578,6 +789,7 @@ export const useProductStore = defineStore('productStore', {
       try {
         const data = await shopifyFetch(mutation, {
           cartId,
+          country: STOREFRONT_COUNTRY_CODE,
           lines: [
             {
               id: lineId,
@@ -588,9 +800,14 @@ export const useProductStore = defineStore('productStore', {
 
         const payload = data?.cartLinesUpdate
         const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+        const warningMessage = getCartWarningMessage(payload?.warnings)
 
         if (userErrorMessage) {
           throw new Error(userErrorMessage)
+        }
+
+        if (warningMessage) {
+          throw new Error(warningMessage)
         }
 
         if (!payload?.cart) {
@@ -631,10 +848,16 @@ export const useProductStore = defineStore('productStore', {
         mutation RemoveCartLines(
           $cartId: ID!
           $lineIds: [ID!]!
-        ) {
+          $country: CountryCode!
+        ) @inContext(country: $country) {
           cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
             cart {
               ...CartFields
+            }
+            warnings {
+              code
+              message
+              target
             }
             userErrors {
               field
@@ -647,14 +870,20 @@ export const useProductStore = defineStore('productStore', {
       try {
         const data = await shopifyFetch(mutation, {
           cartId,
+          country: STOREFRONT_COUNTRY_CODE,
           lineIds: [lineId]
         })
 
         const payload = data?.cartLinesRemove
         const userErrorMessage = getUserErrorMessage(payload?.userErrors)
+        const warningMessage = getCartWarningMessage(payload?.warnings)
 
         if (userErrorMessage) {
           throw new Error(userErrorMessage)
+        }
+
+        if (warningMessage) {
+          throw new Error(warningMessage)
         }
 
         if (!payload?.cart) {
@@ -684,12 +913,33 @@ export const useProductStore = defineStore('productStore', {
       }
     },
 
-    proceedToCheckout() {
-      if (!this.checkoutUrl) {
-        throw new Error('Shopify checkout URL is not available.')
-      }
+    async proceedToCheckout() {
+      this.cartLoading = true
+      this.cartError = null
+      this.inventoryError = null
 
-      window.location.href = this.checkoutUrl
+      try {
+        const cartId = this.getStoredCartId()
+
+        if (!cartId) {
+          throw new Error('Your cart is empty.')
+        }
+
+        await this.getCart(cartId)
+        await this.validateCartInventory()
+
+        if (!this.checkoutUrl) {
+          throw new Error('Shopify checkout URL is not available.')
+        }
+
+        window.location.href = this.checkoutUrl
+      } catch (error) {
+        this.inventoryError = error instanceof Error ? error.message : 'Your cart inventory could not be verified.'
+        console.error('Failed to validate cart inventory:', error)
+        throw error
+      } finally {
+        this.cartLoading = false
+      }
     },
 
     async getOrders() {

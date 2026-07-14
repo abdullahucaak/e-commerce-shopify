@@ -136,6 +136,11 @@ const updateQuantity = async () => {
     } catch (error) {
         localQuantity.value = props.cartLine.quantity
         console.error('Failed to update cart quantity:', error)
+        window.alert(
+            error instanceof Error
+                ? error.message
+                : 'The requested quantity is not available.'
+        )
     } finally {
         isUpdating.value = false
     }

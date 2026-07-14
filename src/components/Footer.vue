@@ -335,7 +335,28 @@ const subscribe = async () => {
         }
 
     }
+    @media (min-width: 341px) and (max-width: 370px) {
 
+        .footer .f-container .f-item .f-item-inner .f-content .subscription {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .footer .f-container .f-item .f-item-inner .f-content .f-input {
+            flex: 1;
+            min-width: 0;
+            width: auto;
+            margin-right: 0;
+        }
+
+        .footer .f-container .f-item .f-item-inner .f-content .subscription .f-btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+    }
     @media (max-width: 340px){
         
         .footer .f-container{

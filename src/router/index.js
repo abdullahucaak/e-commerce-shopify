@@ -3,8 +3,6 @@ import HomePage from '../views/HomePage.vue'
 import ShopPage from '../views/ShopPage.vue'
 import ProductPage from '../views/ProductPage.vue'
 import CartPage from '../views/CartPage.vue'
-import Checkouts from '../views/Checkouts.vue'
-import FinalPage from '../views/FinalPage.vue'
 import CompletedOrders from '../views/cms/CompletedOrders.vue'
 import LoginPage from '../views/cms/LoginPage.vue'
 import Dashboard from '../views/cms/Dashboard.vue'
@@ -38,16 +36,6 @@ const router = createRouter({
       path: '/about-us',
       name: 'about-us',
       component: () => import('../views/AboutUs.vue')
-    },
-    {
-      path: '/checkouts',
-      name: 'checkouts',
-      component: Checkouts
-    },
-    {
-      path: '/final-page/:id',
-      name: 'final-page',
-      component: FinalPage
     },
     {
       path: '/cms/completed-orders',
