@@ -131,7 +131,7 @@ const sortedProducts = computed(() => {
       width: 1050px;
       height: auto;
       margin: 50px auto;
-      overflow: hidden;
+      overflow: visible;
    }
    
 
@@ -174,7 +174,7 @@ const sortedProducts = computed(() => {
          width: 95%;
          height: auto;
          margin: 50px auto;
-         overflow: hidden;
+         overflow: visible;
       }
    }
    /* responsive smart phone */
@@ -188,7 +188,7 @@ const sortedProducts = computed(() => {
          width: 90%;
          height: auto;
          margin: 50px auto;
-         overflow: hidden;
+         overflow: visible;
       }
    }
    @media (max-width: 340px){

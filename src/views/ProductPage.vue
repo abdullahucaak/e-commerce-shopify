@@ -137,12 +137,35 @@
     <div class="main-inner">
       <div class="main-inner-left">
         <div>
-          <div
-            class="big-img"
-            :style="{
-              backgroundImage: `url('${activeImageUrl}')`
-            }"
-          ></div>
+          <div class="product-image-zoom-wrapper">
+            <div
+              class="big-img"
+              :style="{
+                backgroundImage: `url('${highResImageUrl}')`
+              }"
+              @mouseenter="showImageZoom"
+              @mousemove="updateImageZoom"
+              @mouseleave="hideImageZoom"
+            >
+              <div
+                v-if="isImageZoomVisible"
+                class="image-zoom-lens"
+                :style="{
+                  left: `${imageZoomX}%`,
+                  top: `${imageZoomY}%`
+                }"
+              ></div>
+            </div>
+
+            <div
+              v-if="isImageZoomVisible"
+              class="image-zoom-preview"
+              :style="{
+                backgroundImage: `url('${highResImageUrl}')`,
+                backgroundPosition: `${imageZoomX}% ${imageZoomY}%`
+              }"
+            ></div>
+          </div>
 
           <div class="other-images">
             <button
@@ -155,6 +178,7 @@
                 backgroundImage: `url('${image.url}')`
               }"
               @click="selectImage(image.url)"
+              @mouseenter="selectImage(image.url)"
             ></button>
           </div>
         </div>
@@ -249,7 +273,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import Footer from '../components/Footer.vue'
@@ -267,6 +291,16 @@ const isAddedToCart = ref(false)
 const isOpenCart = ref(false)
 const recentlyAddedVariantId = ref('')
 const recentlyAddedQuantity = ref(0)
+const isImageZoomVisible = ref(false)
+const imageZoomX = ref(50)
+const imageZoomY = ref(50)
+
+const highResImageUrl = computed(() => {
+  return activeImageUrl.value
+    ? activeImageUrl.value.replace(/([?&])width=\d+/g, '').replace(/([?&])height=\d+/g, '')
+    : ''
+})
+
 
 const currentProduct = computed(() => {
   return productStore.selectedProduct
@@ -360,8 +394,60 @@ const loadProduct = async () => {
   }
 }
 
+const getMainImageUrl = () => {
+  return (
+    currentProduct.value?.featuredImage?.url ||
+    currentProduct.value?.images?.nodes?.[0]?.url ||
+    ''
+  )
+}
+
 const selectImage = imageUrl => {
   activeImageUrl.value = imageUrl
+}
+
+const showImageZoom = event => {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    return
+  }
+
+  isImageZoomVisible.value = true
+  updateImageZoom(event)
+}
+
+const updateImageZoom = event => {
+  if (!isImageZoomVisible.value) {
+    return
+  }
+
+  const imageBounds = event.currentTarget.getBoundingClientRect()
+  const pointerX = event.clientX - imageBounds.left
+  const pointerY = event.clientY - imageBounds.top
+
+  imageZoomX.value = Math.min(
+    100,
+    Math.max(0, (pointerX / imageBounds.width) * 100)
+  )
+  imageZoomY.value = Math.min(
+    100,
+    Math.max(0, (pointerY / imageBounds.height) * 100)
+  )
+}
+
+const hideImageZoom = () => {
+  isImageZoomVisible.value = false
+}
+
+const resetToMainImage = () => {
+  activeImageUrl.value = getMainImageUrl()
+}
+
+const handleDocumentPointerDown = event => {
+  if (event.target.closest('.other-images-product')) {
+    return
+  }
+
+  resetToMainImage()
 }
 
 const handleAddToCart = async () => {
@@ -444,7 +530,14 @@ const hideCartPanel = () => {
   }, 499)
 }
 
-onMounted(loadProduct)
+onMounted(() => {
+  loadProduct()
+  document.addEventListener('pointerdown', handleDocumentPointerDown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleDocumentPointerDown)
+})
 
 watch(
   () => route.params.handle,
@@ -692,18 +785,54 @@ watch(
   gap: 10px;
 }
 
+.main .main-inner .main-inner-left .product-image-zoom-wrapper {
+  position: relative;
+}
+
 .main .main-inner .main-inner-left .big-img {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   overflow: hidden;
+  cursor: crosshair;
+}
+
+.main .main-inner .main-inner-left .image-zoom-lens {
+  position: absolute;
+  width: 38%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(27, 156, 133, 0.75);
+  background-color: rgba(27, 156, 133, 0.16);
+  box-sizing: border-box;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.main .main-inner .main-inner-left .image-zoom-preview {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 30px);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: 180%;
+  background-repeat: no-repeat;
+  background-color: white;
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 20;
+  pointer-events: none;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .main .main-inner .main-inner-left .other-images {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
 }
@@ -714,9 +843,17 @@ watch(
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  border: 1px solid #ddd;
   box-sizing: border-box;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.main .main-inner .main-inner-left .other-images .other-images-product:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
+    z-index: 2;
 }
 
 .main .main-inner .main-inner-right {
@@ -920,6 +1057,11 @@ watch(
     grid-template-rows: auto auto;
   }
 
+  .main .main-inner .main-inner-left .image-zoom-lens,
+  .main .main-inner .main-inner-left .image-zoom-preview {
+    display: none;
+  }
+
   .main .main-inner .main-inner-left .big-img {
     aspect-ratio: 1 / 1;
     background-size: contain;
@@ -930,7 +1072,6 @@ watch(
     aspect-ratio: 1 / 1;
     background-size: contain;
     background-repeat: no-repeat;
-    border: solid #1b9c85 0.5px;
     margin: 0;
   }
 

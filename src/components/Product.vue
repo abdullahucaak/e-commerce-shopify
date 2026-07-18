@@ -75,6 +75,16 @@ const formattedPrice = computed(() => {
     background-size: contain;
     background-repeat: no-repeat;
     margin-bottom: 3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.product-img:hover, .product-img-2:hover{
+    transform: scale(1.01);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    border-radius: 5px;
 }
 .product-img-2{
     display: none;

@@ -118,7 +118,7 @@ body{
     grid-gap: 10px;
     width: 1197px;
     margin: 0 auto;
-    overflow: hidden;
+    overflow: visible;
 } 
 .home-container .c-best-selling .bs-item-container .bs-item{
     width: 100%;
@@ -177,7 +177,7 @@ body{
         grid-gap: 10px;
         width: 95%;
         margin: 0 auto;
-        overflow: hidden;
+        overflow: visible;
     } 
 }
 /* smart phone responsive */
@@ -236,7 +236,7 @@ body{
         grid-gap: 10px;
         width: 90%;
         margin: 0 auto;
-        overflow: hidden;
+        overflow: visible;
     } 
 }
 @media (max-width: 340px){
