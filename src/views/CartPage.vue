@@ -162,6 +162,10 @@ import { useProductStore } from '../stores/productStore'
 
 const productStore = useProductStore()
 
+// Product-page add-to-cart warnings must not remain visible on the cart page.
+productStore.cartError = null
+productStore.inventoryError = null
+
 const userNote = ref('')
 const howDidYouHear = ref('Please Make a Selection')
 
@@ -196,6 +200,9 @@ const goToCheckout = async () => {
 }
 
 onMounted(async () => {
+    productStore.cartError = null
+    productStore.inventoryError = null
+
     try {
         await productStore.initializeCart()
     } catch (error) {

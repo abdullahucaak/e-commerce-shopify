@@ -112,6 +112,7 @@ export const useProductStore = defineStore('productStore', {
     cart: null,
     cartLoading: false,
     cartError: null,
+    cartWarning: null,
     inventoryError: null,
     isAddingToCart: false,
 
@@ -606,15 +607,12 @@ export const useProductStore = defineStore('productStore', {
         throw new Error(userErrorMessage)
       }
 
-      if (warningMessage) {
-        throw new Error(warningMessage)
-      }
-
       if (!payload?.cart) {
         throw new Error('Shopify did not return a cart.')
       }
 
       this.cart = payload.cart
+      this.cartWarning = warningMessage
       this.storeCartId(payload.cart.id)
 
       return this.cart
@@ -665,15 +663,12 @@ export const useProductStore = defineStore('productStore', {
         throw new Error(userErrorMessage)
       }
 
-      if (warningMessage) {
-        throw new Error(warningMessage)
-      }
-
       if (!payload?.cart) {
         throw new Error('Shopify did not return the updated cart.')
       }
 
       this.cart = payload.cart
+      this.cartWarning = warningMessage
       this.storeCartId(payload.cart.id)
 
       return this.cart
@@ -684,6 +679,7 @@ export const useProductStore = defineStore('productStore', {
 
       this.isAddingToCart = true
       this.cartError = null
+      this.cartWarning = null
 
       try {
         const existingLine = this.cartLines.find(line => line.merchandise?.id === merchandiseId)
