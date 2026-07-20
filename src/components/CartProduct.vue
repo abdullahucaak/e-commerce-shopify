@@ -133,14 +133,24 @@ const updateQuantity = async () => {
             props.cartLine.id,
             safeQuantity
         )
+
+        const updatedLine = productStore.cartLines.find(
+            line => line.id === props.cartLine.id
+        )
+
+        // Shopify/store limits quantities above 50 to 50. Update the local
+        // input immediately from the returned cart so it never falls back to 1.
+        localQuantity.value = updatedLine?.quantity ?? Math.min(safeQuantity, 50)
     } catch (error) {
         localQuantity.value = props.cartLine.quantity
         console.error('Failed to update cart quantity:', error)
-        window.alert(
+
+        // Show cart quantity/inventory errors with the shared cart popup.
+        productStore.cartError = null
+        productStore.cartWarning =
             error instanceof Error
                 ? error.message
                 : 'The requested quantity is not available.'
-        )
     } finally {
         isUpdating.value = false
     }

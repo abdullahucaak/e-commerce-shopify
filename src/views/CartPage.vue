@@ -1,4 +1,44 @@
 <template>
+    <!-- Cart quantity / inventory warning pop-up -->
+    <div
+        v-if="productStore.cartWarning"
+        class="cart-popup-overlay"
+        role="presentation"
+        @click.self="hideCartPopup"
+    >
+        <div
+            class="cart-popup"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="cart-popup-title"
+        >
+            <button
+                type="button"
+                class="cart-popup-close"
+                aria-label="Close"
+                @click="hideCartPopup"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="cart-popup-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <h2 id="cart-popup-title">Dear Friend</h2>
+
+            <p>{{ productStore.cartWarning }}</p>
+
+            <button
+                type="button"
+                class="cart-popup-button"
+                @click="hideCartPopup"
+            >
+                OK
+            </button>
+        </div>
+    </div>
+
     <Navigation/>
     <div class="main">
         <div
@@ -166,6 +206,10 @@ const productStore = useProductStore()
 productStore.cartError = null
 productStore.inventoryError = null
 
+const hideCartPopup = () => {
+    productStore.cartWarning = null
+}
+
 const userNote = ref('')
 const howDidYouHear = ref('Please Make a Selection')
 
@@ -212,6 +256,99 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+
+.cart-popup-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.45);
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+.cart-popup {
+    position: relative;
+    width: min(100%, 430px);
+    padding: 34px 30px 28px;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.22);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.cart-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    padding: 5px;
+    border: 0;
+    background: transparent;
+    color: #535e6f;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.cart-popup-icon {
+    margin-bottom: 14px;
+    color: rgb(71, 71, 71);
+    font-size: 2.2rem;
+}
+
+.cart-popup h2 {
+    margin: 0 0 12px;
+    color: #1b2430;
+    font-size: 1.35rem;
+    font-weight: 500;
+}
+
+.cart-popup p {
+    margin: 0;
+    color: #535e6f;
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.cart-popup-button {
+    width: 75%;
+    margin-top: 24px;
+    padding: 12px 18px;
+    border: 1px solid #1b9c85;
+    border-radius: 4px;
+    background-color: white;
+    color: #1b9c85;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.cart-popup-button:hover {
+    width: 80%;
+    background-color: white;
+    color: #1b9c85;
+}
+
+@media (max-width: 480px) {
+    .cart-popup-overlay {
+        padding: 14px;
+    }
+
+    .cart-popup {
+        padding: 32px 20px 22px;
+    }
+
+    .cart-popup h2 {
+        font-size: 1.2rem;
+    }
+
+    .cart-popup p {
+        font-size: 0.92rem;
+    }
+}
+
 .main{
     display: grid;
 }

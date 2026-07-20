@@ -24,22 +24,44 @@
                         STAY IN TOUCH: JOIN OUR NEWSLETTER
                     </div>
                     <div class="f-content">
-                        <div class="subscription">
-                            <input 
-                                v-model="email" 
-                                class="f-input" 
-                                type="email" 
-                                placeholder="Email Adress"
-                                @keyup.enter="subscribe"
+                        <form
+                            ref="subscriptionForm"
+                            class="subscription"
+                            :action="shopifyNewsletterUrl"
+                            method="post"
+                            target="shopify-newsletter-frame"
+                            accept-charset="UTF-8"
+                            @submit.prevent="subscribe"
+                        >
+                            <input type="hidden" name="form_type" value="customer">
+                            <input type="hidden" name="utf8" value="✓">
+                            <input type="hidden" name="contact[tags]" value="newsletter">
+
+                            <input
+                                v-model.trim="email"
+                                class="f-input"
+                                type="email"
+                                name="contact[email]"
+                                placeholder="Email Address"
+                                autocomplete="email"
+                                required
                             >
-                            <button 
+
+                            <button
                                 class="btn f-btn"
-                                @click="subscribe"
-                                :disabled="!isValidEmail"
+                                type="submit"
+                                :disabled="!isValidEmail || isSubmitting"
                             >
-                                SUBSCRIBE
+                                {{ isSubmitting ? 'SUBSCRIBING...' : 'SUBSCRIBE' }}
                             </button>
-                        </div>
+                        </form>
+
+                        <iframe
+                            name="shopify-newsletter-frame"
+                            class="newsletter-frame"
+                            title="Newsletter subscription response"
+                        ></iframe>
+
                         <div v-if="subscriptionMessage" :class="['subscription-message', subscriptionStatus]">
                             {{ subscriptionMessage }}
                         </div>
@@ -107,12 +129,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import axios from 'axios'
+import { computed, nextTick, ref } from 'vue'
 
 const email = ref('')
+const subscriptionForm = ref(null)
 const subscriptionMessage = ref('')
 const subscriptionStatus = ref('')
+const isSubmitting = ref(false)
+
+const shopifyDomain = (import.meta.env.VITE_SHOPIFY_DOMAIN || '')
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '')
+
+const shopifyNewsletterUrl = computed(() => {
+    return shopifyDomain ? `https://${shopifyDomain}/contact#contact_form` : ''
+})
 
 const isValidEmail = computed(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -120,38 +151,42 @@ const isValidEmail = computed(() => {
 })
 
 const subscribe = async () => {
-    if (!isValidEmail.value) {
-        subscriptionMessage.value = 'Lütfen geçerli bir e-posta adresi girin.'
+    subscriptionMessage.value = ''
+    subscriptionStatus.value = ''
+
+    if (!shopifyNewsletterUrl.value) {
+        subscriptionMessage.value = 'Shopify store connection is missing.'
         subscriptionStatus.value = 'error'
         return
     }
 
+    if (!isValidEmail.value) {
+        subscriptionMessage.value = 'Please enter a valid email address.'
+        subscriptionStatus.value = 'error'
+        return
+    }
+
+    if (isSubmitting.value) return
+
+    isSubmitting.value = true
+
     try {
-        // Önce mevcut aboneleri kontrol et
-        const subscribers = await axios.get('http://localhost:3000/subscribers')
-        const isEmailExists = subscribers.data.some(subscriber => subscriber.email === email.value)
+        await nextTick()
+        subscriptionForm.value?.submit()
 
-        if (isEmailExists) {
-            subscriptionMessage.value = 'Bu e-posta adresi zaten kayıtlı.'
-            subscriptionStatus.value = 'error'
-            return
-        }
-
-        // E-posta adresi kayıtlı değilse yeni kayıt oluştur
-        const response = await axios.post('http://localhost:3000/subscribers', {
-            email: email.value,
-            date: new Date().toISOString()
-        })
-
-        if (response.status === 201) {
-            subscriptionMessage.value = 'Markamıza başarıyla abone oldunuz!'
+        // Shopify's native customer form is submitted into the hidden iframe.
+        // The response is cross-origin, so the browser does not allow us to read it.
+        window.setTimeout(() => {
+            subscriptionMessage.value = 'You have successfully subscribed to our newsletter!'
             subscriptionStatus.value = 'success'
             email.value = ''
-        }
+            isSubmitting.value = false
+        }, 1000)
     } catch (error) {
-        subscriptionMessage.value = 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+        subscriptionMessage.value = 'Something went wrong. Please try again later.'
         subscriptionStatus.value = 'error'
-        console.error('Abonelik hatası:', error)
+        isSubmitting.value = false
+        console.error('Newsletter subscription error:', error)
     }
 }
 </script>
@@ -229,6 +264,13 @@ const subscribe = async () => {
         margin-top: 10px;
         font-size: 0.8rem;
         text-align: left;
+    }
+
+    .newsletter-frame {
+        display: none;
+        width: 0;
+        height: 0;
+        border: 0;
     }
 
     .subscription-message.success {

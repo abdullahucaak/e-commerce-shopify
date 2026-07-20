@@ -5,6 +5,7 @@ import { shopifyFetch } from '../services/shopify'
 const CART_ID_STORAGE_KEY = 'shopifyCartId'
 const STOREFRONT_COUNTRY_CODE = import.meta.env.VITE_SHOPIFY_COUNTRY_CODE || 'US'
 const LEGACY_STORAGE_KEYS = ['cartProducts', 'order']
+const MAX_QUANTITY_PER_CART_LINE = 50
 
 const CART_FIELDS = `
   fragment CartFields on Cart {
@@ -735,7 +736,12 @@ export const useProductStore = defineStore('productStore', {
 
     async updateCartLine(lineId, quantity) {
       const cartId = this.getStoredCartId()
-      const safeQuantity = Math.max(1, Number(quantity) || 1)
+      const requestedQuantity = Math.max(1, Number(quantity) || 1)
+      const safeQuantity = Math.min(
+        requestedQuantity,
+        MAX_QUANTITY_PER_CART_LINE
+      )
+      const quantityWasLimited = requestedQuantity > MAX_QUANTITY_PER_CART_LINE
 
       if (!cartId || !lineId) {
         throw new Error('Cart and line identifiers are required.')
@@ -743,6 +749,7 @@ export const useProductStore = defineStore('productStore', {
 
       this.cartLoading = true
       this.cartError = null
+      this.cartWarning = null
 
       const currentLine = this.cartLines.find(line => line.id === lineId)
 
@@ -751,11 +758,10 @@ export const useProductStore = defineStore('productStore', {
         throw new Error('The cart item could not be found.')
       }
 
-      await this.validateVariantInventory(
-        currentLine.merchandise.id,
-        safeQuantity,
-        0
-      )
+      // Do not pre-reject the requested cart quantity here.
+      // Shopify may accept the mutation and return a corrected quantity
+      // together with a warning. Keeping that returned cart prevents the
+      // quantity input from jumping back to its previous value.
 
       const mutation = `
         ${CART_FIELDS}
@@ -802,15 +808,16 @@ export const useProductStore = defineStore('productStore', {
           throw new Error(userErrorMessage)
         }
 
-        if (warningMessage) {
-          throw new Error(warningMessage)
-        }
-
         if (!payload?.cart) {
           throw new Error('Shopify did not return the updated cart.')
         }
 
+        // Shopify can return a valid, corrected cart together with a warning.
+        // Keep that corrected cart instead of treating the warning as a fatal error.
         this.cart = payload.cart
+        this.cartWarning = quantityWasLimited
+          ? `Only ${MAX_QUANTITY_PER_CART_LINE} items were added to your cart due to availability.`
+          : warningMessage
         this.storeCartId(payload.cart.id)
 
         return this.cart

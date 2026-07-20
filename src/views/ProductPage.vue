@@ -505,6 +505,10 @@ const handleAddToCart = async () => {
     if (productStore.cartWarning) {
       cartMessageType.value = 'warning'
       cartMessage.value = productStore.cartWarning
+
+      // This warning has already been shown on ProductPage. Consume it here
+      // so opening CartPage does not display the same warning a second time.
+      productStore.cartWarning = null
     } else {
       cartMessageType.value = 'success'
       cartMessage.value = 'Product added to cart.'
