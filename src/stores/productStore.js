@@ -327,6 +327,24 @@ export const useProductStore = defineStore('productStore', {
                 image {
                   url
                   altText
+                  width
+                  height
+                }
+
+                variantImages: metafield(namespace: "custom", key: "variant_images") {
+                  type
+                  references(first: 50) {
+                    nodes {
+                      ... on MediaImage {
+                        image {
+                          url
+                          altText
+                          width
+                          height
+                        }
+                      }
+                    }
+                  }
                 }
 
                 selectedOptions {

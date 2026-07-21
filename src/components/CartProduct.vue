@@ -15,7 +15,7 @@
                     }"
                 >
                     <div class="cart-product-name">
-                        {{ cartLine.merchandise.product.title }}
+                        {{ cartProductTitle }}
                     </div>
                 </RouterLink>
 
@@ -94,6 +94,17 @@ watch(
         localQuantity.value = newQuantity
     }
 )
+
+const cartProductTitle = computed(() => {
+    const baseTitle = props.cartLine.merchandise?.product?.title || ''
+    const variantTitle = props.cartLine.merchandise?.title || ''
+
+    if (!variantTitle || variantTitle === 'Default Title') {
+        return baseTitle
+    }
+
+    return `${baseTitle} (${variantTitle})`
+})
 
 const productImageUrl = computed(() => {
     return (
@@ -241,6 +252,7 @@ const removeProduct = async () => {
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name{
     user-select: none;
     cursor: pointer;
+    text-transform: uppercase;
 }
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name:hover{
         text-decoration: underline;

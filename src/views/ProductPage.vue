@@ -34,7 +34,7 @@
         ></div>
 
         <div class="product-name">
-          {{ recentlyAddedLine.merchandise.product.title }}
+          {{ recentlyAddedProductTitle }}
         </div>
 
         <div class="quantity">
@@ -173,7 +173,9 @@
               :key="image.url"
               type="button"
               class="other-images-product"
+              :class="{ active: image.url === activeImageUrl }"
               :aria-label="image.altText || currentProduct.title"
+              :aria-pressed="image.url === activeImageUrl"
               :style="{
                 backgroundImage: `url('${image.url}')`
               }"
@@ -181,15 +183,63 @@
               @mouseenter="selectImage(image.url)"
             ></button>
           </div>
+
+          <div
+            v-if="colorOption"
+            class="variant-color-picker"
+          >
+            <div class="variant-color-header">
+              <span class="variant-color-label">Color</span>
+              <span class="variant-color-value">{{ selectedColorValue }}</span>
+            </div>
+
+            <div
+              class="variant-color-options"
+              role="radiogroup"
+              aria-label="Color"
+            >
+              <button
+                v-for="colorValue in colorValues"
+                :key="colorValue"
+                type="button"
+                class="variant-color-button"
+                :class="{
+                  active: selectedColorValue === colorValue,
+                  unavailable: !isColorAvailable(colorValue)
+                }"
+                role="radio"
+                :aria-checked="selectedColorValue === colorValue"
+                :aria-label="`${colorValue}${isColorAvailable(colorValue) ? '' : ' - Sold out'}`"
+                @click="selectColor(colorValue)"
+              >
+                <span
+                  class="variant-color-swatch"
+                  :style="{ backgroundColor: getColorSwatch(colorValue) }"
+                  aria-hidden="true"
+                ></span>
+                <span class="variant-color-name">{{ colorValue }}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="main-inner-right">
         <div>
           <div class="payout">
+<!--             <h1>
+              {{ productTitleWithVariant }}
+            </h1> -->
             <h1>
               {{ currentProduct.title }}
             </h1>
+
+            <div
+              v-if="selectedVariant && selectedVariant.title !== 'Default Title'"
+              class="product-variant-title"
+            >
+              {{ selectedVariant.title }}
+            </div>
 
             <div class="product-stars">
               <i class="fa fa-light fa-star"></i>
@@ -284,6 +334,7 @@ const route = useRoute()
 const productStore = useProductStore()
 
 const activeImageUrl = ref('')
+const selectedOptions = ref({})
 const quantity = ref(1)
 const cartMessage = ref('')
 const cartMessageType = ref('success')
@@ -307,7 +358,9 @@ const currentProduct = computed(() => {
 })
 
 const formattedPrice = computed(() => {
-  const money = currentProduct.value?.priceRange?.minVariantPrice
+  const money =
+    selectedVariant.value?.price ||
+    currentProduct.value?.priceRange?.minVariantPrice
 
   if (!money) {
     return ''
@@ -319,21 +372,93 @@ const formattedPrice = computed(() => {
   }).format(Number(money.amount))
 })
 
-const productImages = computed(() => {
-  return currentProduct.value?.images?.nodes || []
+const normalizeOptionValue = optionValue => {
+  if (typeof optionValue === 'string') {
+    return optionValue
+  }
+
+  return optionValue?.name || optionValue?.value || ''
+}
+
+const colorOption = computed(() => {
+  return (
+    currentProduct.value?.options?.find(option => (
+      String(option.name).toLowerCase() === 'color'
+    )) || null
+  )
 })
+
+const colorValues = computed(() => {
+  return (colorOption.value?.values || [])
+    .map(normalizeOptionValue)
+    .filter(Boolean)
+})
+
+const selectedColorValue = computed(() => {
+  if (!colorOption.value) {
+    return ''
+  }
+
+  return selectedOptions.value[colorOption.value.name] || ''
+})
+
+const variantMatchesSelections = (variant, selections) => {
+  const variantOptions = variant?.selectedOptions || []
+
+  return Object.entries(selections).every(([name, value]) => (
+    variantOptions.some(option => (
+      option.name === name && option.value === value
+    ))
+  ))
+}
 
 const selectedVariant = computed(() => {
   const variants = currentProduct.value?.variants?.nodes || []
+  const chosenVariant = variants.find(variant => (
+    variantMatchesSelections(variant, selectedOptions.value)
+  ))
 
-  return (
-    variants.find(variant => (
-      variant.availableForSale &&
-      variant.quantityAvailable !== 0
-    )) ||
-    variants[0] ||
-    null
-  )
+  return chosenVariant || variants[0] || null
+})
+
+
+/* const productTitleWithVariant = computed(() => {
+  const baseTitle = currentProduct.value?.title || ''
+  const variant = selectedVariant.value
+  if (!variant) return baseTitle
+
+  const variantName = variant.title && variant.title !== 'Default Title'
+    ? variant.title
+    : (variant.selectedOptions || []).map(o => o.value).filter(v => v && v !== 'Default Title').join(' / ')
+
+  return variantName ? `${baseTitle} (${variantName})` : baseTitle
+}) */
+
+const variantMetafieldImages = computed(() => {
+  const references = selectedVariant.value?.variantImages?.references?.nodes || []
+
+  return references
+    .map(reference => reference?.image || null)
+    .filter(image => image?.url)
+})
+
+const productImages = computed(() => {
+  const metafieldImages = variantMetafieldImages.value
+
+  if (metafieldImages.length) {
+    return metafieldImages
+  }
+
+  const variantImage = selectedVariant.value?.image
+
+  // A product-level gallery can contain images belonging to every color.
+  // When a Color option exists but the metafield has not been filled yet,
+  // show only the selected variant's own image to avoid mixing colors.
+  if (colorOption.value) {
+    return variantImage?.url ? [variantImage] : []
+  }
+
+  return currentProduct.value?.images?.nodes || []
 })
 
 const recentlyAddedLine = computed(() => {
@@ -342,6 +467,18 @@ const recentlyAddedLine = computed(() => {
       return line.merchandise?.id === recentlyAddedVariantId.value
     }) || null
   )
+})
+
+const recentlyAddedProductTitle = computed(() => {
+  const line = recentlyAddedLine.value
+  const baseTitle = line?.merchandise?.product?.title || ''
+  const variantTitle = line?.merchandise?.title || ''
+
+  if (!variantTitle || variantTitle === 'Default Title') {
+    return baseTitle
+  }
+
+  return `${baseTitle} (${variantTitle})`
 })
 
 const recentlyAddedImageUrl = computed(() => {
@@ -378,16 +515,32 @@ const addToCartButtonText = computed(() => {
   return 'ADD TO CART'
 })
 
+const initializeSelectedOptions = product => {
+  const variants = product?.variants?.nodes || []
+  const initialVariant = (
+    variants.find(variant => (
+      variant.availableForSale && variant.quantityAvailable !== 0
+    )) ||
+    variants[0] ||
+    null
+  )
+
+  selectedOptions.value = Object.fromEntries(
+    (initialVariant?.selectedOptions || []).map(option => [
+      option.name,
+      option.value
+    ])
+  )
+}
+
 const loadProduct = async () => {
   const handle = route.params.handle
 
   try {
     const product = await productStore.getProductByHandle(handle)
+    initializeSelectedOptions(product)
 
-    activeImageUrl.value =
-      product?.featuredImage?.url ||
-      product?.images?.nodes?.[0]?.url ||
-      ''
+    activeImageUrl.value = ''
   } catch (error) {
     console.error('Failed to load product page:', error)
     activeImageUrl.value = ''
@@ -396,10 +549,72 @@ const loadProduct = async () => {
 
 const getMainImageUrl = () => {
   return (
+    productImages.value[0]?.url ||
+    selectedVariant.value?.image?.url ||
     currentProduct.value?.featuredImage?.url ||
-    currentProduct.value?.images?.nodes?.[0]?.url ||
     ''
   )
+}
+
+const selectColor = colorValue => {
+  if (!colorOption.value) {
+    return
+  }
+
+  selectedOptions.value = {
+    ...selectedOptions.value,
+    [colorOption.value.name]: colorValue
+  }
+  quantity.value = 1
+  hideImageZoom()
+}
+
+const isColorAvailable = colorValue => {
+  if (!colorOption.value) {
+    return false
+  }
+
+  const selections = {
+    ...selectedOptions.value,
+    [colorOption.value.name]: colorValue
+  }
+  const variants = currentProduct.value?.variants?.nodes || []
+
+  return variants.some(variant => (
+    variantMatchesSelections(variant, selections) &&
+    variant.availableForSale &&
+    variant.quantityAvailable !== 0
+  ))
+}
+
+const getColorSwatch = colorValue => {
+  const normalizedColor = String(colorValue)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+
+  const colorMap = {
+    'dark blue': '#2f5f86',
+    'light blue': '#9bd4eb',
+    blue: '#4f86b5',
+    navy: '#233a5e',
+    'light gray': '#c9c9c9',
+    'light grey': '#c9c9c9',
+    gray: '#8e8e8e',
+    grey: '#8e8e8e',
+    black: '#1f1f1f',
+    white: '#ffffff',
+    red: '#c84b4b',
+    green: '#56835f',
+    beige: '#d8c6a5',
+    brown: '#7d5a45',
+    pink: '#e3a8b7',
+    purple: '#795c9b',
+    yellow: '#e6c64f',
+    orange: '#d98542'
+  }
+
+  return colorMap[normalizedColor] || '#dedede'
 }
 
 const selectImage = imageUrl => {
@@ -443,7 +658,7 @@ const resetToMainImage = () => {
 }
 
 const handleDocumentPointerDown = event => {
-  if (event.target.closest('.other-images-product')) {
+  if (event.target.closest('.other-images-product, .variant-color-picker')) {
     return
   }
 
@@ -544,6 +759,14 @@ onBeforeUnmount(() => {
 })
 
 watch(
+  () => [selectedVariant.value?.id, productImages.value[0]?.url],
+  () => {
+    activeImageUrl.value = getMainImageUrl()
+  },
+  { immediate: true }
+)
+
+watch(
   () => route.params.handle,
   async (newHandle, oldHandle) => {
     if (newHandle !== oldHandle) {
@@ -628,6 +851,15 @@ watch(
   width: 80%;
   background-color: white;
   color: #1b9c85;
+}
+.product-variant-title {
+  margin-top: -10px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgb(110, 110, 110);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 @media (max-width: 480px) {
@@ -860,6 +1092,92 @@ watch(
     z-index: 2;
 }
 
+.main .main-inner .main-inner-left .other-images .other-images-product.active {
+  outline: 2px solid #1b9c85;
+  outline-offset: 2px;
+}
+
+.variant-color-picker {
+  width: 100%;
+  margin-top: 16px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(65, 61, 61, 0.18);
+  box-sizing: border-box;
+}
+
+.variant-color-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.variant-color-label {
+  color: rgb(65, 61, 61);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.variant-color-value {
+  color: rgba(65, 61, 61, 0.75);
+  font-size: 0.95rem;
+}
+
+.variant-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.variant-color-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  min-width: 125px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(65, 61, 61, 0.28);
+  border-radius: 4px;
+  background-color: #fff;
+  color: rgb(65, 61, 61);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  text-transform: capitalize;
+}
+
+.variant-color-button:hover {
+  border-color: #1b9c85;
+  transform: translateY(-1px);
+}
+
+.variant-color-button.active {
+  border-color: #1b9c85;
+  box-shadow: 0 0 0 1px #1b9c85;
+}
+
+.variant-color-button.unavailable:not(.active) {
+  opacity: 0.55;
+}
+
+.variant-color-swatch {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.variant-color-name {
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
 .main .main-inner .main-inner-right {
   min-width: 0;
 }
@@ -867,6 +1185,7 @@ watch(
 .main .main-inner .main-inner-right .payout h1 {
   font-weight: 400;
   margin-bottom: 20px;
+  text-transform: uppercase;
 }
 
 .main .main-inner .main-inner-right .payout .product-stars {
@@ -1079,6 +1398,22 @@ watch(
     margin: 0;
   }
 
+  .variant-color-picker {
+    margin-top: 12px;
+    padding-top: 15px;
+  }
+
+  .variant-color-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .variant-color-button {
+    width: 100%;
+    min-width: 0;
+  }
+
   .main .main-inner .main-inner-right {
     display: grid;
     grid-template-rows: 2.5fr;
@@ -1107,6 +1442,10 @@ watch(
 }
 
 @media (max-width: 340px) {
+  .variant-color-options {
+    grid-template-columns: 1fr;
+  }
+
   .main .main-inner .main-inner-right .payout h1 {
     font-size: 1.5rem;
     font-weight: 400;
