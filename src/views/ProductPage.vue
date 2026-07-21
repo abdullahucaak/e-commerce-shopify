@@ -34,7 +34,16 @@
         ></div>
 
         <div class="product-name">
-          {{ recentlyAddedProductTitle }}
+          <div class="product-name-title">
+            {{ recentlyAddedProductTitle }}
+          </div>
+
+          <div
+            v-if="recentlyAddedVariantTitle"
+            class="product-variant-name"
+          >
+            {{ recentlyAddedVariantTitle }}
+          </div>
         </div>
 
         <div class="quantity">
@@ -475,7 +484,11 @@ const recentlyAddedLine = computed(() => {
 
 const recentlyAddedProductTitle = computed(() => {
   const line = recentlyAddedLine.value
-  const baseTitle = line?.merchandise?.product?.title || ''
+  return line?.merchandise?.product?.title || ''
+})
+
+const recentlyAddedVariantTitle = computed(() => {
+  const line = recentlyAddedLine.value
   const variantTitle = line?.merchandise?.title || ''
 
   if (
@@ -483,10 +496,10 @@ const recentlyAddedProductTitle = computed(() => {
     !variantTitle ||
     variantTitle === 'Default Title'
   ) {
-    return baseTitle
+    return ''
   }
 
-  return `${baseTitle} (${variantTitle})`
+  return variantTitle
 })
 
 const recentlyAddedImageUrl = computed(() => {
@@ -939,6 +952,16 @@ watch(
   letter-spacing: 1px;
   font-weight: 500;
   text-transform: capitalize;
+}
+.view-cart .middle .product-name-title{
+  text-transform: capitalize;
+}
+
+.view-cart .middle .product-variant-name {
+  margin-top: 4px;
+  color: rgba(27, 36, 48, 0.58);
+  font-size: 0.86em;
+  line-height: 1.3;
 }
 
 .view-cart .middle .quantity {
@@ -1450,6 +1473,74 @@ watch(
   }
 }
 
+@media (max-width: 367px) {
+  .view-cart {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .view-cart-inner {
+    padding: 0 12px;
+  }
+
+  .view-cart .title {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 15px 0 9px;
+    font-size: 0.75rem;
+  }
+
+  .view-cart .title .title-inner,
+  .view-cart .title .cross {
+    grid-column: auto;
+  }
+
+  .view-cart .middle {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+    padding: 14px 0;
+  }
+
+  .view-cart .middle .little-img,
+  .view-cart .middle .product-name {
+    grid-column: auto;
+  }
+
+  .view-cart .middle .little-img {
+    width: 64px;
+  }
+
+  .view-cart .middle .product-name {
+    min-width: 0;
+    padding-left: 0;
+    font-size: clamp(0.72rem, 3.6vw, 0.82rem);
+    line-height: 1.25;
+    letter-spacing: 0.4px;
+    overflow-wrap: anywhere;
+  }
+
+  .view-cart .middle .quantity {
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  .view-cart .view-cart-button .cart-button {
+    min-width: 0;
+    padding: 10px 8px;
+    font-size: clamp(0.78rem, 4vw, 0.9rem);
+  }
+
+  .view-cart .view-cart-button .cart-button:hover {
+    padding: 9.5px 8px;
+  }
+
+  .view-cart .continue-shopping {
+    padding: 16px 8px;
+    font-size: 0.82rem;
+  }
+}
+
 @media (max-width: 340px) {
   .variant-color-options {
     grid-template-columns: 1fr;
@@ -1489,26 +1580,6 @@ watch(
     border: solid rgb(188, 188, 188, 0.6) 1px;
   }
 
-  .view-cart {
-    background-color: white;
-    border: 1px solid #ebebeb;
-    width: 96%;
-    position: fixed;
-    right: 0;
-    box-shadow: 1px 1px 10px 2px rgba(0, 0, 0, 0.1);
-    z-index: 5;
-  }
-
-  .view-cart .view-cart-button .cart-button {
-    width: 100%;
-    background-color: white;
-    line-height: 1.4;
-    border: solid #1b9c85 0.5px;
-    border-radius: 2px;
-    font-size: 0.9rem;
-    color: #1b9c85;
-    padding: 12px 0;
-  }
 }
 
 .loading,

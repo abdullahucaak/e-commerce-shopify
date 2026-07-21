@@ -15,7 +15,14 @@
                     }"
                 >
                     <div class="cart-product-name">
-                        {{ cartProductTitle }}
+                        {{ productTitle }}
+                    </div>
+
+                    <div
+                        v-if="displayedVariantTitle"
+                        class="cart-product-variant-title"
+                    >
+                        {{ displayedVariantTitle }}
                     </div>
                 </RouterLink>
 
@@ -95,8 +102,11 @@ watch(
     }
 )
 
-const cartProductTitle = computed(() => {
-    const baseTitle = props.cartLine.merchandise?.product?.title || ''
+const productTitle = computed(() => {
+    return props.cartLine.merchandise?.product?.title || ''
+})
+
+const displayedVariantTitle = computed(() => {
     const variantTitle = props.cartLine.merchandise?.title || ''
     const productId = props.cartLine.merchandise?.product?.id
     const loadedProduct = productStore.products.find(product => product.id === productId)
@@ -108,10 +118,10 @@ const cartProductTitle = computed(() => {
     const hasSingleVariant = variantCount === 1
 
     if (hasSingleVariant || !variantTitle || variantTitle === 'Default Title') {
-        return baseTitle
+        return ''
     }
 
-    return `${baseTitle} (${variantTitle})`
+    return variantTitle
 })
 
 const productImageUrl = computed(() => {
@@ -264,6 +274,13 @@ const removeProduct = async () => {
 }
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name:hover{
         text-decoration: underline;
+}
+.main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-variant-title{
+    margin-top: 4px;
+    color: rgba(27, 36, 48, 0.58);
+    font-size: 0.86em;
+    line-height: 1.3;
+    text-transform: uppercase;
 }
 .main .main-inner form .cart-table tbody tr .cart-quantity .cart-quantity-input{
     width: 100px;
