@@ -98,8 +98,16 @@ watch(
 const cartProductTitle = computed(() => {
     const baseTitle = props.cartLine.merchandise?.product?.title || ''
     const variantTitle = props.cartLine.merchandise?.title || ''
+    const productId = props.cartLine.merchandise?.product?.id
+    const loadedProduct = productStore.products.find(product => product.id === productId)
+    const variantNodes = (
+        props.cartLine.merchandise?.product?.variants?.nodes ||
+        loadedProduct?.variants?.nodes
+    )
+    const variantCount = variantNodes?.length
+    const hasSingleVariant = variantCount === 1
 
-    if (!variantTitle || variantTitle === 'Default Title') {
+    if (hasSingleVariant || !variantTitle || variantTitle === 'Default Title') {
         return baseTitle
     }
 

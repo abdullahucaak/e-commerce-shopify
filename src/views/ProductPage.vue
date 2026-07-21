@@ -185,7 +185,7 @@
           </div>
 
           <div
-            v-if="colorOption"
+            v-if="colorOption && hasMultipleVariants"
             class="variant-color-picker"
           >
             <div class="variant-color-header">
@@ -235,7 +235,7 @@
             </h1>
 
             <div
-              v-if="selectedVariant && selectedVariant.title !== 'Default Title'"
+              v-if="hasMultipleVariants && selectedVariant && selectedVariant.title !== 'Default Title'"
               class="product-variant-title"
             >
               {{ selectedVariant.title }}
@@ -388,6 +388,10 @@ const colorOption = computed(() => {
   )
 })
 
+const hasMultipleVariants = computed(() => {
+  return (currentProduct.value?.variants?.nodes?.length || 0) > 1
+})
+
 const colorValues = computed(() => {
   return (colorOption.value?.values || [])
     .map(normalizeOptionValue)
@@ -452,9 +456,9 @@ const productImages = computed(() => {
   const variantImage = selectedVariant.value?.image
 
   // A product-level gallery can contain images belonging to every color.
-  // When a Color option exists but the metafield has not been filled yet,
-  // show only the selected variant's own image to avoid mixing colors.
-  if (colorOption.value) {
+  // Only restrict it to the selected variant when the product actually has
+  // multiple variants. Single-variant products should keep their full gallery.
+  if (colorOption.value && hasMultipleVariants.value) {
     return variantImage?.url ? [variantImage] : []
   }
 
@@ -474,7 +478,11 @@ const recentlyAddedProductTitle = computed(() => {
   const baseTitle = line?.merchandise?.product?.title || ''
   const variantTitle = line?.merchandise?.title || ''
 
-  if (!variantTitle || variantTitle === 'Default Title') {
+  if (
+    !hasMultipleVariants.value ||
+    !variantTitle ||
+    variantTitle === 'Default Title'
+  ) {
     return baseTitle
   }
 
@@ -930,6 +938,7 @@ watch(
   padding-left: 20px;
   letter-spacing: 1px;
   font-weight: 500;
+  text-transform: capitalize;
 }
 
 .view-cart .middle .quantity {

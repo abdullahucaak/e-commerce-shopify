@@ -59,6 +59,12 @@ const CART_FIELDS = `
               handle
               title
 
+              variants(first: 2) {
+                nodes {
+                  id
+                }
+              }
+
               featuredImage {
                 url
                 altText
