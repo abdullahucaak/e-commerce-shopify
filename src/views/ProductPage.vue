@@ -194,7 +194,7 @@
           </div>
 
           <div
-            v-if="colorOption && hasMultipleVariants"
+            v-if="hasMultipleColorValues"
             class="variant-color-picker"
           >
             <div class="variant-color-header">
@@ -219,6 +219,7 @@
                 role="radio"
                 :aria-checked="selectedColorValue === colorValue"
                 :aria-label="`${colorValue}${isColorAvailable(colorValue) ? '' : ' - Sold out'}`"
+                :disabled="!isColorAvailable(colorValue)"
                 @click="selectColor(colorValue)"
               >
                 <span
@@ -227,6 +228,41 @@
                   aria-hidden="true"
                 ></span>
                 <span class="variant-color-name">{{ colorValue }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div
+            v-for="option in selectableNonColorOptions"
+            :key="option.id || option.name"
+            class="variant-option-picker"
+          >
+            <div class="variant-color-header">
+              <span class="variant-color-label">{{ option.name }}</span>
+              <span class="variant-color-value">{{ selectedOptions[option.name] }}</span>
+            </div>
+
+            <div
+              class="variant-color-options"
+              role="radiogroup"
+              :aria-label="option.name"
+            >
+              <button
+                v-for="optionValue in getOptionValues(option)"
+                :key="optionValue"
+                type="button"
+                class="variant-option-button"
+                :class="{
+                  active: selectedOptions[option.name] === optionValue,
+                  unavailable: !isOptionValueAvailable(option.name, optionValue)
+                }"
+                role="radio"
+                :aria-checked="selectedOptions[option.name] === optionValue"
+                :aria-label="`${optionValue}${isOptionValueAvailable(option.name, optionValue) ? '' : ' - Sold out'}`"
+                :disabled="!isOptionValueAvailable(option.name, optionValue)"
+                @click="selectOption(option.name, optionValue)"
+              >
+                {{ optionValue }}
               </button>
             </div>
           </div>
@@ -244,10 +280,10 @@
             </h1>
 
             <div
-              v-if="hasMultipleVariants && selectedVariant && selectedVariant.title !== 'Default Title'"
+              v-if="selectedVariantTitle"
               class="product-variant-title"
             >
-              {{ selectedVariant.title }}
+              {{ selectedVariantTitle }}
             </div>
 
             <div class="product-stars">
@@ -397,14 +433,34 @@ const colorOption = computed(() => {
   )
 })
 
-const hasMultipleVariants = computed(() => {
-  return (currentProduct.value?.variants?.nodes?.length || 0) > 1
-})
-
 const colorValues = computed(() => {
   return (colorOption.value?.values || [])
     .map(normalizeOptionValue)
     .filter(Boolean)
+})
+
+const hasMultipleColorValues = computed(() => {
+  return colorValues.value.length > 1
+})
+
+const getOptionValues = option => {
+  return (option?.values || [])
+    .map(normalizeOptionValue)
+    .filter(Boolean)
+}
+
+const selectableOptions = computed(() => {
+  return (currentProduct.value?.options || []).filter(option => (
+    getOptionValues(option).length > 1
+  ))
+})
+
+const selectableNonColorOptions = computed(() => {
+  return selectableOptions.value.filter(option => option !== colorOption.value)
+})
+
+const hasSelectableOptions = computed(() => {
+  return selectableOptions.value.length > 0
 })
 
 const selectedColorValue = computed(() => {
@@ -434,6 +490,22 @@ const selectedVariant = computed(() => {
   return chosenVariant || variants[0] || null
 })
 
+const selectedVariantTitle = computed(() => {
+  if (!hasSelectableOptions.value || !selectedVariant.value) {
+    return ''
+  }
+
+  const selectableOptionNames = new Set(
+    selectableOptions.value.map(option => option.name)
+  )
+
+  return (selectedVariant.value.selectedOptions || [])
+    .filter(option => selectableOptionNames.has(option.name))
+    .map(option => option.value)
+    .filter(Boolean)
+    .join(' / ')
+})
+
 
 /* const productTitleWithVariant = computed(() => {
   const baseTitle = currentProduct.value?.title || ''
@@ -447,31 +519,51 @@ const selectedVariant = computed(() => {
   return variantName ? `${baseTitle} (${variantName})` : baseTitle
 }) */
 
-const variantMetafieldImages = computed(() => {
-  const references = selectedVariant.value?.variantImages?.references?.nodes || []
+const getImageKey = image => {
+  return String(image?.url || '').split('?')[0]
+}
 
-  return references
+const getVariantImages = variant => {
+  const metafieldImages = (
+    variant?.variantImages?.references?.nodes || []
+  )
     .map(reference => reference?.image || null)
     .filter(image => image?.url)
-})
+
+  const images = [
+    ...metafieldImages,
+    variant?.image || null
+  ].filter(image => image?.url)
+
+  return images.filter((image, index) => (
+    images.findIndex(candidate => getImageKey(candidate) === getImageKey(image)) === index
+  ))
+}
 
 const productImages = computed(() => {
-  const metafieldImages = variantMetafieldImages.value
+  const variants = currentProduct.value?.variants?.nodes || []
+  const selectedImages = getVariantImages(selectedVariant.value)
+  const selectedImageKeys = new Set(selectedImages.map(getImageKey))
 
-  if (metafieldImages.length) {
-    return metafieldImages
-  }
+  const otherVariantImageKeys = new Set(
+    variants
+      .filter(variant => variant.id !== selectedVariant.value?.id)
+      .flatMap(getVariantImages)
+      .map(getImageKey)
+      .filter(imageKey => !selectedImageKeys.has(imageKey))
+  )
 
-  const variantImage = selectedVariant.value?.image
+  const sharedProductImages = (currentProduct.value?.images?.nodes || [])
+    .filter(image => !otherVariantImageKeys.has(getImageKey(image)))
 
-  // A product-level gallery can contain images belonging to every color.
-  // Only restrict it to the selected variant when the product actually has
-  // multiple variants. Single-variant products should keep their full gallery.
-  if (colorOption.value && hasMultipleVariants.value) {
-    return variantImage?.url ? [variantImage] : []
-  }
+  const galleryImages = [
+    ...selectedImages,
+    ...sharedProductImages
+  ]
 
-  return currentProduct.value?.images?.nodes || []
+  return galleryImages.filter((image, index) => (
+    galleryImages.findIndex(candidate => getImageKey(candidate) === getImageKey(image)) === index
+  ))
 })
 
 const recentlyAddedLine = computed(() => {
@@ -492,7 +584,7 @@ const recentlyAddedVariantTitle = computed(() => {
   const variantTitle = line?.merchandise?.title || ''
 
   if (
-    !hasMultipleVariants.value ||
+    !hasSelectableOptions.value ||
     !variantTitle ||
     variantTitle === 'Default Title'
   ) {
@@ -590,6 +682,29 @@ const selectColor = colorValue => {
   hideImageZoom()
 }
 
+const selectOption = (optionName, optionValue) => {
+  selectedOptions.value = {
+    ...selectedOptions.value,
+    [optionName]: optionValue
+  }
+  quantity.value = 1
+  hideImageZoom()
+}
+
+const isOptionValueAvailable = (optionName, optionValue) => {
+  const selections = {
+    ...selectedOptions.value,
+    [optionName]: optionValue
+  }
+  const variants = currentProduct.value?.variants?.nodes || []
+
+  return variants.some(variant => (
+    variantMatchesSelections(variant, selections) &&
+    variant.availableForSale &&
+    variant.quantityAvailable !== 0
+  ))
+}
+
 const isColorAvailable = colorValue => {
   if (!colorOption.value) {
     return false
@@ -679,7 +794,7 @@ const resetToMainImage = () => {
 }
 
 const handleDocumentPointerDown = event => {
-  if (event.target.closest('.other-images-product, .variant-color-picker')) {
+  if (event.target.closest('.other-images-product, .variant-color-picker, .variant-option-picker')) {
     return
   }
 
@@ -1129,7 +1244,8 @@ watch(
   outline-offset: 2px;
 }
 
-.variant-color-picker {
+.variant-color-picker,
+.variant-option-picker {
   width: 100%;
   margin-top: 16px;
   padding-top: 18px;
@@ -1192,6 +1308,35 @@ watch(
 
 .variant-color-button.unavailable:not(.active) {
   opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.variant-option-button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid rgba(65, 61, 61, 0.28);
+  border-radius: 4px;
+  background-color: #fff;
+  color: rgb(65, 61, 61);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.variant-option-button:hover {
+  border-color: #1b9c85;
+  transform: translateY(-1px);
+}
+
+.variant-option-button.active {
+  border-color: #1b9c85;
+  box-shadow: 0 0 0 1px #1b9c85;
+}
+
+.variant-option-button.unavailable:not(.active) {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .variant-color-swatch {
@@ -1430,7 +1575,8 @@ watch(
     margin: 0;
   }
 
-  .variant-color-picker {
+  .variant-color-picker,
+  .variant-option-picker {
     margin-top: 12px;
     padding-top: 15px;
   }
