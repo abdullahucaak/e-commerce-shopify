@@ -294,8 +294,23 @@
               <i class="fa fa-light fa-star"></i>
             </div>
 
-            <div class="product-price">
-              {{ formattedPrice }}
+            <div
+              class="product-price"
+              :class="{ 'has-discount': isDiscounted }"
+            >
+              <span class="current-price">{{ formattedPrice }}</span>
+              <span
+                v-if="isDiscounted"
+                class="compare-at-price"
+              >
+                {{ formattedCompareAtPrice }}
+              </span>
+              <span
+                v-if="isDiscounted"
+                class="discount-badge"
+              >
+                SAVE {{ discountPercentage }}%
+              </span>
             </div>
 
             <div class="quantity">
@@ -402,11 +417,7 @@ const currentProduct = computed(() => {
   return productStore.selectedProduct
 })
 
-const formattedPrice = computed(() => {
-  const money =
-    selectedVariant.value?.price ||
-    currentProduct.value?.priceRange?.minVariantPrice
-
+const formatMoney = money => {
   if (!money) {
     return ''
   }
@@ -415,6 +426,43 @@ const formattedPrice = computed(() => {
     style: 'currency',
     currency: money.currencyCode
   }).format(Number(money.amount))
+}
+
+const formattedPrice = computed(() => {
+  const money =
+    selectedVariant.value?.price ||
+    currentProduct.value?.priceRange?.minVariantPrice
+
+  return formatMoney(money)
+})
+
+const isDiscounted = computed(() => {
+  const price = selectedVariant.value?.price
+  const compareAtPrice = selectedVariant.value?.compareAtPrice
+
+  return Boolean(
+    price &&
+    compareAtPrice &&
+    price.currencyCode === compareAtPrice.currencyCode &&
+    Number(compareAtPrice.amount) > Number(price.amount)
+  )
+})
+
+const formattedCompareAtPrice = computed(() => {
+  return isDiscounted.value
+    ? formatMoney(selectedVariant.value?.compareAtPrice)
+    : ''
+})
+
+const discountPercentage = computed(() => {
+  if (!isDiscounted.value) {
+    return 0
+  }
+
+  const price = Number(selectedVariant.value.price.amount)
+  const compareAtPrice = Number(selectedVariant.value.compareAtPrice.amount)
+
+  return Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
 })
 
 const normalizeOptionValue = optionValue => {
@@ -1372,10 +1420,38 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout .product-price {
-  color: rgb(65, 61, 61);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  color: #313C55;
   font-weight: 600;
   font-size: 1.3rem;
   margin-bottom: 30px;
+}
+
+.main .main-inner .main-inner-right .payout .compare-at-price {
+  /* color: #b64036; */
+  color: #6E6E6E;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.main .main-inner .main-inner-right .payout .discount-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background-color: rgba(27, 156, 133, 0.12);
+  color: #147967;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.45px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .main .main-inner .main-inner-right .payout .quantity .q-header {

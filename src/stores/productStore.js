@@ -49,6 +49,11 @@ const CART_FIELDS = `
               currencyCode
             }
 
+            compareAtPrice {
+              amount
+              currencyCode
+            }
+
             image {
               url
               altText
@@ -213,6 +218,11 @@ export const useProductStore = defineStore('productStore', {
                   quantityAvailable
 
                   price {
+                    amount
+                    currencyCode
+                  }
+
+                  compareAtPrice {
                     amount
                     currencyCode
                   }

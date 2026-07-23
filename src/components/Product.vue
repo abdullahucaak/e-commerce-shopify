@@ -11,21 +11,35 @@
         :style="{
           backgroundImage: `url(${product.featuredImage?.url || ''})`
         }"
-      ></div>
+      >
+        <span
+          v-if="isDiscounted"
+          class="image-discount-label"
+        >
+          DISCOUNTED
+        </span>
+      </div>
 
       <div
         class="product-img-2"
         :style="{
           backgroundImage: `url(${product.images?.nodes?.[1]?.url || product.featuredImage?.url || ''})`
         }"
-      ></div>
+      >
+      </div>
 
       <div class="product-name">
         {{ product.title }}
       </div>
 
       <div class="product-price">
-        {{ formattedPrice }}
+        <span>{{ formattedPrice }}</span>
+        <span
+          v-if="isDiscounted"
+          class="compare-at-price"
+        >
+          {{ formattedCompareAtPrice }}
+        </span>
       </div>
     </div>
   </RouterLink>
@@ -41,9 +55,7 @@ const props = defineProps({
   }
 })
 
-const formattedPrice = computed(() => {
-  const money = props.product.priceRange?.minVariantPrice
-
+const formatMoney = money => {
   if (!money) {
     return ''
   }
@@ -52,6 +64,44 @@ const formattedPrice = computed(() => {
     style: 'currency',
     currency: money.currencyCode
   }).format(Number(money.amount))
+}
+
+const displayedVariant = computed(() => {
+  const variants = props.product.variants?.nodes || []
+  const minimumPrice = props.product.priceRange?.minVariantPrice
+
+  if (!minimumPrice) {
+    return variants[0] || null
+  }
+
+  return variants.find(variant => (
+    variant.price?.currencyCode === minimumPrice.currencyCode &&
+    Number(variant.price?.amount) === Number(minimumPrice.amount)
+  )) || variants[0] || null
+})
+
+const formattedPrice = computed(() => {
+  const money = props.product.priceRange?.minVariantPrice
+
+  return formatMoney(money)
+})
+
+const isDiscounted = computed(() => {
+  const price = displayedVariant.value?.price
+  const compareAtPrice = displayedVariant.value?.compareAtPrice
+
+  return Boolean(
+    price &&
+    compareAtPrice &&
+    price.currencyCode === compareAtPrice.currencyCode &&
+    Number(compareAtPrice.amount) > Number(price.amount)
+  )
+})
+
+const formattedCompareAtPrice = computed(() => {
+  return isDiscounted.value
+    ? formatMoney(displayedVariant.value.compareAtPrice)
+    : ''
 })
 </script>
 <style scoped>
@@ -69,6 +119,7 @@ const formattedPrice = computed(() => {
     margin-top: 10px;
 }
 .product-img, .product-img-2{
+    position: relative;
     aspect-ratio: 1/1;
     width: 100%;
     height: auto;
@@ -79,6 +130,24 @@ const formattedPrice = computed(() => {
     border-radius: 3px;
 
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.image-discount-label{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #147967;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.35px;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0px 0px 2px rgba(255, 255, 255, 0.5);
 }
 .product-img:hover, .product-img-2:hover{
     transform: scale(1.01);
@@ -96,10 +165,22 @@ display: none;
 display: block;
 }
 .product-price{
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 7px;
     font-size: 1.05rem;
     text-transform: uppercase;
     margin-top: 5px;
     font-weight: 600;
+}
+.compare-at-price{
+    color: #6e6e6e;
+    font-size: 0.85em;
+    font-weight: 400;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    white-space: nowrap;
 }
 @media (max-width: 340px){
     .product-name{

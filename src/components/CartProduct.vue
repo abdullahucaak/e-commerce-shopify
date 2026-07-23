@@ -36,8 +36,14 @@
         </td>
 
         <td>
-            <div class="cart-item-price">
-                {{ formattedUnitPrice }}
+            <div
+                class="cart-item-price"
+                :class="{ 'has-discount': isDiscounted }"
+            >
+                <span class="cart-item-current-price">
+                    {{ formattedUnitPrice }}
+                </span>
+
             </div>
         </td>
 
@@ -56,10 +62,16 @@
             </div>
         </td>
 
-        <td>
+        <td class="cart-total-cell">
             <div class="cart-item-regular-price-group">
                 <span class="cart-item-regular-price">
                     {{ formattedLineTotal }}
+                </span>
+                <span
+                    v-if="isDiscounted"
+                    class="cart-item-compare-at-price"
+                >
+                    {{ formattedCompareAtLineTotal }}
                 </span>
             </div>
 
@@ -147,8 +159,39 @@ const formattedUnitPrice = computed(() => {
     return formatMoney(props.cartLine.merchandise.price)
 })
 
+const isDiscounted = computed(() => {
+    const price = props.cartLine.merchandise?.price
+    const compareAtPrice = props.cartLine.merchandise?.compareAtPrice
+
+    return Boolean(
+        price &&
+        compareAtPrice &&
+        price.currencyCode === compareAtPrice.currencyCode &&
+        Number(compareAtPrice.amount) > Number(price.amount)
+    )
+})
+
+const formattedCompareAtUnitPrice = computed(() => {
+    return isDiscounted.value
+        ? formatMoney(props.cartLine.merchandise.compareAtPrice)
+        : ''
+})
+
 const formattedLineTotal = computed(() => {
     return formatMoney(props.cartLine.cost?.totalAmount)
+})
+
+const formattedCompareAtLineTotal = computed(() => {
+    if (!isDiscounted.value) {
+        return ''
+    }
+
+    const compareAtPrice = props.cartLine.merchandise.compareAtPrice
+
+    return formatMoney({
+        amount: Number(compareAtPrice.amount) * props.cartLine.quantity,
+        currencyCode: compareAtPrice.currencyCode
+    })
 })
 
 const updateQuantity = async () => {
@@ -374,6 +417,29 @@ const removeProduct = async () => {
 .cart-item-regular-price{
     font-weight: 500;
 }
+.cart-item-price,
+.cart-item-regular-price-group {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+.cart-item-regular-price-group .cart-item-regular-price {
+    font-weight: 600;
+}
+.cart-item-compare-at-price {
+    color: #b64036;
+    /* color: rgb(203, 116, 107); */
+    font-size: 0.85em;
+    font-weight: 400;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    white-space: nowrap;
+    padding-left: 5px;
+}
+.cart-total-cell {
+    position: relative;
+}
 
 @media (max-width: 1200px){
     .main .main-inner{
@@ -381,6 +447,7 @@ const removeProduct = async () => {
     }
 }
 @media (max-width: 867px) {
+
     .main .main-inner form .cart-table tbody tr{
     height: auto;
     }

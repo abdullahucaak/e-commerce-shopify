@@ -127,7 +127,22 @@
                                 <div class="cart-sub-total-wrapper">
                                     <div class="cart-sub-total">
                                         <span class="subtotal">Subtotal</span>
-                                        <span class="subtotal">{{ formattedSubtotal }}</span>
+                                        <span class="subtotal subtotal-prices">
+                                            <span>{{ formattedSubtotal }}</span>
+                                            <span
+                                                v-if="formattedOriginalSubtotal"
+                                                class="original-subtotal"
+                                            >
+                                                {{ formattedOriginalSubtotal }}
+                                            </span>
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        v-if="formattedSavings"
+                                        class="cart-savings-message"
+                                    >
+                                        You saved {{ formattedSavings }} on this order.
                                     </div>
 
                                     <div class="cart-shipping-message">
@@ -225,7 +240,85 @@ const formattedSubtotal = computed(() => {
         currency: money.currencyCode
     }).format(Number(money.amount))
 
-    return `${formattedAmount} ${money.currencyCode}`
+    return formattedAmount
+})
+
+const formattedSavings = computed(() => {
+    const subtotalCurrency = productStore.cartSubtotal?.currencyCode
+
+    if (!subtotalCurrency) {
+        return ''
+    }
+
+    const savings = productStore.cartLines.reduce((total, cartLine) => {
+        const price = cartLine.merchandise?.price
+        const compareAtPrice = cartLine.merchandise?.compareAtPrice
+
+        if (
+            !price ||
+            !compareAtPrice ||
+            price.currencyCode !== subtotalCurrency ||
+            compareAtPrice.currencyCode !== subtotalCurrency ||
+            Number(compareAtPrice.amount) <= Number(price.amount)
+        ) {
+            return total
+        }
+
+        return total + (
+            (Number(compareAtPrice.amount) - Number(price.amount)) *
+            cartLine.quantity
+        )
+    }, 0)
+
+    if (savings <= 0) {
+        return ''
+    }
+
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: subtotalCurrency
+    }).format(savings)
+})
+
+const formattedOriginalSubtotal = computed(() => {
+    const subtotal = productStore.cartSubtotal
+
+    if (!subtotal) {
+        return ''
+    }
+
+    let hasDiscountedLine = false
+
+    const originalTotal = productStore.cartLines.reduce((total, cartLine) => {
+        const price = cartLine.merchandise?.price
+        const compareAtPrice = cartLine.merchandise?.compareAtPrice
+        const hasCompareAtPrice = Boolean(
+            price &&
+            compareAtPrice &&
+            price.currencyCode === subtotal.currencyCode &&
+            compareAtPrice.currencyCode === subtotal.currencyCode &&
+            Number(compareAtPrice.amount) > Number(price.amount)
+        )
+
+        if (hasCompareAtPrice) {
+            hasDiscountedLine = true
+        }
+
+        const unitAmount = hasCompareAtPrice
+            ? Number(compareAtPrice.amount)
+            : Number(price?.amount || 0)
+
+        return total + (unitAmount * cartLine.quantity)
+    }, 0)
+
+    if (!hasDiscountedLine) {
+        return ''
+    }
+
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: subtotal.currencyCode
+    }).format(originalTotal)
 })
 
 const goToCheckout = async () => {
@@ -476,16 +569,30 @@ onMounted(async () => {
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner{
     justify-self: end;
     display: grid;
+    width: 100%;
 }
 
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper{
     justify-self: end;
+    width: 100%;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
-    margin: 0 0 20px 60px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0 0 20px;
 }
-.main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total span:nth-child(2){
-    padding-left: 75px;
+.main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total > span:nth-child(2){
+    margin-left: auto;
+    padding-left: 30px;
+    text-align: right;
+}
+.main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
+    margin: -8px 0 14px;
+    color: #147967;
+    font-size: 0.9em;
+    font-weight: 500;
+    text-align: right;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
     margin-bottom: 50px;
@@ -537,8 +644,41 @@ onMounted(async () => {
     border-width: 1.5px;
 }
 .subtotal{
-    font-weight: 500;
+    font-weight: 600;
 }
+.subtotal-prices {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 9px;
+    font-size: 1.05em;
+}
+.original-subtotal {
+    color: #b64036;
+    font-size: 0.85em;
+    font-weight: 400;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    white-space: nowrap;
+    padding-left: 5px;
+}
+
+@media (min-width: 868px) {
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total {
+        display: grid;
+        grid-template-columns: 65.5% minmax(0, 1fr);
+        align-items: baseline;
+    }
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total span.subtotal-prices:nth-child(2) {
+        justify-content: flex-start;
+        margin-left: 0;
+        padding-left: 0;
+        gap: 7px;
+        text-align: left;
+    }
+
+}
+
 .continue-shopping{
     letter-spacing: 0.5px;
     opacity: 0.8;
@@ -594,12 +734,12 @@ onMounted(async () => {
         display: grid;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper{
-        justify-self: center;
+        justify-self: stretch;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
         font-size: 1.1rem;
         font-weight: 500;
-        margin: 0 0 20px 25px;
+        margin: 0 0 20px;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
         margin-bottom: 20px;
