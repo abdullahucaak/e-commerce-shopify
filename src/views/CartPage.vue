@@ -125,9 +125,17 @@
                         <div class="f-right">
                             <div class="f-right-inner">
                                 <div class="cart-sub-total-wrapper">
-                                    <div class="cart-sub-total">
+                                    <div
+                                        class="cart-sub-total"
+                                        :class="{
+                                            'single-subtotal-price': !formattedOriginalSubtotal
+                                        }"
+                                    >
                                         <span class="subtotal">Subtotal</span>
-                                        <span class="subtotal subtotal-prices">
+                                        <span
+                                            ref="subtotalPricesElement"
+                                            class="subtotal subtotal-prices"
+                                        >
                                             <span>{{ formattedSubtotal }}</span>
                                             <span
                                                 v-if="formattedOriginalSubtotal"
@@ -207,7 +215,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch
+} from 'vue'
 
 import Footer from '../components/Footer.vue'
 import Navigation from '../components/Navigation.vue'
@@ -227,6 +242,7 @@ const hideCartPopup = () => {
 
 const userNote = ref('')
 const howDidYouHear = ref('Please Make a Selection')
+const subtotalPricesElement = ref(null)
 
 const formattedSubtotal = computed(() => {
     const money = productStore.cartSubtotal
@@ -321,6 +337,52 @@ const formattedOriginalSubtotal = computed(() => {
     }).format(originalTotal)
 })
 
+const alignSingleSubtotalPrice = async () => {
+    await nextTick()
+
+    const subtotalElement = subtotalPricesElement.value
+
+    if (!subtotalElement) {
+        return
+    }
+
+    subtotalElement.style.transform = ''
+
+    if (formattedOriginalSubtotal.value) {
+        return
+    }
+
+    requestAnimationFrame(() => {
+        const cartTotalElement = document.querySelector(
+            '.cart-total-cell .cart-item-regular-price'
+        )
+
+        if (!cartTotalElement || !subtotalPricesElement.value) {
+            return
+        }
+
+        const subtotalValueElement =
+            subtotalPricesElement.value.querySelector('span')
+
+        if (!subtotalValueElement) {
+            return
+        }
+
+        const cartTotalLeft = cartTotalElement.getBoundingClientRect().left
+        const subtotalLeft = subtotalValueElement.getBoundingClientRect().left
+        const offset = cartTotalLeft - subtotalLeft
+
+        subtotalPricesElement.value.style.transform =
+            `translateX(${offset}px)`
+    })
+}
+
+watch(
+    [formattedSubtotal, formattedOriginalSubtotal],
+    alignSingleSubtotalPrice,
+    { flush: 'post' }
+)
+
 const goToCheckout = async () => {
     productStore.inventoryError = null
 
@@ -342,9 +404,16 @@ onMounted(async () => {
 
     try {
         await productStore.initializeCart()
+        await alignSingleSubtotalPrice()
     } catch (error) {
         console.error('Failed to load Shopify cart:', error)
     }
+
+    window.addEventListener('resize', alignSingleSubtotalPrice)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', alignSingleSubtotalPrice)
 })
 </script>
 
@@ -675,6 +744,9 @@ onMounted(async () => {
         padding-left: 0;
         gap: 7px;
         text-align: left;
+    }
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total.single-subtotal-price span.subtotal-prices:nth-child(2) {
+        justify-content: center;
     }
 
 }

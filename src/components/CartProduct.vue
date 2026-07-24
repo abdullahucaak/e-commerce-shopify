@@ -441,6 +441,32 @@ const removeProduct = async () => {
     position: relative;
 }
 
+@media (max-width: 596px) {
+    .cart-item-regular-price-group {
+        flex-wrap: nowrap;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    .cart-item-compare-at-price {
+        padding-left: 0;
+        font-size: 0.8em;
+    }
+}
+
+@media (min-width: 868px) and (max-width: 900px) {
+    .cart-item-regular-price-group {
+        flex-wrap: nowrap;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    .cart-item-compare-at-price {
+        padding-left: 0;
+        font-size: 0.8em;
+    }
+}
+
 @media (max-width: 1200px){
     .main .main-inner{
         width: 95%;
