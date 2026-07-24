@@ -191,6 +191,26 @@ const sortedProducts = computed(() => {
          overflow: visible;
       }
    }
+   @media (min-width: 393px) and (max-width: 524px){
+      .shop-container .s-header{
+         font-size: 1.7rem;
+         line-height: 1.25;
+      }
+
+      .shop-container .s-description{
+         font-size: 0.84rem;
+         line-height: 1.65;
+         letter-spacing: 1px;
+      }
+
+      .shop-container .sort-by-container{
+         font-size: 0.82rem;
+      }
+
+      .shop-container .sort-by-container .sort-by select{
+         font-size: 0.88rem;
+      }
+   }
       @media (max-width: 392px){
       .shop-container .sort-by-container{
          display: flex;

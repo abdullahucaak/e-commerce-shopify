@@ -561,6 +561,39 @@ const removeProduct = async () => {
         margin-left: 11px;
     }
 }
+@media (min-width:393px) and (max-width:524px){
+    .cart-product-name-wrapper{
+        margin-left: 11px;
+    }
+
+    .cart-product-name{
+        font-size: 0.88rem;
+        line-height: 1.3;
+    }
+
+    .cart-product-variant-title{
+        font-size: 0.78rem;
+        line-height: 1.3;
+    }
+
+    .remove{
+        font-size: 0.8rem;
+    }
+
+    .cart-item-current-price,
+    .cart-item-regular-price{
+        font-size: 0.88rem;
+    }
+
+    .cart-item-compare-at-price{
+        font-size: 0.74rem;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
+        font-size: 0.82rem;
+    }
+}
+
 @media (min-width:363px) and (max-width:392px){
     .cart-product-name-wrapper{
         margin-left: 11px;

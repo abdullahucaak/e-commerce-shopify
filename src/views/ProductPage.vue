@@ -1972,6 +1972,82 @@ watch(
   font-weight: 600;
 }
 
+@media (min-width: 393px) and (max-width: 524px) {
+  .main .main-inner .main-inner-left .image-discount-label {
+    font-size: 0.9rem;
+  }
+
+  .main .main-inner .main-inner-right .payout h1 {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .main .main-inner .main-inner-right .payout .product-variant-title {
+    font-size: 0.92rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .product-stars {
+    font-size: 0.78rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .current-price {
+    font-size: 1.2rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .compare-at-price {
+    font-size: 0.9rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .discount-badge {
+    font-size: 0.88rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .quantity .q-header {
+    font-size: 0.95rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
+    font-size: 0.9rem;
+  }
+
+  .variant-color-label {
+    font-size: 0.95rem;
+  }
+
+  .variant-color-value,
+  .variant-color-name {
+    font-size: 0.84rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .purchase-buttons .p-btn-1,
+  .main .main-inner .main-inner-right .payout .purchase-buttons .p-btn-2 {
+    font-size: 0.88rem;
+  }
+
+  .main .main-inner .main-inner-right .description,
+  .description-text {
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+
+  .view-cart .title {
+    font-size: 0.82rem;
+  }
+
+  .view-cart .middle .product-name {
+    font-size: 0.84rem;
+  }
+
+  .view-cart .middle .quantity {
+    font-size: 0.8rem;
+  }
+
+  .view-cart .view-cart-button .cart-button,
+  .view-cart .continue-shopping {
+    font-size: 0.86rem;
+  }
+}
+
 
 
 </style>

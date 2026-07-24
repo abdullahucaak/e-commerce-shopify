@@ -239,6 +239,34 @@ body{
         overflow: visible;
     } 
 }
+@media (min-width: 393px) and (max-width: 524px){
+    .home-container .c-banner .banner-message .bm-inner .bm-title{
+        font-size: 1.65rem;
+        line-height: 1.25;
+    }
+
+    .home-container .c-banner .banner-message .bm-inner .bm-content{
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .home-container .c-banner .banner-message .bm-inner .bm-btn{
+        font-size: 0.88rem;
+    }
+
+    .home-container .c-message{
+        font-size: 1rem;
+        line-height: 1.55;
+    }
+
+    .home-container .c-best-selling .bs-title{
+        font-size: 1.05rem;
+    }
+
+    .home-container .c-best-selling .bs-footer .bs-btn{
+        font-size: 0.88rem;
+    }
+}
 @media (max-width: 392px){
     .home-container .c-best-selling .bs-footer{
         margin-bottom: 15px;

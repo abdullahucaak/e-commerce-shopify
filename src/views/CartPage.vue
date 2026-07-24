@@ -867,6 +867,70 @@ onBeforeUnmount(() => {
 
 }
 
+@media (min-width:393px) and (max-width:524px){
+    .main .main-inner .cart-header h1{
+        font-size: 1.85rem;
+        line-height: 1.2;
+    }
+
+    .main .main-inner .cart-header .continue-shopping{
+        font-size: 0.94rem;
+    }
+
+    .main .main-inner form .cart-table thead tr th{
+        font-size: 0.88rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-left label{
+        font-size: 0.94rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
+        font-size: 0.9rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
+        font-size: 1.05rem;
+    }
+
+    .subtotal-prices{
+        font-size: 1em;
+    }
+
+    .original-subtotal{
+        font-size: 0.84em;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
+        font-size: 0.86rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
+        font-size: 0.84rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
+        font-size: 0.92rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
+        font-size: 1.15rem;
+    }
+
+    .main .main-inner .how-did-you-hear .head{
+        font-size: 0.9rem;
+    }
+
+    .main .main-inner .how-did-you-hear .options select{
+        font-size: 0.86rem;
+    }
+
+    .cart-inventory-warning,
+    .cart-status{
+        font-size: 0.94rem;
+    }
+}
+
 @media (min-width:363px) and (max-width:392px){
     .main .main-inner .cart-header h1{
         font-size: 1.7rem;

@@ -248,4 +248,23 @@ display: block;
     }
 }
 
+@media (min-width: 393px) and (max-width: 524px){
+    .image-discount-label{
+        font-size: 0.72rem;
+    }
+
+    .product-name{
+        font-size: 0.86rem;
+        line-height: 1.3;
+    }
+
+    .product-price{
+        font-size: 0.9rem;
+    }
+
+    .compare-at-price{
+        font-size: 0.82em;
+    }
+}
+
 </style>
