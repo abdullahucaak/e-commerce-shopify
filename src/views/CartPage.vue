@@ -867,6 +867,66 @@ onBeforeUnmount(() => {
 
 }
 
+@media (max-width:362px){
+    .main .main-inner .cart-header h1{
+        font-size: 1.55rem;
+        line-height: 1.2;
+    }
+
+    .main .main-inner .cart-header .continue-shopping{
+        font-size: 0.82rem;
+    }
+
+    .main .main-inner form .cart-table thead tr th{
+        font-size: 0.76rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-left label{
+        font-size: 0.82rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
+        font-size: 0.78rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
+        font-size: 0.9rem;
+    }
+
+    .subtotal-prices{
+        font-size: 1em;
+    }
+
+    .original-subtotal{
+        font-size: 0.78em;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
+        font-size: 0.76rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
+        font-size: 0.74rem;
+    }
+
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
+        font-size: 0.82rem;
+    }
+
+    .main .main-inner .how-did-you-hear .head{
+        font-size: 0.78rem;
+    }
+
+    .main .main-inner .how-did-you-hear .options select{
+        font-size: 0.76rem;
+    }
+
+    .cart-inventory-warning,
+    .cart-status{
+        font-size: 0.82rem;
+    }
+}
+
 
 
 .cart-inventory-warning {

@@ -561,7 +561,7 @@ const removeProduct = async () => {
         margin-left: 3px;
     }
 }
-@media (max-width:361px){
+@media (max-width:362px){
     .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
         aspect-ratio: 1/1;
         width: 50px;
@@ -575,6 +575,33 @@ const removeProduct = async () => {
     }
     .cart-product-name-wrapper{
         margin-left: 3px;
+    }
+
+    .cart-product-name{
+        font-size: 0.76rem;
+        line-height: 1.25;
+    }
+
+    .cart-product-variant-title{
+        font-size: 0.68rem;
+        line-height: 1.3;
+    }
+
+    .remove{
+        font-size: 0.7rem;
+    }
+
+    .cart-item-current-price,
+    .cart-item-regular-price{
+        font-size: 0.76rem;
+    }
+
+    .cart-item-compare-at-price{
+        font-size: 0.64rem;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
+        font-size: 0.72rem;
     }
 }
 
