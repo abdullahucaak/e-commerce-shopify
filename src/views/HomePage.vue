@@ -239,6 +239,11 @@ body{
         overflow: visible;
     } 
 }
+@media (max-width: 392px){
+    .home-container .c-best-selling .bs-footer{
+        margin-bottom: 15px;
+    }
+}
 @media (max-width: 340px){
     .home-container .c-banner .banner-message .bm-inner .bm-title{
         font-size: 1.4rem;
