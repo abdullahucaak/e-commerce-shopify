@@ -67,9 +67,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     }
   ],
-  /* To open the new page from the top. */
   scrollBehavior(to, from, savedPosition) {
-    return { left: 0, top: 0 };
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    return { left: 0, top: 0 }
   }
 })
 
