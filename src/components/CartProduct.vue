@@ -558,7 +558,7 @@ const removeProduct = async () => {
         font-size: 0.8rem;
     }
     .cart-product-name-wrapper{
-        margin-left: 3px;
+        margin-left: 11px;
     }
 }
 @media (min-width:363px) and (max-width:392px){
@@ -606,7 +606,7 @@ const removeProduct = async () => {
         font-size: 0.7rem;
     }
     .cart-product-name-wrapper{
-        margin-left: 3px;
+        margin-left: 11px;
     }
 
     .cart-product-name{
