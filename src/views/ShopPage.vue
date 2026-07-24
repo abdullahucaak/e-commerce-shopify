@@ -191,10 +191,10 @@ const sortedProducts = computed(() => {
          overflow: visible;
       }
    }
-   @media (max-width: 340px){
+      @media (max-width: 392px){
       .shop-container .sort-by-container{
          display: flex;
-         font-size: 0.7rem;
+         font-size: 0.8rem;
          justify-content: space-around;
          align-items: center;
          border-top: 0.5px solid rgb(182, 182, 182);
@@ -202,10 +202,61 @@ const sortedProducts = computed(() => {
       }
       .shop-container .sort-by-container .sort-by select{
          margin-left: 10px;
-         font-size: 0.8rem;
+         font-size: 0.9rem;
       }
-      .s-products{
-
+   }
+   @media (max-width: 362px){
+      .shop-container{
+         grid-template-rows: auto auto auto auto;
+      }
+      .shop-container .s-header{
+         padding: 44px 16px 20px;
+         font-size: 1.5rem;
+         line-height: 1.2;
+      }
+      .shop-container .s-description{
+         width: calc(100% - 32px);
+         margin: 0 auto 28px;
+         padding: 0;
+         font-size: 0.78rem;
+         line-height: 1.65;
+         letter-spacing: 0.6px;
+      }
+      .shop-container .sort-by-container{
+         display: flex;
+         min-height: 54px;
+         padding: 8px 14px;
+         gap: 8px;
+         font-size: 0.75rem;
+         justify-content: space-between;
+         align-items: center;
+         border-top: 0.5px solid rgb(182, 182, 182);
+         border-bottom: 0.5px solid rgb(182, 182, 182);
+      }
+      .shop-container .sort-by-container .sort-by{
+         display: flex;
+         min-width: 0;
+         align-items: center;
+         gap: 6px;
+         white-space: nowrap;
+      }
+      .shop-container .sort-by-container .sort-by select{
+         min-width: 0;
+         max-width: 130px;
+         margin-left: 0;
+         padding: 4px 2px;
+         font-size: 0.78rem;
+      }
+      .shop-container .sort-by-container .s-products{
+         flex: 0 0 auto;
+         white-space: nowrap;
+      }
+      .shop-container .s-products-container{
+         grid-template-columns: repeat(2, minmax(0, 1fr));
+         column-gap: 12px;
+         row-gap: 20px;
+         width: calc(100% - 24px);
+         margin: 26px auto 38px;
       }
    }
 </style>

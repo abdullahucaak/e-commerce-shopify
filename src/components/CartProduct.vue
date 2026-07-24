@@ -518,7 +518,24 @@ const removeProduct = async () => {
         font-size: 1rem;
     }
 }
-@media (max-width:340px){
+@media (max-width:391px){
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
+        aspect-ratio: 1/1;
+        width: 50px;
+        height: auto;
+        background-image: url(../assets/products/assam-black-600x600.webp);
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    .main .main-inner form .cart-table tbody tr td{
+        font-size: 0.8rem;
+    }
+    .cart-product-name-wrapper{
+        margin-left: 3px;
+    }
+}
+@media (max-width:361px){
     .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
         aspect-ratio: 1/1;
         width: 50px;

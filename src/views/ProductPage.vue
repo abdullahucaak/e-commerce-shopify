@@ -156,6 +156,13 @@
               @mousemove="updateImageZoom"
               @mouseleave="hideImageZoom"
             >
+              <span
+                v-if="isDiscounted"
+                class="image-discount-label"
+              >
+                %{{ discountPercentage }} DISCOUNT
+              </span>
+
               <div
                 v-if="isImageZoomVisible"
                 class="image-zoom-lens"
@@ -481,10 +488,32 @@ const colorOption = computed(() => {
   )
 })
 
-const colorValues = computed(() => {
-  return (colorOption.value?.values || [])
+const getOrderedOptionValues = option => {
+  if (!option?.name) {
+    return []
+  }
+
+  const variants = currentProduct.value?.variants?.nodes || []
+  const valuesFromVariantOrder = variants
+    .map(variant => (
+      variant.selectedOptions?.find(
+        selectedOption => selectedOption.name === option.name
+      )?.value || ''
+    ))
+    .filter(Boolean)
+
+  const remainingOptionValues = (option.values || [])
     .map(normalizeOptionValue)
     .filter(Boolean)
+
+  return [...new Set([
+    ...valuesFromVariantOrder,
+    ...remainingOptionValues
+  ])]
+}
+
+const colorValues = computed(() => {
+  return getOrderedOptionValues(colorOption.value)
 })
 
 const hasMultipleColorValues = computed(() => {
@@ -492,9 +521,7 @@ const hasMultipleColorValues = computed(() => {
 })
 
 const getOptionValues = option => {
-  return (option?.values || [])
-    .map(normalizeOptionValue)
-    .filter(Boolean)
+  return getOrderedOptionValues(option)
 }
 
 const selectableOptions = computed(() => {
@@ -678,7 +705,14 @@ const addToCartButtonText = computed(() => {
 
 const initializeSelectedOptions = product => {
   const variants = product?.variants?.nodes || []
+  const requestedVariantId = Array.isArray(route.query.variant)
+    ? route.query.variant[0]
+    : route.query.variant
+  const requestedVariant = requestedVariantId
+    ? variants.find(variant => variant.id === requestedVariantId)
+    : null
   const initialVariant = (
+    requestedVariant ||
     variants.find(variant => (
       variant.availableForSale && variant.quantityAvailable !== 0
     )) ||
@@ -951,9 +985,9 @@ watch(
 )
 
 watch(
-  () => route.params.handle,
-  async (newHandle, oldHandle) => {
-    if (newHandle !== oldHandle) {
+  () => [route.params.handle, route.query.variant],
+  async ([newHandle, newVariant], [oldHandle, oldVariant]) => {
+    if (newHandle !== oldHandle || newVariant !== oldVariant) {
       quantity.value = 1
       await loadProduct()
     }
@@ -1229,6 +1263,28 @@ watch(
   background-repeat: no-repeat;
   overflow: hidden;
   cursor: crosshair;
+}
+
+.main .main-inner .main-inner-left .image-discount-label {
+  position: absolute;
+  top: 30px;
+  left: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 6px 16px;
+  border: 1px solid #1b9c85;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #147967;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.35px;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+  pointer-events: none;
 }
 
 .main .main-inner .main-inner-left .image-zoom-lens {
@@ -1695,9 +1751,31 @@ watch(
   }
 }
 
-@media (max-width: 367px) {
+@media (max-width: 392px) {
+  .main .main-inner .main-inner-left .image-discount-label {
+    min-height: 22px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .product-variant-title {
+    margin-top: 0;
+  }
+
+    .main .main-inner .main-inner-right .payout h1 {
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 10px;
+  }
+  .current-price, .compare-at-price, .discount-badge{
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 362px) {
   .view-cart {
-    width: 100%;
+    width: 95%;
     max-width: 100vw;
   }
 
@@ -1736,7 +1814,7 @@ watch(
   .view-cart .middle .product-name {
     min-width: 0;
     padding-left: 0;
-    font-size: clamp(0.72rem, 3.6vw, 0.82rem);
+    font-size: 0.78rem;
     line-height: 1.25;
     letter-spacing: 0.4px;
     overflow-wrap: anywhere;
@@ -1761,31 +1839,53 @@ watch(
     padding: 16px 8px;
     font-size: 0.82rem;
   }
-}
 
-@media (max-width: 340px) {
   .variant-color-options {
     grid-template-columns: 1fr;
   }
 
   .main .main-inner .main-inner-right .payout h1 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 400;
-    margin-bottom: 10px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .main .main-inner .main-inner-right .payout .product-variant-title {
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .product-stars {
+    font-size: 0.72rem;
   }
 
   .main .main-inner .main-inner-right .payout .product-price {
     color: rgb(60, 60, 60);
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-bottom: 15px;
+  }
+
+  .main .main-inner .main-inner-right .payout .current-price {
+    font-size: 1.15rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .compare-at-price {
+    font-size: 0.9rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .discount-badge {
+    min-height: 22px;
+    padding: 3px 7px;
+    font-size: 0.8rem;
   }
 
   .main .main-inner .main-inner-right .payout .quantity .q-header {
     display: inline-block;
     color: rgb(65, 61, 61);
     font-weight: 400;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     margin-bottom: 10px;
   }
 
@@ -1795,11 +1895,33 @@ watch(
   }
 
   .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
-    width: 100px;
+    width: 90px;
     padding: 10px 0;
-    font-size: 1rem;
+    font-size: 0.95rem;
     text-indent: 15px;
     border: solid rgb(188, 188, 188, 0.6) 1px;
+  }
+
+  .variant-color-label {
+    font-size: 0.9rem;
+  }
+
+  .variant-color-value {
+    font-size: 0.82rem;
+  }
+
+  .variant-color-name {
+    font-size: 0.82rem;
+  }
+
+  .main .main-inner .main-inner-right .payout .purchase-buttons .p-btn-1 {
+    font-size: 0.85rem;
+  }
+
+  .main .main-inner .main-inner-right .description,
+  .description-text {
+    font-size: 0.88rem;
+    line-height: 1.6;
   }
 
 }

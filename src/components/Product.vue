@@ -2,7 +2,10 @@
   <RouterLink
     :to="{
       name: 'product-page',
-      params: { handle: product.handle }
+      params: { handle: product.handle },
+      query: displayedVariant?.id
+        ? { variant: displayedVariant.id }
+        : {}
     }"
   >
     <div class="bs-item">
@@ -16,7 +19,7 @@
           v-if="isDiscounted"
           class="image-discount-label"
         >
-          DISCOUNTED
+          %{{ discountPercentage }} DISCOUNT
         </span>
       </div>
 
@@ -26,6 +29,12 @@
           backgroundImage: `url(${product.images?.nodes?.[1]?.url || product.featuredImage?.url || ''})`
         }"
       >
+        <span
+          v-if="isDiscounted"
+          class="image-discount-label"
+        >
+          %{{ discountPercentage }} DISCOUNT
+        </span>
       </div>
 
       <div class="product-name">
@@ -102,6 +111,17 @@ const formattedCompareAtPrice = computed(() => {
   return isDiscounted.value
     ? formatMoney(displayedVariant.value.compareAtPrice)
     : ''
+})
+
+const discountPercentage = computed(() => {
+  if (!isDiscounted.value) {
+    return 0
+  }
+
+  const price = Number(displayedVariant.value.price.amount)
+  const compareAtPrice = Number(displayedVariant.value.compareAtPrice.amount)
+
+  return Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
 })
 </script>
 <style scoped>
@@ -182,17 +202,50 @@ display: block;
     text-decoration-thickness: 1px;
     white-space: nowrap;
 }
-@media (max-width: 340px){
+@media (max-width: 392px){
     .product-name{
         margin-top: 3px;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
     .product-price{
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    margin-top: 5px;
-    font-weight: 500;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        margin-top: 5px;
+        font-weight: 600;
+    }
 }
+@media (max-width: 362px){
+    .bs-item{
+        margin-top: 0;
+    }
+    .product-img,
+    .product-img-2{
+        margin-bottom: 5px;
+    }
+    .image-discount-label{
+        top: 6px;
+        right: 6px;
+        min-height: 18px;
+        padding: 2px 5px;
+        font-size: 0.62rem;
+        letter-spacing: 0.2px;
+    }
+    .product-name{
+        margin-top: 2px;
+        font-size: 0.78rem;
+        line-height: 1.3;
+        letter-spacing: 0.35px;
+    }
+    .product-price{
+        gap: 5px;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        margin-top: 4px;
+        font-weight: 600;
+    }
+    .compare-at-price{
+        font-size: 0.8em;
+    }
 }
 
 </style>

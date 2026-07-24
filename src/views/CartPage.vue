@@ -766,9 +766,9 @@ onMounted(async () => {
         font-size: 1rem;
     }
 }
-@media (max-width:340px){
+@media (max-width:391px){
     .main .main-inner{
-        width: 100%;
+        width: 95%;
         padding: 5px;
     }
     .main .main-inner form .cart-table{
