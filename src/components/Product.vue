@@ -202,18 +202,38 @@ display: block;
     text-decoration-thickness: 1px;
     white-space: nowrap;
 }
-@media (max-width: 392px){
-    .product-name{
-        margin-top: 3px;
-        font-size: 0.9rem;
+
+@media (min-width: 393px) and (max-width: 524px){
+    .image-discount-label{
+        font-size: 0.72rem;
     }
+
+    .product-name{
+        font-size: 0.86rem;
+        line-height: 1.3;
+    }
+
     .product-price{
         font-size: 0.9rem;
+    }
+
+    .compare-at-price{
+        font-size: 0.82em;
+    }
+}
+@media (max-width: 392px){
+    .product-name{
+        margin-top: 5px;
+        font-size: 0.85rem;
+    }
+    .product-price{
+        font-size: 0.85rem;
         text-transform: uppercase;
         margin-top: 5px;
         font-weight: 600;
     }
 }
+
 @media (max-width: 362px){
     .bs-item{
         margin-top: 0;
@@ -245,25 +265,6 @@ display: block;
     }
     .compare-at-price{
         font-size: 0.8em;
-    }
-}
-
-@media (min-width: 393px) and (max-width: 524px){
-    .image-discount-label{
-        font-size: 0.72rem;
-    }
-
-    .product-name{
-        font-size: 0.86rem;
-        line-height: 1.3;
-    }
-
-    .product-price{
-        font-size: 0.9rem;
-    }
-
-    .compare-at-price{
-        font-size: 0.82em;
     }
 }
 

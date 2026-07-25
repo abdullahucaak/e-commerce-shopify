@@ -1,6 +1,6 @@
 <template>
   <div class="announce-nav-container">
-    <div class="announce-bar">
+    <div ref="announceBar" class="announce-bar">
       <span> Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'! </span>
     </div>
     <nav>
@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useProductStore } from '../stores/productStore'
 
@@ -113,9 +113,25 @@ const isSearchButtonOn = ref(false)
 const search = ref('')
 const isBarsOpen = ref(false)
 const isAnimationWorked = ref(false)
+const announceBar = ref(null)
+let announceBarObserver
 
 onMounted(async () => {
+  const updateAnnounceBarHeight = () => {
+    const height = announceBar.value?.getBoundingClientRect().height || 0
+    document.documentElement.style.setProperty('--announce-bar-height', `${height}px`)
+  }
+
+  updateAnnounceBarHeight()
+  announceBarObserver = new ResizeObserver(updateAnnounceBarHeight)
+  if (announceBar.value) announceBarObserver.observe(announceBar.value)
+
   await productStore.initializeCart()
+})
+
+onBeforeUnmount(() => {
+  announceBarObserver?.disconnect()
+  document.documentElement.style.removeProperty('--announce-bar-height')
 })
 
 const searchButtonOn = () => {
@@ -184,18 +200,24 @@ const totalProductNumberOnCart = computed(() => {
     z-index: 0;
   }
   .announce-nav-container{
-    display: grid;
-    grid-template-rows: 46px 147px;
-    border-bottom: solid rgba(0,0,0, 0.2) 0.5px;
+    display: contents;
   }
   .announce-nav-container .announce-bar{
     background-color: #4C4C6D;
     width: 100%;
-    height: 100%;
+    min-height: 46px;
+    padding: 10px 0px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    line-height: 46px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
     color: whitesmoke;
-    z-index: +2;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
   }
   .announce-nav-container nav{
     display: grid;
@@ -203,13 +225,17 @@ const totalProductNumberOnCart = computed(() => {
     justify-items: center;
     align-items: center;
     background-color: white;
-    z-index: +2;
+    z-index: 100;
     position: relative;
+    min-height: 147px;
+    border-bottom: solid rgba(0,0,0, 0.2) 0.5px;
   }
 /* nav-inner */
   .announce-nav-container nav .logo > img{
     width: 200px;
-    height: 147px;
+    height: auto;
+    display: block;
+    object-fit: contain;
   }
   .announce-nav-container nav .main-nav{
     width: 100%;
@@ -241,6 +267,7 @@ const totalProductNumberOnCart = computed(() => {
   .announce-nav-container nav .searching-div-wrapper{
     display: inline-block;
     position: absolute;
+    z-index: 1;
     width: 100%;
     height: 100%;
     background-color: white;
@@ -253,12 +280,12 @@ const totalProductNumberOnCart = computed(() => {
   }
   .announce-nav-container nav .sd-inner{
     width: 100%;
-    display: flex;
-    align-items: center;
+    position: relative;
   }
   .announce-nav-container nav .sd-inner input{
-    width: 90%;
+    width: 100%;
     height: 40px;
+    box-sizing: border-box;
     border: 0.5px solid #4C4C6D;
     border-radius: 4px;
     font-size: 1rem;
@@ -268,15 +295,21 @@ const totalProductNumberOnCart = computed(() => {
       border: 2px solid #4C4C6D;
   }
   .announce-nav-container nav .sd-inner .xmark-search{
-    font-size: 1.5rem;
-    margin-left: 10px;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 10px);
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    margin-left: 0;
+    padding: 0;
     cursor: pointer;
   }
   .announce-nav-container nav .results-wrapper{
-    width: 90%;
+    width: 100%;
     background-color: white;
     border: 0.5px solid gray;
     position: absolute;
+    z-index: 2;
   }
   .announce-nav-container nav .results-wrapper .results-inner{
     width: 100%; 
@@ -353,6 +386,9 @@ const totalProductNumberOnCart = computed(() => {
     .announce-nav-container nav .logo{
       justify-self: start;
     }
+    .announce-nav-container nav .logo > img{
+      width: 170px;
+    }
     .announce-nav-container nav .shop-search{
       justify-self: end;
       margin-right: 2rem;
@@ -398,7 +434,7 @@ const totalProductNumberOnCart = computed(() => {
         z-index: +1;
     }
     .announce-nav-container nav .searching-div{
-      width: 90%; 
+      width: calc(100% - 80px);
       height: auto;
       margin: 50px auto 0;
       position: relative;
@@ -411,17 +447,40 @@ const totalProductNumberOnCart = computed(() => {
   }
   @media (max-width: 700px){
     .announce-bar{
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 1rem;
+      font-weight: 400;
     }
   }
-  @media (max-width: 340px){
+  @media (max-width: 392px){
     .announce-nav-container nav .logo > img{
       width: 150px;
-      height: 110px;
+    }
+
+    .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{
+        font-size: 0.95rem;
+    }
+    .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-price{
+        font-size: 1rem;
+    }
+    .announce-nav-container nav .searching-div{
+      width: calc(100% - 80px);
+      height: auto;
+      margin: 50px auto 0;
+      position: relative;
+    }
+      .announce-nav-container nav .sd-inner .xmark-search{
+      font-size: 1rem;
+      margin-left: 0;
+      cursor: pointer;
+    }
+
+  }
+  @media (max-width: 362px){
+    .announce-nav-container nav .logo > img{
+      width: 135px;
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{
-        font-size: 0.7rem;
+        font-size: 0.85rem;
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-price{
         font-size: 0.9rem;

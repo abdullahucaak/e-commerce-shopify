@@ -932,6 +932,10 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width:363px) and (max-width:392px){
+    .main .main-inner{
+        width: 95%;
+        padding: 5px 5px;
+    }
     .main .main-inner .cart-header h1{
         font-size: 1.7rem;
         line-height: 1.2;
@@ -992,6 +996,11 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width:362px){
+
+    .main .main-inner{
+        width: 100%;
+        padding: 5px 5px;
+    }
     .main .main-inner .cart-header h1{
         font-size: 1.55rem;
         line-height: 1.2;
