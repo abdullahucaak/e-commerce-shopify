@@ -1103,9 +1103,11 @@ watch(
   border: 1px solid #ebebeb;
   width: 350px;
   position: fixed;
-  top: var(--announce-bar-height, 46px);
+  top: var(--navigation-visible-bottom, var(--announce-bar-height, 46px));
   right: 0;
-  max-height: calc(100dvh - var(--announce-bar-height, 46px));
+  max-height: calc(
+    100dvh - var(--navigation-visible-bottom, var(--announce-bar-height, 46px))
+  );
   overflow-y: auto;
   box-shadow: 1px 1px 10px 2px rgba(0, 0, 0, 0.1);
   z-index: 5;

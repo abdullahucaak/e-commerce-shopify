@@ -3,7 +3,7 @@
     <div ref="announceBar" class="announce-bar">
       <span> Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'! </span>
     </div>
-    <nav>
+    <nav ref="navigationElement">
       <div class="logo">
         <img src="../assets/Alaya-Logo_300x300.jpg" alt="Logo">
       </div>
@@ -114,24 +114,40 @@ const search = ref('')
 const isBarsOpen = ref(false)
 const isAnimationWorked = ref(false)
 const announceBar = ref(null)
+const navigationElement = ref(null)
 let announceBarObserver
 
-onMounted(async () => {
-  const updateAnnounceBarHeight = () => {
-    const height = announceBar.value?.getBoundingClientRect().height || 0
-    document.documentElement.style.setProperty('--announce-bar-height', `${height}px`)
-  }
+const updateNavigationOffsets = () => {
+  const announceHeight = announceBar.value?.getBoundingClientRect().height || 0
+  const navigationBottom =
+    navigationElement.value?.getBoundingClientRect().bottom || announceHeight
+  const visibleHeaderBottom = Math.max(announceHeight, navigationBottom)
 
-  updateAnnounceBarHeight()
-  announceBarObserver = new ResizeObserver(updateAnnounceBarHeight)
+  document.documentElement.style.setProperty(
+    '--announce-bar-height',
+    `${announceHeight}px`
+  )
+  document.documentElement.style.setProperty(
+    '--navigation-visible-bottom',
+    `${visibleHeaderBottom}px`
+  )
+}
+
+onMounted(async () => {
+  updateNavigationOffsets()
+  announceBarObserver = new ResizeObserver(updateNavigationOffsets)
   if (announceBar.value) announceBarObserver.observe(announceBar.value)
+  if (navigationElement.value) announceBarObserver.observe(navigationElement.value)
+  window.addEventListener('scroll', updateNavigationOffsets, { passive: true })
 
   await productStore.initializeCart()
 })
 
 onBeforeUnmount(() => {
   announceBarObserver?.disconnect()
+  window.removeEventListener('scroll', updateNavigationOffsets)
   document.documentElement.style.removeProperty('--announce-bar-height')
+  document.documentElement.style.removeProperty('--navigation-visible-bottom')
 })
 
 const searchButtonOn = () => {
