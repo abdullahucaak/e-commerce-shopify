@@ -271,14 +271,23 @@ body{
     .home-container .c-best-selling .bs-footer{
         margin-bottom: 15px;
     }
+    .home-container .c-message{
+        font-size: 1rem;
+        line-height: 1.55;
+    }
 }
-@media (max-width: 340px){
+@media (max-width: 362px){
     .home-container .c-banner .banner-message .bm-inner .bm-title{
         font-size: 1.4rem;
     }  
     .home-container .c-banner .banner-message .bm-inner .bm-content{
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         font-weight: 500;
     }
+    .home-container .c-message{
+        font-size: 1rem;
+        line-height: 1.55;
+    }
+
 }
 </style>

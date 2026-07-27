@@ -1505,7 +1505,7 @@ watch(
   align-items: center;
   min-height: 25px;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: 7px;
   background-color: rgba(27, 156, 133, 0.12);
   color: #147967;
   font-size: 1rem;

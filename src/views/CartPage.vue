@@ -998,7 +998,7 @@ onBeforeUnmount(() => {
 @media (max-width:362px){
 
     .main .main-inner{
-        width: 100%;
+        width: 95%;
         padding: 5px 5px;
     }
     .main .main-inner .cart-header h1{
