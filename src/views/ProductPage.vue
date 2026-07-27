@@ -7,6 +7,7 @@
       'slide-in': isOpenCart,
       'slide-out': !isOpenCart
     }"
+    @animationend.self="handleCartPanelAnimationEnd"
   >
     <div class="view-cart-inner">
       <div class="title">
@@ -65,14 +66,13 @@
         </RouterLink>
       </div>
 
-      <RouterLink :to="{ name: 'shop' }">
-        <div
-          class="continue-shopping"
-          @click="hideCartPanel"
-        >
-          Continue Shopping
-        </div>
-      </RouterLink>
+      <button
+        type="button"
+        class="continue-shopping"
+        @click="hideCartPanel"
+      >
+        Continue Shopping
+      </button>
     </div>
   </div>
 
@@ -961,10 +961,12 @@ const hideCartPopup = () => {
 
 const hideCartPanel = () => {
   isOpenCart.value = false
+}
 
-  window.setTimeout(() => {
+const handleCartPanelAnimationEnd = () => {
+  if (!isOpenCart.value) {
     isAddedToCart.value = false
-  }, 499)
+  }
 }
 
 onMounted(() => {
@@ -1192,12 +1194,17 @@ watch(
 }
 
 .view-cart .continue-shopping {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
   text-align: center;
   letter-spacing: 0.7px;
   color: #1b9c85;
   text-decoration: underline;
   font-size: 0.9rem;
   padding: 20px;
+  cursor: pointer;
 }
 
 @keyframes slide-in {
@@ -1225,7 +1232,7 @@ watch(
 }
 
 .slide-out {
-  animation: slide-out 0.5s ease;
+  animation: slide-out 0.5s ease forwards;
 }
 
 .main {
