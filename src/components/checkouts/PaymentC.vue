@@ -254,13 +254,13 @@ const payNow = () =>{
 /* SHIPPING METHOD */
 
 div.title{
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 form .shipping-method{
     border: solid black 1px;
     border-radius: 10px;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
 }
 form .shipping-method .shipping-grid{
     display: block;
@@ -271,7 +271,7 @@ form .shipping-method .shipping-grid:first-child{
     border-bottom: solid black 0.5px;
 }
 form .shipping-method .shipping-grid .shipping-option p{
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 form .shipping-method .shipping-grid .shipping-price{
     justify-self: end;
@@ -290,10 +290,10 @@ form .shipping-method .shipping-grid input{
 
 /* FORM CONTENT */
 h1, h2{
-    font-size: 1rem;
+    font-size: var(--font-size-body);
 }
 p.payment-info{
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
 }
 .form-container {
   max-width: 40rem;
@@ -326,8 +326,8 @@ p.payment-info{
 
 .field__label {
   color: var(--color-gray);
-  font-size: 0.6rem;
-  font-weight: 300;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-light);
   text-transform: uppercase;
   margin-bottom: 0.25rem
 }
@@ -337,8 +337,8 @@ p.payment-info{
   margin: 0;
   border: 0;
   outline: 0;
-  font-weight: 300;
-  font-size: 1rem;
+  font-weight: var(--font-weight-light);
+  font-size: var(--font-size-body);
   width: 100%;
   -webkit-appearance: none;
   appearance: none;
@@ -357,8 +357,8 @@ p.payment-info{
 .button {
   background-color: #000;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   display: block;
   color: #fff;
   width: 100%;
@@ -369,7 +369,7 @@ p.payment-info{
   outline: 0;
 }
 .button:focus-visible {
-  background-color: #333;
+  background-color: var(--color-text-primary);
 }
 .form-footer{
     display: grid;
@@ -394,7 +394,7 @@ p.payment-info{
     margin-left: 3px;
     font-family: 'Montserrat', sans-serif;
     background-color: white;
-    font-size: 0.95rem;
+    font-size: var(--font-size-body-compact);
     letter-spacing: 0.06rem;
 }
 @media(max-width:340px){
@@ -408,12 +408,12 @@ p.payment-info{
     }
     .payment-info-inner{
       padding: 20px;
-      font-size: 0.7rem;
+      font-size: var(--font-size-2xs);
   }
   .field__label {
   color: var(--color-gray);
-  font-size: 0.7rem;
-  font-weight: 400;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-regular);
   text-transform: uppercase;
   margin-bottom: 0.25rem
 }
@@ -422,8 +422,8 @@ p.payment-info{
   margin: 0;
   border: 0;
   outline: 0;
-  font-weight: 300;
-  font-size: 0.7rem;
+  font-weight: var(--font-weight-light);
+  font-size: var(--font-size-2xs);
   width: 100%;
   -webkit-appearance: none;
   appearance: none;
@@ -444,7 +444,7 @@ p.payment-info{
     width: 80px;
     font-family: 'Montserrat', sans-serif;
     background-color: white;
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
     letter-spacing: 0.06rem;
 }
 .form-footer{
@@ -457,8 +457,8 @@ p.payment-info{
 .button {
   background-color: #000;
   text-transform: uppercase;
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
   display: block;
   color: #fff;
   width: 100%;

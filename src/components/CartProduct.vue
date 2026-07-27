@@ -14,20 +14,20 @@
                         params: { handle: cartLine.merchandise.product.handle }
                     }"
                 >
-                    <div class="cart-product-name">
+                    <div class="cart-product-name text-card-title">
                         {{ productTitle }}
                     </div>
 
                     <div
                         v-if="displayedVariantTitle"
-                        class="cart-product-variant-title"
+                        class="cart-product-variant-title text-muted"
                     >
                         {{ displayedVariantTitle }}
                     </div>
                 </RouterLink>
 
                 <div
-                    class="remove"
+                    class="remove link-danger link-underline"
                     @click="removeProduct"
                 >
                     Remove
@@ -40,7 +40,7 @@
                 class="cart-item-price"
                 :class="{ 'has-discount': isDiscounted }"
             >
-                <span class="cart-item-current-price">
+                <span class="cart-item-current-price price price-current">
                     {{ formattedUnitPrice }}
                 </span>
 
@@ -64,12 +64,12 @@
 
         <td class="cart-total-cell">
             <div class="cart-item-regular-price-group">
-                <span class="cart-item-regular-price">
+                <span class="cart-item-regular-price price price-total">
                     {{ formattedLineTotal }}
                 </span>
                 <span
                     v-if="isDiscounted"
-                    class="cart-item-compare-at-price"
+                    class="cart-item-compare-at-price price price-original price-original--danger"
                 >
                     {{ formattedCompareAtLineTotal }}
                 </span>
@@ -260,14 +260,14 @@ const removeProduct = async () => {
 }
 .main .main-inner .cart-header h1{
     margin-bottom: 20px;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
 }
 .main .main-inner .cart-header a{
-    color: #535e6f;
+    color: var(--color-text-secondary);
     text-decoration: underline;
 }
 .main .main-inner .cart-header a:hover{
-    color: #1b9c85;
+    color: var(--color-brand-primary);
 }
 .main .main-inner form .cart-table{
     border-collapse: collapse;
@@ -280,7 +280,7 @@ const removeProduct = async () => {
     padding: 12px 15px;
     border-bottom: solid 0.5px rgb(184, 184, 184);
     font-size: 1.05em;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
 }
 .main .main-inner form .cart-table tbody tr td{
     padding: 30px 15px;
@@ -301,13 +301,13 @@ const removeProduct = async () => {
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name-wrapper .remove{
     display: inline;
     margin-top: 5px;
-    color: rgb(203, 116, 107);
+    color: var(--color-danger);
     text-decoration: underline;
     cursor: pointer;
     user-select: none;
 }
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name-wrapper .remove:hover{
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     color: rgb(218, 75, 75);
 }
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name{
@@ -328,8 +328,8 @@ const removeProduct = async () => {
 .main .main-inner form .cart-table tbody tr .cart-quantity .cart-quantity-input{
     width: 100px;
     padding: 20px 10px;
-    border: solid 0.5px #1b2430;
-    font-size: 1.1rem;
+    border: solid 0.5px var(--color-text-strong);
+    font-size: var(--font-size-lg);
 }
 .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
     display: none;
@@ -342,13 +342,13 @@ const removeProduct = async () => {
 .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
     border: 0.5px solid black;
     border-radius: 3px;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     letter-spacing: 1.2px;
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
     padding: 10px;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea:focus{
-    border: 0.5px solid #1b9c85;
+    border: 0.5px solid var(--color-brand-primary);
     border-width: 1.5px;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right{
@@ -380,7 +380,7 @@ const removeProduct = async () => {
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
     padding: 10px 30px;
-    background-color: #1b9c85;
+    background-color: var(--color-brand-primary);
     color: white;
     font-size: 1em;
     border-radius: 3px;
@@ -388,8 +388,8 @@ const removeProduct = async () => {
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
     display: inline-block;
     padding: 20px 10px;
-    color: #1b2430;
-    font-size: 1.5rem;
+    color: var(--color-text-strong);
+    font-size: var(--font-size-2xl);
 }
 
 .main .main-inner .how-did-you-hear {
@@ -397,7 +397,7 @@ const removeProduct = async () => {
 }
 .main .main-inner .how-did-you-hear p {
     color: rgba(27, 26, 26, 0.7);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 .main .main-inner .how-did-you-hear .options select{
     background-color: none;
@@ -406,16 +406,16 @@ const removeProduct = async () => {
     margin-top: 10px;
     padding: 10px 20px;
     width: 100%;
-    font-size: 1rem;
-    font-weight: 300;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-light);
     letter-spacing: 1.1px;
 }
 .main .main-inner .how-did-you-hear .options select:focus{
-    border: solid 0.5px #1b9c85;
+    border: solid 0.5px var(--color-brand-primary);
     border-width: 1.5px;
 }
 .cart-item-regular-price{
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 .cart-item-price,
 .cart-item-regular-price-group {
@@ -425,13 +425,12 @@ const removeProduct = async () => {
     gap: 7px;
 }
 .cart-item-regular-price-group .cart-item-regular-price {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 .cart-item-compare-at-price {
-    color: #b64036;
-    /* color: rgb(203, 116, 107); */
+    color: var(--color-price-original-danger);
     font-size: 0.85em;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     text-decoration: line-through;
     text-decoration-thickness: 1px;
     white-space: nowrap;
@@ -478,7 +477,7 @@ const removeProduct = async () => {
     height: auto;
     }
     .main .main-inner form .cart-table tbody tr td{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
     .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
         aspect-ratio: 1/1;
@@ -500,7 +499,7 @@ const removeProduct = async () => {
         margin-top: 5px;
         width: 75px;
         padding: 5px 10px;
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner{
@@ -521,8 +520,8 @@ const removeProduct = async () => {
         justify-self: center;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
-        font-size: 1.1rem;
-        font-weight: 500;
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-medium);
         margin: 0 0 20px 25px;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
@@ -540,8 +539,8 @@ const removeProduct = async () => {
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
         display: inline-block;
         padding: 20px 10px;
-        color: #1b2430;
-        font-size: 1rem;
+        color: var(--color-text-strong);
+        font-size: var(--font-size-body);
     }
 }
 @media (max-width:391px){
@@ -555,7 +554,7 @@ const removeProduct = async () => {
         background-repeat: no-repeat;
     }
     .main .main-inner form .cart-table tbody tr td{
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
     .cart-product-name-wrapper{
         margin-left: 11px;
@@ -567,30 +566,30 @@ const removeProduct = async () => {
     }
 
     .cart-product-name{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
         line-height: 1.3;
     }
 
     .cart-product-variant-title{
-        font-size: 0.78rem;
+        font-size: var(--font-size-xs-relaxed);
         line-height: 1.3;
     }
 
     .remove{
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
 
     .cart-item-current-price,
     .cart-item-regular-price{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 
     .cart-item-compare-at-price{
-        font-size: 0.74rem;
+        font-size: var(--font-size-xs);
     }
 
     .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 }
 
@@ -600,30 +599,30 @@ const removeProduct = async () => {
     }
 
     .cart-product-name{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
         line-height: 1.28;
     }
 
     .cart-product-variant-title{
-        font-size: 0.74rem;
+        font-size: var(--font-size-xs);
         line-height: 1.3;
     }
 
     .remove{
-        font-size: 0.76rem;
+        font-size: var(--font-size-xs);
     }
 
     .cart-item-current-price,
     .cart-item-regular-price{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .cart-item-compare-at-price{
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     }
 
     .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
-        font-size: 0.78rem;
+        font-size: var(--font-size-xs-relaxed);
     }
 }
 @media (max-width:362px){
@@ -636,14 +635,14 @@ const removeProduct = async () => {
         background-repeat: no-repeat;
     }
     .main .main-inner form .cart-table tbody tr td{
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     }
     .cart-product-name-wrapper{
         margin-left: 11px;
     }
 
     .cart-product-name{
-        font-size: 0.76rem;
+        font-size: var(--font-size-xs);
         line-height: 1.25;
     }
 
@@ -653,12 +652,12 @@ const removeProduct = async () => {
     }
 
     .remove{
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     }
 
     .cart-item-current-price,
     .cart-item-regular-price{
-        font-size: 0.76rem;
+        font-size: var(--font-size-xs);
     }
 
     .cart-item-compare-at-price{
@@ -666,7 +665,7 @@ const removeProduct = async () => {
     }
 
     .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
-        font-size: 0.72rem;
+        font-size: var(--font-size-xs);
     }
 }
 

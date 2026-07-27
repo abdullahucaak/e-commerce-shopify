@@ -77,7 +77,7 @@ const handleLogin = async () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f5f5f5;
+    background-color: var(--color-surface-subtle);
 }
 
 .login-box {
@@ -101,9 +101,9 @@ const handleLogin = async () => {
 
 h2 {
     text-align: center;
-    color: #333;
+    color: var(--color-text-primary);
     margin-bottom: 1.5rem;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
 }
 
 .form-group {
@@ -113,7 +113,7 @@ h2 {
 label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #666;
+    color: var(--color-text-secondary);
 }
 
 input {
@@ -121,15 +121,15 @@ input {
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
 }
 
 input.error {
-    border-color: #dc3545;
+    border-color: var(--color-danger);
 }
 
 .error-message {
-    color: #dc3545;
+    color: var(--color-danger);
     font-size: 0.875rem;
     margin-bottom: 1rem;
 }
@@ -137,17 +137,17 @@ input.error {
 button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #1B9C85;
+    background-color: var(--color-brand-primary);
     color: white;
     border: none;
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #158c77;
+    background-color: var(--color-brand-hover);
 }
 
 button:disabled {
@@ -161,4 +161,4 @@ button:disabled {
         padding: 1.5rem;
     }
 }
-</style> 
+</style>

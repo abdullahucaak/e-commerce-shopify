@@ -108,7 +108,7 @@ const recentOrders = computed(() => {
 
 <style scoped>
 .green{
-    color: #1B9C85;
+    color: var(--color-brand-primary);
 }
 
 .dashboard {
@@ -119,7 +119,7 @@ const recentOrders = computed(() => {
 
 .dashboard-content {
     padding: 2rem;
-    background-color: #f5f5f5;
+    background-color: var(--color-surface-subtle);
 }
 
 .content-header {
@@ -130,8 +130,8 @@ const recentOrders = computed(() => {
 }
 
 .content-header h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
     opacity: 0.9;
 }
 
@@ -153,21 +153,21 @@ const recentOrders = computed(() => {
 }
 
 .stat-icon {
-    font-size: 2rem;
-    color: #1B9C85;
+    font-size: var(--font-size-3xl);
+    color: var(--color-brand-primary);
 }
 
 .stat-info h3 {
     font-size: 0.875rem;
-    font-weight: 500;
-    color: #666;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
     margin-bottom: 0.5rem;
 }
 
 .stat-info p {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: #1B9C85;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-brand-primary);
 }
 
 .recent-orders {
@@ -178,8 +178,8 @@ const recentOrders = computed(() => {
 }
 
 .recent-orders h2 {
-    font-size: 1.25rem;
-    font-weight: 500;
+    font-size: var(--font-size-heading-md);
+    font-weight: var(--font-weight-medium);
     margin-bottom: 1rem;
 }
 
@@ -195,12 +195,12 @@ table {
 th, td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 th {
-    font-weight: 500;
-    color: #666;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {
@@ -212,7 +212,7 @@ th {
         padding: 1rem;
         padding-bottom: 5rem;
         min-height: 100vh;
-        background-color: #f5f5f5;
+        background-color: var(--color-surface-subtle);
     }
 
     .content-header {
@@ -223,12 +223,12 @@ th {
     }
 
     .content-header h1 {
-        font-size: 1.5rem;
+        font-size: var(--font-size-2xl);
         margin: 0;
     }
 
     .user-info {
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         opacity: 0.8;
     }
 
@@ -245,16 +245,16 @@ th {
     }
 
     .stat-icon {
-        font-size: 1.75rem;
+        font-size: var(--font-size-heading-xl);
     }
 
     .stat-info h3 {
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
         margin-bottom: 0.25rem;
     }
 
     .stat-info p {
-        font-size: 1.25rem;
+        font-size: var(--font-size-heading-md);
     }
 
     .recent-orders {
@@ -264,7 +264,7 @@ th {
     }
 
     .recent-orders h2 {
-        font-size: 1.1rem;
+        font-size: var(--font-size-lg);
         margin-bottom: 1rem;
         opacity: 0.9;
     }
@@ -276,22 +276,22 @@ th {
     }
 
     table {
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         border-collapse: separate;
         border-spacing: 0;
     }
 
     th {
-        background-color: #f8f9fa;
+        background-color: var(--color-surface-muted);
         padding: 0.75rem 0.5rem;
-        font-weight: 500;
-        color: #666;
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-secondary);
         white-space: nowrap;
     }
 
     td {
         padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid var(--color-border-light);
     }
 
     td:first-child {
@@ -308,7 +308,7 @@ th {
 
 @media (max-width: 480px) {
     .content-header h1 {
-        font-size: 1.25rem;
+        font-size: var(--font-size-heading-md);
     }
 
     .stat-card {
@@ -320,15 +320,15 @@ th {
 
     .stat-icon {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: var(--font-size-2xl);
     }
 
     .stat-info h3 {
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
 
     .stat-info p {
-        font-size: 1.2rem;
+        font-size: var(--font-size-heading-sm);
     }
 
     .table-responsive {
@@ -340,7 +340,7 @@ th {
 
     table {
         min-width: 480px;
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
     }
 
     th, td {

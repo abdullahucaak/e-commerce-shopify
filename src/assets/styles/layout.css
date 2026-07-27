@@ -1,0 +1,40 @@
+.page-shell {
+  width: min(100% - (2 * var(--page-padding-inline)), var(--page-max-width));
+  margin-inline: auto;
+}
+
+.content-shell {
+  width: min(100% - (2 * var(--page-padding-inline)), var(--content-max-width));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: var(--section-spacing);
+}
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--card-gap);
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+@media (max-width: 700px) {
+  :root {
+    --page-padding-inline: clamp(0.75rem, 4vw, 1.5rem);
+    --section-spacing: clamp(1.75rem, 8vw, 3rem);
+    --card-gap: clamp(0.625rem, 3vw, 1rem);
+  }
+}
+

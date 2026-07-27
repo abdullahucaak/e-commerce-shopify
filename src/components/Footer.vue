@@ -1,18 +1,18 @@
 <template>
-    <div class="footer">
+    <div class="footer site-footer">
         <div class="f-container">
             <div class="f-item">
                 <div class="f-item-inner">
-                    <div class="f-title">
+                    <div class="f-title site-footer__title">
                         ALAYA TEA
                     </div>
                     <div class="f-content">
                         <ul>
                             <li>
-                                <RouterLink :to="{name:'shop'}">Shop</RouterLink>
+                                <RouterLink class="site-footer__link" :to="{name:'shop'}">Shop</RouterLink>
                             </li>
                             <li>
-                                <RouterLink :to="{name:'about-us'}">About Us</RouterLink>
+                                <RouterLink class="site-footer__link" :to="{name:'about-us'}">About Us</RouterLink>
                             </li>
                         </ul>
                     </div>
@@ -20,7 +20,7 @@
             </div>
             <div class="f-item">
                 <div class="f-item-inner">
-                    <div class="f-title">
+                    <div class="f-title site-footer__title">
                         STAY IN TOUCH: JOIN OUR NEWSLETTER
                     </div>
                     <div class="f-content">
@@ -39,7 +39,7 @@
 
                             <input
                                 v-model.trim="email"
-                                class="f-input"
+                                class="f-input form-control site-footer__input"
                                 type="email"
                                 name="contact[email]"
                                 placeholder="Email Address"
@@ -48,7 +48,7 @@
                             >
 
                             <button
-                                class="btn f-btn"
+                                class="btn f-btn button button-primary site-footer__button"
                                 type="submit"
                                 :disabled="!isValidEmail || isSubmitting"
                             >
@@ -70,7 +70,7 @@
             </div>
             <div class="f-item">
                 <div class="f-item-inner">
-                    <div class="f-title">
+                    <div class="f-title site-footer__title">
                         CONTACT
                     </div>
                     <div class="f-content">
@@ -193,7 +193,7 @@ const subscribe = async () => {
 
 <style scoped>
     .footer{
-        background-color: #4C4C6D;
+        background-color: var(--color-footer-bg);
         width: 100%;
         height: auto;
     }
@@ -209,23 +209,23 @@ const subscribe = async () => {
         padding: 25px;
     }
     .footer .f-container .f-item .f-item-inner{
-        color: whitesmoke;
+        color: var(--color-footer-text);
         letter-spacing: 3px;
     }
     .footer .f-container .f-item .f-item-inner .f-title{
-        font-size: 1.1rem;
+        font-size: var(--font-size-lg);
     }
     .footer .f-container .f-item .f-item-inner .f-content{
         margin-top: 20px;
     }
     /* item-1 */
     .footer .f-container .f-item .f-item-inner .f-content ul li{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         margin-top: 25px;
     }
     .footer .f-container .f-item .f-item-inner .f-content ul li a{
-        color: whitesmoke;
-        border-bottom: 0.5px solid whitesmoke;
+        color: var(--color-footer-link);
+        border-bottom: 0.5px solid var(--color-footer-link);
     }
     /* item-2 */
     .footer .f-container .f-item .f-item-inner .f-content .f-input{
@@ -233,7 +233,7 @@ const subscribe = async () => {
         padding: 10px 0;
         margin-right: 5px;
         border-radius: 2px;
-        font-size: 1rem;
+        font-size: var(--font-size-body);
         text-indent: 10px;
     }
     /* item-3 */
@@ -253,16 +253,16 @@ const subscribe = async () => {
         justify-self: end;
     }
     .footer .f-container .f-item .f-item-inner .f-content .alaya-tea{
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
         letter-spacing: 0.8px;
     }
     /* item-1, item-2, item-3 border-bottom */
     .footer .f-container .f-item:nth-child(-n+3){ /* prototürk */
-        border-bottom: 0.5px solid whitesmoke;
+        border-bottom: 0.5px solid var(--color-footer-text);
     }
     .subscription-message {
         margin-top: 10px;
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
         text-align: left;
     }
 
@@ -278,7 +278,7 @@ const subscribe = async () => {
     }
 
     .subscription-message.error {
-        color: #E74646;
+        color: var(--color-danger);
     }
 
     .f-btn:disabled {
@@ -300,7 +300,7 @@ const subscribe = async () => {
             padding: 10px 0;
             margin-right: 5px;
             border-radius: 2px;
-            font-size: 0.9rem;
+            font-size: var(--font-size-body-sm);
             text-indent: 10px;
         }
 
@@ -348,7 +348,7 @@ const subscribe = async () => {
             grid-row: 2/3;
         }
         .footer .f-container .f-item .f-item-inner .f-content .f-input{
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
         text-indent: 5px;
     }
         .footer .f-container .f-item:nth-child(2) .f-item-inner .f-content .subscription .f-btn{
@@ -414,10 +414,10 @@ const subscribe = async () => {
         }
         
         .footer .f-container .f-item .f-item-inner .f-title{
-            font-size: 1rem;
+            font-size: var(--font-size-body);
         }
         .footer .f-container .f-item .f-item-inner .f-content ul li{
-            font-size: 0.7rem;
+            font-size: var(--font-size-2xs);
             margin-top: 25px;
         }
         
@@ -426,21 +426,21 @@ const subscribe = async () => {
             padding: 10px 0;
             margin-right: 5px;
             border-radius: 2px;
-            font-size: 0.6rem;
+            font-size: var(--font-size-3xs);
             text-indent: 10px;
         }
         .footer .f-container .f-item .f-item-inner .f-content .alaya-tea{
-            font-size: 0.8rem;
+            font-size: var(--font-size-sm);
             letter-spacing: 0.8px;
         }
         .footer .f-container .f-item:nth-child(2) .f-item-inner .f-content .subscription .f-btn{
             padding: 10px 9px;
-            font-size: 0.7rem;
+            font-size: var(--font-size-2xs);
         }
         .subscription-message {
             margin-top: 8px;
             margin-bottom: 10px;
-            font-size: 0.6rem;
+            font-size: var(--font-size-3xs);
             text-align: left;
         }
 
@@ -449,7 +449,7 @@ const subscribe = async () => {
         }
 
         .subscription-message.error {
-            color: #E74646;
+            color: var(--color-danger);
         }
 
         .f-btn:disabled {

@@ -1,15 +1,15 @@
 <template>
    <Navigation/>
    <div class="shop-container">
-      <div class="s-header">
+      <div class="s-header text-page-title">
          All Products
       </div>
-      <div class="s-description">
+      <div class="s-description text-body">
          We source our teas from organic estates and farms that are building soil health and going back to regenerative practices: no tilling, no pesticides, and no synthetic inputs. All our teas come from biodynamic estates. All our herbals come from organic farms, which have transitioned to regenerative agriculture. Picked fresh and sent in small batches, our products celebrate simple and pure ingredients free of pesticides or added flavorings.
       </div>
       <div class="sort-by-container">
          <div class="sort-by">SORT BY
-            <select v-model="sortBy">
+            <select v-model="sortBy" class="sort-select">
                 <option value="featured">Featured</option>
                 <option value="low-to-high">Price, low to high</option>
                 <option value="high-to-low">Price, high to low</option>
@@ -95,13 +95,13 @@ const sortedProducts = computed(() => {
    .shop-container .s-header{
       text-align: center;
       align-self: center;
-      font-size: 2rem;
-      font-weight: 300;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-light);
    }
    .shop-container .s-description{
       text-align: center;
-      font-size: 0.9rem;
-      font-weight: 400;
+      font-size: var(--font-size-body-sm);
+      font-weight: var(--font-weight-regular);
       width: 70%;
       height: auto;
       margin: 0 auto 50px;
@@ -111,24 +111,27 @@ const sortedProducts = computed(() => {
    }
    .shop-container .sort-by-container{
       display: flex;
-      font-size: 0.9rem;
+      font-size: var(--font-size-body-sm);
       justify-content: space-around;
       align-items: center;
-      border-top: 0.5px solid rgb(182, 182, 182);
-      border-bottom: 0.5px solid rgb(182, 182, 182);
+      border-top: 0.5px solid var(--color-text-subtle);
+      border-bottom: 0.5px solid var(--color-text-subtle);
    }
    .shop-container .sort-by-container .sort-by select{
       margin-left: 10px;
-      font-size: 1rem;
+      font-size: var(--font-size-body);
    }
 
    .shop-container .s-products-container{
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      grid-column-gap: 30px;
-      grid-row-gap: 10px;
+      column-gap: var(--card-gap);
+      row-gap: var(--card-gap);
       align-items: start;
-      width: 1050px;
+      width: min(
+        calc(100% - (2 * var(--page-padding-inline))),
+        var(--shop-grid-max-width)
+      );
       height: auto;
       margin: 50px auto;
       overflow: visible;
@@ -156,12 +159,12 @@ const sortedProducts = computed(() => {
       background-repeat: no-repeat;
    }
    .shop-container .s-products-container .s-item .product-name, .product-price{
-      font-size: 1.05rem;
+      font-size: var(--font-size-body-large);
       text-transform: uppercase;
    }
    .shop-container .s-products-container .s-item .product-price{
       margin-top: 5px;
-      font-weight: 700;
+      font-weight: var(--font-weight-bold);
    }
 
    /* responsive | stop shrinking*/
@@ -198,31 +201,31 @@ const sortedProducts = computed(() => {
       }
 
       .shop-container .s-description{
-         font-size: 0.84rem;
+         font-size: var(--font-size-sm);
          line-height: 1.65;
          letter-spacing: 1px;
       }
 
       .shop-container .sort-by-container{
-         font-size: 0.82rem;
+         font-size: var(--font-size-sm);
       }
 
       .shop-container .sort-by-container .sort-by select{
-         font-size: 0.88rem;
+         font-size: var(--font-size-sm-relaxed);
       }
    }
       @media (max-width: 392px){
       .shop-container .sort-by-container{
          display: flex;
-         font-size: 0.8rem;
+         font-size: var(--font-size-sm);
          justify-content: space-around;
          align-items: center;
-         border-top: 0.5px solid rgb(182, 182, 182);
-         border-bottom: 0.5px solid rgb(182, 182, 182);
+         border-top: 0.5px solid var(--color-text-subtle);
+         border-bottom: 0.5px solid var(--color-text-subtle);
       }
       .shop-container .sort-by-container .sort-by select{
          margin-left: 10px;
-         font-size: 0.9rem;
+         font-size: var(--font-size-body-sm);
       }
    }
    @media (max-width: 362px){
@@ -231,14 +234,14 @@ const sortedProducts = computed(() => {
       }
       .shop-container .s-header{
          padding: 44px 16px 20px;
-         font-size: 1.5rem;
+         font-size: var(--font-size-2xl);
          line-height: 1.2;
       }
       .shop-container .s-description{
          width: calc(100% - 32px);
          margin: 0 auto 28px;
          padding: 0;
-         font-size: 0.78rem;
+         font-size: var(--font-size-xs-relaxed);
          line-height: 1.65;
          letter-spacing: 0.6px;
       }
@@ -247,11 +250,11 @@ const sortedProducts = computed(() => {
          min-height: 54px;
          padding: 8px 14px;
          gap: 8px;
-         font-size: 0.75rem;
+         font-size: var(--font-size-xs);
          justify-content: space-between;
          align-items: center;
-         border-top: 0.5px solid rgb(182, 182, 182);
-         border-bottom: 0.5px solid rgb(182, 182, 182);
+         border-top: 0.5px solid var(--color-text-subtle);
+         border-bottom: 0.5px solid var(--color-text-subtle);
       }
       .shop-container .sort-by-container .sort-by{
          display: flex;
@@ -265,7 +268,7 @@ const sortedProducts = computed(() => {
          max-width: 130px;
          margin-left: 0;
          padding: 4px 2px;
-         font-size: 0.78rem;
+         font-size: var(--font-size-xs-relaxed);
       }
       .shop-container .sort-by-container .s-products{
          flex: 0 0 auto;

@@ -111,7 +111,7 @@ img.logo:hover {
 }
 
 .dashboard-nav {
-    background-color: #1B9C85;
+    background-color: var(--color-brand-primary);
     color: white;
     padding: 2rem;
 }
@@ -157,7 +157,7 @@ img.logo:hover {
     padding: 0.75rem 1rem;
     cursor: pointer;
     text-align: left;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
 }
 
 .logout-btn:hover {
@@ -173,7 +173,7 @@ img.logo:hover {
         padding: 0.75rem;
         z-index: 100;
         box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        background-color: #1B9C85;
+        background-color: var(--color-brand-primary);
     }
     
     .logo {
@@ -189,7 +189,7 @@ img.logo:hover {
     
     .nav-link {
         padding: 0.5rem;
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         text-align: center;
         display: flex;
         flex-direction: column;
@@ -200,17 +200,17 @@ img.logo:hover {
     
     .nav-link i {
         margin: 0;
-        font-size: 1.2rem;
+        font-size: var(--font-size-heading-sm);
     }
     
     .nav-link span {
-        font-size: 0.75rem;
+        font-size: var(--font-size-xs);
     }
 
     .logout-btn {
         margin: 0;
         padding: 0.5rem;
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -220,7 +220,7 @@ img.logo:hover {
 
     .logout-btn i {
         margin: 0;
-        font-size: 1.2rem;
+        font-size: var(--font-size-heading-sm);
     }
 }
 

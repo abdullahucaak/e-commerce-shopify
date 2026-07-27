@@ -60,7 +60,7 @@
             class="main-inner-cart-empty"
         >
             <div class="mice-inner">
-                <h1 class="your-cart">Your Cart</h1>
+                <h1 class="your-cart text-page-title">Your Cart</h1>
                 <div>Your Cart is Currently Empty</div>
                 <RouterLink :to="{name:'shop'}">
                     <button type="button"> CONTINUE SHOPPING </button>
@@ -70,8 +70,8 @@
 
         <div v-else class="main-inner">
             <div class="cart-header">
-                <h1>Your Cart</h1>
-                <RouterLink class="continue-shopping" :to="{name:'shop'}">
+                <h1 class="text-page-title">Your Cart</h1>
+                <RouterLink class="continue-shopping link-secondary link-underline" :to="{name:'shop'}">
                     Continue Shopping
                 </RouterLink>
             </div>
@@ -86,7 +86,7 @@
 
             <form @submit.prevent="goToCheckout">
                 <table class="cart-table">
-                    <thead class="t-heading">
+                    <thead class="t-heading table-heading">
                         <tr>
                             <th>PRODUCT</th>
                             <th>PRICE</th>
@@ -107,13 +107,14 @@
                     <div class="cart-footer-inner">
                         <div class="f-left">
                             <label
-                                style="display: block; margin-bottom: 20px; font-weight: 300;"
+                                class="order-note-label form-note-label"
                                 for="order-note"
                             >
                                 Add a note to your order
                             </label>
 
                             <textarea
+                                class="order-note-input"
                                 id="order-note"
                                 name="userNote"
                                 v-model="userNote"
@@ -139,7 +140,7 @@
                                             <span>{{ formattedSubtotal }}</span>
                                             <span
                                                 v-if="formattedOriginalSubtotal"
-                                                class="original-subtotal"
+                                                class="original-subtotal price price-original price-original--danger"
                                             >
                                                 {{ formattedOriginalSubtotal }}
                                             </span>
@@ -148,7 +149,7 @@
 
                                     <div
                                         v-if="formattedSavings"
-                                        class="cart-savings-message"
+                                        class="cart-savings-message price-savings"
                                     >
                                         You saved {{ formattedSavings }} on this order.
                                     </div>
@@ -194,9 +195,9 @@
                 </div>
 
                 <div class="how-did-you-hear">
-                    <div class="head">How did you hear about us?</div>
+                    <div class="head form-question-label">How did you hear about us?</div>
                     <div class="options">
-                        <select v-model="howDidYouHear">
+                        <select v-model="howDidYouHear" class="referral-select">
                             <option>Please Make a Selection</option>
                             <option value="Facebook">Facebook</option>
                             <option value="Google">Google</option>
@@ -449,28 +450,28 @@ onBeforeUnmount(() => {
     padding: 5px;
     border: 0;
     background: transparent;
-    color: #535e6f;
-    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-heading-md);
     cursor: pointer;
 }
 
 .cart-popup-icon {
     margin-bottom: 14px;
     color: rgb(71, 71, 71);
-    font-size: 2.2rem;
+    font-size: var(--font-size-display);
 }
 
 .cart-popup h2 {
     margin: 0 0 12px;
-    color: #1b2430;
-    font-size: 1.35rem;
-    font-weight: 500;
+    color: var(--color-text-strong);
+    font-size: var(--font-size-heading-lg);
+    font-weight: var(--font-weight-medium);
 }
 
 .cart-popup p {
     margin: 0;
-    color: #535e6f;
-    font-size: 1rem;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
     line-height: 1.55;
 }
 
@@ -478,11 +479,11 @@ onBeforeUnmount(() => {
     width: 75%;
     margin-top: 24px;
     padding: 12px 18px;
-    border: 1px solid #1b9c85;
+    border: 1px solid var(--color-brand-primary);
     border-radius: 4px;
     background-color: white;
-    color: #1b9c85;
-    font-size: 0.95rem;
+    color: var(--color-brand-primary);
+    font-size: var(--font-size-body-compact);
     cursor: pointer;
     transition: 0.3s;
 }
@@ -490,7 +491,7 @@ onBeforeUnmount(() => {
 .cart-popup-button:hover {
     width: 80%;
     background-color: white;
-    color: #1b9c85;
+    color: var(--color-brand-primary);
 }
 
 @media (max-width: 480px) {
@@ -503,11 +504,11 @@ onBeforeUnmount(() => {
     }
 
     .cart-popup h2 {
-        font-size: 1.2rem;
+        font-size: var(--font-size-heading-sm);
     }
 
     .cart-popup p {
-        font-size: 0.92rem;
+        font-size: var(--font-size-body-compact);
     }
 }
 
@@ -524,7 +525,7 @@ onBeforeUnmount(() => {
 }
 .main .main-inner-cart-empty .mice-inner .your-cart{
     letter-spacing: 3px;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 .main .main-inner-cart-empty .mice-inner div{
     margin-top: 20px;
@@ -532,9 +533,9 @@ onBeforeUnmount(() => {
 }
 .main .main-inner-cart-empty .mice-inner button{
     background-color: white;
-    color: #1b9c85;
-    border: 1px solid #1b9c85;
-    font-size: 0.8rem;
+    color: var(--color-brand-primary);
+    border: 1px solid var(--color-brand-primary);
+    font-size: var(--font-size-sm);
     letter-spacing: 1px;
     padding: 15px 35px;
     border-radius: 5px;
@@ -542,9 +543,9 @@ onBeforeUnmount(() => {
     transition: 0.5s;
 }
 .main .main-inner-cart-empty .mice-inner button:hover{
-    background-color: #1b9c85;
-    color: whitesmoke;
-    font-size: 0.8rem;
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-inverse);
+    font-size: var(--font-size-sm);
     letter-spacing: 0.1px;
     padding: 15px 55px;
     border-radius: 5px;
@@ -561,14 +562,14 @@ onBeforeUnmount(() => {
 }
 .main .main-inner .cart-header h1{
     margin-bottom: 20px;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
 }
 .main .main-inner .cart-header a{
-    color: #535e6f;
+    color: var(--color-text-secondary);
     text-decoration: underline;
 }
 .main .main-inner .cart-header a:hover{
-    color: #1b9c85;
+    color: var(--color-brand-primary);
 }
 .main .main-inner form .cart-table{
     border-collapse: collapse;
@@ -581,7 +582,7 @@ onBeforeUnmount(() => {
     padding: 12px 15px;
     border-bottom: solid 0.5px rgb(184, 184, 184);
     font-size: 1.05em;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
 }
 .main .main-inner form .cart-table tbody tr td{
     padding: 30px 15px;
@@ -601,14 +602,14 @@ onBeforeUnmount(() => {
 }
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-name-wrapper .remove{
     margin-top: 5px;
-    color: rgb(203, 116, 107);
+    color: var(--color-danger);
     text-decoration: underline;
 }
 .main .main-inner form .cart-table tbody tr .cart-quantity .cart-quantity-input{
     width: 100px;
     padding: 20px 10px;
-    border: solid 0.5px #1b2430;
-    font-size: 1.1rem;
+    border: solid 0.5px var(--color-text-strong);
+    font-size: var(--font-size-lg);
 }
 .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone{
     display: none;
@@ -618,16 +619,20 @@ onBeforeUnmount(() => {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
+.main .main-inner form .cart-footer .cart-footer-inner .order-note-label{
+    display: block;
+    margin-bottom: 20px;
+}
 .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
     border: 0.5px solid black;
     border-radius: 3px;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     letter-spacing: 1.2px;
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
     padding: 10px;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea:focus{
-    border: 0.5px solid #1b9c85;
+    border: 0.5px solid var(--color-brand-primary);
     border-width: 1.5px;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right{
@@ -658,9 +663,9 @@ onBeforeUnmount(() => {
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
     margin: -8px 0 14px;
-    color: #147967;
+    color: var(--color-brand-hover);
     font-size: 0.9em;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     text-align: right;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
@@ -673,7 +678,7 @@ onBeforeUnmount(() => {
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
     padding: 10px 30px;
-    background-color: #1b9c85;
+    background-color: var(--color-brand-primary);
     color: white;
     font-size: 1em;
     border-radius: 3px;
@@ -686,8 +691,8 @@ onBeforeUnmount(() => {
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
     display: inline-block;
     padding: 20px 10px;
-    color: #1b2430;
-    font-size: 1.5rem;
+    color: var(--color-text-strong);
+    font-size: var(--font-size-2xl);
 }
 
 .main .main-inner .how-did-you-hear {
@@ -695,7 +700,7 @@ onBeforeUnmount(() => {
 }
 .main .main-inner .how-did-you-hear .head {
     color: rgba(27, 26, 26, 0.7);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 .main .main-inner .how-did-you-hear .options select{
     background-color: none;
@@ -704,16 +709,16 @@ onBeforeUnmount(() => {
     margin-top: 10px;
     padding: 10px 20px;
     width: 100%;
-    font-size: 1rem;
-    font-weight: 300;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-light);
     letter-spacing: 1.1px;
 }
 .main .main-inner .how-did-you-hear .options select:focus{
-    border: solid 0.5px #1b9c85;
+    border: solid 0.5px var(--color-brand-primary);
     border-width: 1.5px;
 }
 .subtotal{
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 .subtotal-prices {
     display: inline-flex;
@@ -723,9 +728,9 @@ onBeforeUnmount(() => {
     font-size: 1.05em;
 }
 .original-subtotal {
-    color: #b64036;
+    color: var(--color-price-original-danger);
     font-size: 0.85em;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     text-decoration: line-through;
     text-decoration-thickness: 1px;
     white-space: nowrap;
@@ -766,7 +771,7 @@ onBeforeUnmount(() => {
     height: auto;
     }
     .main .main-inner form .cart-table tbody tr td{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
     .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
         aspect-ratio: 1/1;
@@ -788,7 +793,7 @@ onBeforeUnmount(() => {
         margin-top: 5px;
         width: 75px;
         padding: 5px 10px;
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner{
@@ -809,8 +814,8 @@ onBeforeUnmount(() => {
         justify-self: stretch;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
-        font-size: 1.1rem;
-        font-weight: 500;
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-medium);
         margin: 0 0 20px;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
@@ -828,14 +833,14 @@ onBeforeUnmount(() => {
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input:hover{
         padding: 10px 100px;
         background-color: white;
-        color: #1b9c85;
-        border: #1b9c85 0.5px solid;
+        color: var(--color-brand-primary);
+        border: var(--color-brand-primary) 0.5px solid;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
         display: inline-block;
         padding: 20px 10px;
-        color: #1b2430;
-        font-size: 1rem;
+        color: var(--color-text-strong);
+        font-size: var(--font-size-body);
     }
 }
 @media (max-width:391px){
@@ -858,7 +863,7 @@ onBeforeUnmount(() => {
         background-repeat: no-repeat;
     }
     .main .main-inner form .cart-table tbody tr td{
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     }
 
     .cart-product-name-wrapper{
@@ -874,23 +879,23 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner .cart-header .continue-shopping{
-        font-size: 0.94rem;
+        font-size: var(--font-size-body-compact);
     }
 
     .main .main-inner form .cart-table thead tr th{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-left label{
-        font-size: 0.94rem;
+        font-size: var(--font-size-body-compact);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
-        font-size: 1.05rem;
+        font-size: var(--font-size-body-large);
     }
 
     .subtotal-prices{
@@ -902,15 +907,15 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
-        font-size: 0.86rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
-        font-size: 0.84rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
-        font-size: 0.92rem;
+        font-size: var(--font-size-body-compact);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
@@ -918,16 +923,16 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner .how-did-you-hear .head{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .main .main-inner .how-did-you-hear .options select{
-        font-size: 0.86rem;
+        font-size: var(--font-size-sm);
     }
 
     .cart-inventory-warning,
     .cart-status{
-        font-size: 0.94rem;
+        font-size: var(--font-size-body-compact);
     }
 }
 
@@ -942,23 +947,23 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner .cart-header .continue-shopping{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 
     .main .main-inner form .cart-table thead tr th{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-left label{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
-        font-size: 0.84rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
-        font-size: 1rem;
+        font-size: var(--font-size-body);
     }
 
     .subtotal-prices{
@@ -970,28 +975,28 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 
     .main .main-inner .how-did-you-hear .head{
-        font-size: 0.84rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner .how-did-you-hear .options select{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .cart-inventory-warning,
     .cart-status{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 }
 
@@ -1007,23 +1012,23 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner .cart-header .continue-shopping{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-table thead tr th{
-        font-size: 0.76rem;
+        font-size: var(--font-size-xs);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-left label{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea{
-        font-size: 0.78rem;
+        font-size: var(--font-size-xs-relaxed);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .subtotal-prices{
@@ -1035,28 +1040,28 @@ onBeforeUnmount(() => {
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-savings-message{
-        font-size: 0.76rem;
+        font-size: var(--font-size-xs);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-shipping-message{
-        font-size: 0.74rem;
+        font-size: var(--font-size-xs);
     }
 
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 
     .main .main-inner .how-did-you-hear .head{
-        font-size: 0.78rem;
+        font-size: var(--font-size-xs-relaxed);
     }
 
     .main .main-inner .how-did-you-hear .options select{
-        font-size: 0.76rem;
+        font-size: var(--font-size-xs);
     }
 
     .cart-inventory-warning,
     .cart-status{
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
     }
 }
 
@@ -1065,8 +1070,8 @@ onBeforeUnmount(() => {
 .cart-inventory-warning {
     margin: 20px 0;
     padding: 15px;
-    border: 1px solid #dc3545;
-    color: #dc3545;
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
     background-color: #fff5f5;
 }
 
@@ -1076,10 +1081,10 @@ onBeforeUnmount(() => {
     width: 60%;
     padding: 100px 0;
     text-align: center;
-    font-size: 1.1rem;
+    font-size: var(--font-size-lg);
 }
 
 .cart-error {
-    color: #dc3545;
+    color: var(--color-danger);
 }
 </style>

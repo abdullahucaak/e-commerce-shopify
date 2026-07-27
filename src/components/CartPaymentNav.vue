@@ -45,8 +45,8 @@
   display: inline-block;
   padding: 0 10px;
   margin-bottom: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   user-select: none;
 }
 .main-checkouts .inner-navbar ul li span{
@@ -65,7 +65,7 @@ display: none;
 }
 .currentPage{
   text-decoration: underline;
-  color: #1B9C85;
+  color: var(--color-brand-primary);
 }
 @media (max-width: 537px){
   .main-checkouts .inner-navbar ul{

@@ -43,7 +43,7 @@ import Navigation from '../components/Navigation.vue'
 }
 .main-container .main-inner-container .title h1{
     display: inline-block;
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
 }
 .main-container .main-inner-container .founders-img{
     aspect-ratio: 460/612;
@@ -61,7 +61,7 @@ import Navigation from '../components/Navigation.vue'
 .p1{
     letter-spacing: 0.5px;
     line-height: 32px;
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
     margin-bottom: 20px;
 }
 
@@ -71,7 +71,7 @@ import Navigation from '../components/Navigation.vue'
         overflow: hidden;
     }
     .main-container .main-inner-container .title h1{
-        font-size: 1.2rem;
+        font-size: var(--font-size-heading-sm);
 }
 @media (max-width:340px){
     .main-container .main-inner-container{
@@ -80,7 +80,7 @@ import Navigation from '../components/Navigation.vue'
         margin: 0 auto 50px;
         justify-content: center;
         align-items: center;
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
     .main-container .main-inner-container .paragraph{
         margin: 25px auto;
@@ -89,7 +89,7 @@ import Navigation from '../components/Navigation.vue'
     .p1{
     letter-spacing: 0.5px;
     line-height: 24px;
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
     margin-bottom: 20px;
 }
 }

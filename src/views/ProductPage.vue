@@ -158,7 +158,7 @@
             >
               <span
                 v-if="isDiscounted"
-                class="image-discount-label"
+                class="image-discount-label discount-badge discount-badge--outline"
               >
                 %{{ discountPercentage }} DISCOUNT
               </span>
@@ -282,7 +282,7 @@
 <!--             <h1>
               {{ productTitleWithVariant }}
             </h1> -->
-            <h1>
+            <h1 class="text-product-title">
               {{ currentProduct.title }}
             </h1>
 
@@ -305,16 +305,16 @@
               class="product-price"
               :class="{ 'has-discount': isDiscounted }"
             >
-              <span class="current-price">{{ formattedPrice }}</span>
+              <span class="current-price price price-current">{{ formattedPrice }}</span>
               <span
                 v-if="isDiscounted"
-                class="compare-at-price"
+                class="compare-at-price price price-original price-original--muted"
               >
                 {{ formattedCompareAtPrice }}
               </span>
               <span
                 v-if="isDiscounted"
-                class="discount-badge"
+                class="discount-badge discount-badge--soft"
               >
                 SAVE {{ discountPercentage }}%
               </span>
@@ -818,8 +818,8 @@ const getColorSwatch = colorValue => {
     navy: '#233a5e',
     'light gray': '#c9c9c9',
     'light grey': '#c9c9c9',
-    gray: '#8e8e8e',
-    grey: '#8e8e8e',
+    gray: 'var(--color-text-muted)',
+    grey: 'var(--color-text-muted)',
     black: '#1f1f1f',
     white: '#ffffff',
     red: '#c84b4b',
@@ -1029,28 +1029,28 @@ watch(
   padding: 5px;
   border: 0;
   background: transparent;
-  color: #535e6f;
-  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-heading-md);
   cursor: pointer;
 }
 
 .cart-popup-icon {
   margin-bottom: 14px;
   color: rgb(71, 71, 71);
-  font-size: 2.2rem;
+  font-size: var(--font-size-display);
 }
 
 .cart-popup h2 {
   margin: 0 0 12px;
-  color: #1b2430;
-  font-size: 1.35rem;
-  font-weight: 500;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-medium);
 }
 
 .cart-popup p {
   margin: 0;
-  color: #535e6f;
-  font-size: 1rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
   line-height: 1.55;
 }
 
@@ -1058,11 +1058,11 @@ watch(
   width: 75%;
   margin-top: 24px;
   padding: 12px 18px;
-  border: 1px solid #1b9c85;
+  border: 1px solid var(--color-brand-primary);
   border-radius: 4px;
   background-color: white;
-  color: #1b9c85;
-  font-size: 0.95rem;
+  color: var(--color-brand-primary);
+  font-size: var(--font-size-body-compact);
   cursor: pointer;
   transition: 0.3s;
 }
@@ -1070,13 +1070,13 @@ watch(
 .cart-popup-button:hover {
   width: 80%;
   background-color: white;
-  color: #1b9c85;
+  color: var(--color-brand-primary);
 }
 .product-variant-title {
   margin-top: -10px;
   margin-bottom: 20px;
-  font-size: 1rem;
-  font-weight: 400;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   color: rgb(110, 110, 110);
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1092,11 +1092,11 @@ watch(
   }
 
   .cart-popup h2 {
-    font-size: 1.2rem;
+    font-size: var(--font-size-heading-sm);
   }
 
   .cart-popup p {
-    font-size: 0.92rem;
+    font-size: var(--font-size-body-compact);
   }
 }
 
@@ -1133,7 +1133,7 @@ watch(
 
 .view-cart .title .cross {
   text-align: right;
-  font-size: 1.3rem;
+  font-size: var(--font-size-xl);
   cursor: pointer;
 }
 
@@ -1154,7 +1154,7 @@ watch(
   grid-column: 2 / 5;
   padding-left: 20px;
   letter-spacing: 1px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: capitalize;
 }
 .view-cart .middle .product-name-title{
@@ -1180,16 +1180,16 @@ watch(
   width: 100%;
   background-color: white;
   line-height: 1.4;
-  border: solid #1b9c85 0.5px;
+  border: solid var(--color-brand-primary) 0.5px;
   border-radius: 2px;
-  font-size: 1rem;
-  color: #1b9c85;
+  font-size: var(--font-size-body);
+  color: var(--color-brand-primary);
   padding: 12px 0;
 }
 
 .view-cart .view-cart-button .cart-button:hover {
-  border: solid #1b9c85 1px;
-  color: #1b9c85;
+  border: solid var(--color-brand-primary) 1px;
+  color: var(--color-brand-primary);
   padding: 11.5px 0;
 }
 
@@ -1200,9 +1200,9 @@ watch(
   background: transparent;
   text-align: center;
   letter-spacing: 0.7px;
-  color: #1b9c85;
+  color: var(--color-brand-primary);
   text-decoration: underline;
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
   padding: 20px;
   cursor: pointer;
 }
@@ -1286,12 +1286,12 @@ watch(
   align-items: center;
   min-height: 24px;
   padding: 6px 16px;
-  border: 1px solid #1b9c85;
+  border: 1px solid var(--color-brand-primary);
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.9);
-  color: #147967;
-  font-size: 1rem;
-  font-weight: 500;
+  color: var(--color-brand-hover);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.35px;
   line-height: 1;
   white-space: nowrap;
@@ -1303,8 +1303,16 @@ watch(
   position: absolute;
   width: 38%;
   aspect-ratio: 1 / 1;
-  border: 1px solid rgba(27, 156, 133, 0.75);
-  background-color: rgba(27, 156, 133, 0.16);
+  border: 1px solid color-mix(
+    in srgb,
+    var(--color-brand-primary) 75%,
+    transparent
+  );
+  background-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 16%,
+    transparent
+  );
   box-sizing: border-box;
   pointer-events: none;
   transform: translate(-50%, -50%);
@@ -1356,7 +1364,7 @@ watch(
 }
 
 .main .main-inner .main-inner-left .other-images .other-images-product.active {
-  outline: 2px solid #1b9c85;
+  outline: 2px solid var(--color-brand-primary);
   outline-offset: 2px;
 }
 
@@ -1379,13 +1387,13 @@ watch(
 
 .variant-color-label {
   color: rgb(65, 61, 61);
-  font-size: 1.05rem;
-  font-weight: 500;
+  font-size: var(--font-size-body-large);
+  font-weight: var(--font-weight-medium);
 }
 
 .variant-color-value {
   color: rgba(65, 61, 61, 0.75);
-  font-size: 0.95rem;
+  font-size: var(--font-size-body-compact);
 }
 
 .variant-color-options {
@@ -1413,13 +1421,13 @@ watch(
 }
 
 .variant-color-button:hover {
-  border-color: #1b9c85;
+  border-color: var(--color-brand-primary);
   transform: translateY(-1px);
 }
 
 .variant-color-button.active {
-  border-color: #1b9c85;
-  box-shadow: 0 0 0 1px #1b9c85;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 1px var(--color-brand-primary);
 }
 
 .variant-color-button.unavailable:not(.active) {
@@ -1440,13 +1448,13 @@ watch(
 }
 
 .variant-option-button:hover {
-  border-color: #1b9c85;
+  border-color: var(--color-brand-primary);
   transform: translateY(-1px);
 }
 
 .variant-option-button.active {
-  border-color: #1b9c85;
-  box-shadow: 0 0 0 1px #1b9c85;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 1px var(--color-brand-primary);
 }
 
 .variant-option-button.unavailable:not(.active) {
@@ -1466,7 +1474,7 @@ watch(
 
 .variant-color-name {
   overflow-wrap: anywhere;
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
   line-height: 1.25;
   text-align: left;
 }
@@ -1476,14 +1484,14 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout h1 {
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
   margin-bottom: 20px;
   text-transform: uppercase;
 }
 
 .main .main-inner .main-inner-right .payout .product-stars {
-  color: rgb(255, 211, 33);
-  font-size: 0.8rem;
+  color: var(--color-rating);
+  font-size: var(--font-size-sm);
   margin-bottom: 10px;
 }
 
@@ -1492,17 +1500,16 @@ watch(
   align-items: center;
   flex-wrap: wrap;
   gap: 9px;
-  color: #313C55;
-  font-weight: 600;
-  font-size: 1.3rem;
+  color: var(--color-price-current);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xl);
   margin-bottom: 30px;
 }
 
 .main .main-inner .main-inner-right .payout .compare-at-price {
-  /* color: #b64036; */
-  color: #6E6E6E;
-  font-size: 0.95rem;
-  font-weight: 400;
+  color: var(--color-price-original-muted);
+  font-size: var(--font-size-body-compact);
+  font-weight: var(--font-weight-regular);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }
@@ -1513,10 +1520,10 @@ watch(
   min-height: 25px;
   padding: 3px 9px;
   border-radius: 7px;
-  background-color: rgba(27, 156, 133, 0.12);
-  color: #147967;
-  font-size: 1rem;
-  font-weight: 500;
+  background-color: var(--color-product-savings-soft);
+  color: var(--color-product-savings);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.45px;
   line-height: 1;
   white-space: nowrap;
@@ -1524,15 +1531,15 @@ watch(
 
 .main .main-inner .main-inner-right .payout .quantity .q-header {
   color: rgb(65, 61, 61);
-  font-weight: 400;
-  font-size: 1.1rem;
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-lg);
   margin-bottom: 10px;
 }
 
 .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
   width: 100px;
   padding: 10px 0;
-  font-size: 1rem;
+  font-size: var(--font-size-body);
   text-indent: 20px;
   border: solid rgb(188, 188, 188, 0.6) 1px;
 }
@@ -1561,14 +1568,14 @@ watch(
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card {
   background-color: white;
-  border: solid #1b9c85 0.5px;
-  color: #1b9c85;
+  border: solid var(--color-brand-primary) 0.5px;
+  color: var(--color-brand-primary);
   transition: 0.6s;
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:hover {
-  background-color: #1b9c85;
-  border: solid #1b9c85 0.5px;
+  background-color: var(--color-brand-primary);
+  border: solid var(--color-brand-primary) 0.5px;
   color: white;
   transition: 0.6s;
 }
@@ -1580,33 +1587,33 @@ watch(
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:disabled:hover {
   background-color: white;
-  color: #1b9c85;
+  color: var(--color-brand-primary);
 }
 
 .cart-message {
   margin: 4px 0 16px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
   line-height: 1.5;
 }
 
 .cart-message.success {
-  color: #1b9c85;
+  color: var(--color-brand-primary);
 }
 
 .cart-message.error {
-  color: #dc3545;
+  color: var(--color-danger);
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .apple-pay {
-  background-color: #5a31f4;
-  border: solid #5a31f4 0.5px;
-  color: whitesmoke;
+  background-color: var(--color-payment);
+  border: solid var(--color-payment) 0.5px;
+  color: var(--color-text-inverse);
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .more-payment-options {
   display: block;
   text-decoration: underline;
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
   margin: 0 auto 20px;
   color: rgb(63, 63, 63);
   background-color: white;
@@ -1616,7 +1623,7 @@ watch(
   text-align: justify;
   letter-spacing: 1.5px;
   line-height: 22px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-body-sm);
 }
 
 .main .main-inner .main-inner-right .description p {
@@ -1636,8 +1643,8 @@ watch(
   margin: 20px auto 50px;
   padding: 20px 30px;
   background-color: white;
-  border: solid #1b9c85 0.5px;
-  color: #1b9c85;
+  border: solid var(--color-brand-primary) 0.5px;
+  color: var(--color-brand-primary);
   transition: 0.6s;
 }
 
@@ -1677,7 +1684,7 @@ watch(
     width: 90%;
     color: rgba(0, 0, 0, 0.7);
     line-height: 22px;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
   }
 }
 
@@ -1745,7 +1752,7 @@ watch(
   .main .main-inner .main-inner-right .payout {
     width: 100%;
     margin: 0 auto 50px;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
   }
 
   .main .main-inner .main-inner-right .payout .purchase-buttons {
@@ -1759,7 +1766,7 @@ watch(
     text-align: justify;
     letter-spacing: 1.5px;
     line-height: 22px;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 }
 
@@ -1767,7 +1774,7 @@ watch(
   .main .main-inner .main-inner-left .image-discount-label {
     min-height: 22px;
     padding: 4px 10px;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
   }
 
   .main .main-inner .main-inner-right .payout .product-variant-title {
@@ -1776,12 +1783,12 @@ watch(
 
     .main .main-inner .main-inner-right .payout h1 {
     font-size: 1.6rem;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     margin-bottom: 10px;
   }
   .current-price, .compare-at-price, .discount-badge{
-    font-size: 1.3rem;
-    font-weight: 600;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
   }
 }
 
@@ -1799,7 +1806,7 @@ watch(
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px;
     padding: 15px 0 9px;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
 
   .view-cart .title .title-inner,
@@ -1826,7 +1833,7 @@ watch(
   .view-cart .middle .product-name {
     min-width: 0;
     padding-left: 0;
-    font-size: 0.92rem;
+    font-size: var(--font-size-body-compact);
     line-height: 1.25;
     letter-spacing: 0.4px;
     overflow-wrap: anywhere;
@@ -1834,7 +1841,7 @@ watch(
 
   .view-cart .middle .quantity {
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
 
   .view-cart .view-cart-button .cart-button {
@@ -1849,7 +1856,7 @@ watch(
 
   .view-cart .continue-shopping {
     padding: 16px 8px;
-    font-size: 0.82rem;
+    font-size: var(--font-size-sm);
   }
 
   .variant-color-options {
@@ -1857,25 +1864,25 @@ watch(
   }
 
   .main .main-inner .main-inner-right .payout h1 {
-    font-size: 1.35rem;
-    font-weight: 400;
+    font-size: var(--font-size-heading-lg);
+    font-weight: var(--font-weight-regular);
     line-height: 1.2;
     margin-bottom: 8px;
   }
 
   .main .main-inner .main-inner-right .payout .product-variant-title {
     margin-bottom: 14px;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
   }
 
   .main .main-inner .main-inner-right .payout .product-stars {
-    font-size: 0.72rem;
+    font-size: var(--font-size-xs);
   }
 
   .main .main-inner .main-inner-right .payout .product-price {
     color: rgb(60, 60, 60);
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
     margin-bottom: 15px;
   }
 
@@ -1884,20 +1891,20 @@ watch(
   }
 
   .main .main-inner .main-inner-right .payout .compare-at-price {
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 
   .main .main-inner .main-inner-right .payout .discount-badge {
     min-height: 22px;
     padding: 3px 7px;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
   }
 
   .main .main-inner .main-inner-right .payout .quantity .q-header {
     display: inline-block;
     color: rgb(65, 61, 61);
-    font-weight: 400;
-    font-size: 0.95rem;
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-body-compact);
     margin-bottom: 10px;
   }
 
@@ -1909,30 +1916,30 @@ watch(
   .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
     width: 90px;
     padding: 10px 0;
-    font-size: 0.95rem;
+    font-size: var(--font-size-body-compact);
     text-indent: 15px;
     border: solid rgb(188, 188, 188, 0.6) 1px;
   }
 
   .variant-color-label {
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 
   .variant-color-value {
-    font-size: 0.82rem;
+    font-size: var(--font-size-sm);
   }
 
   .variant-color-name {
-    font-size: 0.82rem;
+    font-size: var(--font-size-sm);
   }
 
   .main .main-inner .main-inner-right .payout .purchase-buttons .p-btn-1 {
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
   }
 
   .main .main-inner .main-inner-right .description,
   .description-text {
-    font-size: 0.88rem;
+    font-size: var(--font-size-sm-relaxed);
     line-height: 1.6;
   }
 
@@ -1943,17 +1950,17 @@ watch(
   text-align: center;
   margin: 2rem 25%;
   padding: 2rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-heading-sm);
 }
 
 .error {
-  color: #dc3545;
+  color: var(--color-danger);
 }
 
 
 /* Shopify description styling */
 .description-text {
-  font-size: 0.95rem;
+  font-size: var(--font-size-body-compact);
   line-height: 1.7;
   letter-spacing: 0;
   text-align: left;
@@ -1981,82 +1988,82 @@ watch(
 }
 
 .description-text :deep(strong) {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 @media (min-width: 393px) and (max-width: 524px) {
   .main .main-inner .main-inner-left .image-discount-label {
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 
   .main .main-inner .main-inner-right .payout h1 {
-    font-size: 1.75rem;
+    font-size: var(--font-size-heading-xl);
     line-height: 1.25;
   }
 
   .main .main-inner .main-inner-right .payout .product-variant-title {
-    font-size: 0.92rem;
+    font-size: var(--font-size-body-compact);
   }
 
   .main .main-inner .main-inner-right .payout .product-stars {
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs-relaxed);
   }
 
   .main .main-inner .main-inner-right .payout .current-price {
-    font-size: 1.2rem;
+    font-size: var(--font-size-heading-sm);
   }
 
   .main .main-inner .main-inner-right .payout .compare-at-price {
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 
   .main .main-inner .main-inner-right .payout .discount-badge {
-    font-size: 0.88rem;
+    font-size: var(--font-size-sm-relaxed);
   }
 
   .main .main-inner .main-inner-right .payout .quantity .q-header {
-    font-size: 0.95rem;
+    font-size: var(--font-size-body-compact);
   }
 
   .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
   }
 
   .variant-color-label {
-    font-size: 0.95rem;
+    font-size: var(--font-size-body-compact);
   }
 
   .variant-color-value,
   .variant-color-name {
-    font-size: 0.84rem;
+    font-size: var(--font-size-sm);
   }
 
   .main .main-inner .main-inner-right .payout .purchase-buttons .p-btn-1,
   .main .main-inner .main-inner-right .payout .purchase-buttons .p-btn-2 {
-    font-size: 0.88rem;
+    font-size: var(--font-size-sm-relaxed);
   }
 
   .main .main-inner .main-inner-right .description,
   .description-text {
-    font-size: 0.86rem;
+    font-size: var(--font-size-sm);
     line-height: 1.6;
   }
 
   .view-cart .title {
-    font-size: 0.82rem;
+    font-size: var(--font-size-sm);
   }
 
   .view-cart .middle .product-name {
-    font-size: 0.84rem;
+    font-size: var(--font-size-sm);
   }
 
   .view-cart .middle .quantity {
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
   }
 
   .view-cart .view-cart-button .cart-button,
   .view-cart .continue-shopping {
-    font-size: 0.86rem;
+    font-size: var(--font-size-sm);
   }
 }
 

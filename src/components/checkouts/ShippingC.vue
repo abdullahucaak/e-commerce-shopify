@@ -141,7 +141,7 @@ const previousComponent = () => {
  form .itc-inner .itc-grid{
     display: grid;
     grid-template-columns: 1fr 5fr 1fr;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
 }
  form .itc-inner .contact{
     border-bottom: solid black 0.5px;
@@ -152,8 +152,8 @@ const previousComponent = () => {
 }
 
  form .itc-inner .itc-grid div:nth-child(2){
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-body-sm);
 }
  form .itc-inner .itc-grid div:last-child{
     text-decoration: underline;
@@ -162,7 +162,7 @@ const previousComponent = () => {
  form .shipping-method{
     border: solid black 1px;
     border-radius: 10px;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
 }
  form .shipping-method .shipping-grid{
     display: grid;
@@ -173,7 +173,7 @@ const previousComponent = () => {
     border-bottom: solid black 0.5px;
 }
  form .shipping-method .shipping-grid .shipping-option p:last-child{
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
 }
  form .shipping-method .shipping-grid .shipping-price{
     justify-self: end;
@@ -185,8 +185,8 @@ const previousComponent = () => {
 
 /* FORM CONTENT */
 div.title{
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
 }
 
 .form-container {
@@ -206,8 +206,8 @@ div.title{
 .button {
   background-color: #000;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   display: block;
   color: #fff;
   width: 100%;
@@ -218,7 +218,7 @@ div.title{
   outline: 0;
 }
 .button:focus-visible {
-  background-color: #333;
+  background-color: var(--color-text-primary);
 }
 .back-icon{
     display: inline-block;
@@ -233,7 +233,7 @@ div.title{
 .r-btn{
     font-family: 'Montserrat', sans-serif;
     background-color: white;
-    font-size: 0.95rem;
+    font-size: var(--font-size-body-compact);
     letter-spacing: 0.06rem;
 }
 @media(max-width:340px){
@@ -253,11 +253,11 @@ div.title{
 form .shipping-method{
     border: solid black 1px;
     border-radius: 10px;
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
 }
 form .shipping-method .shipping-grid .shipping-option{
     padding-left: 10px ;
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
 }
 form .shipping-method .shipping-grid{
     display: grid;
@@ -279,14 +279,14 @@ form .shipping-method .shipping-grid{
     width: 80px;
     font-family: 'Montserrat', sans-serif;
     background-color: white;
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
     letter-spacing: 0.06rem;
 }
 .button {
   background-color: #000;
   text-transform: uppercase;
-  font-size: 0.6rem;
-  font-weight: 600;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-semibold);
   display: block;
   color: #fff;
   width: 100%;
@@ -299,7 +299,7 @@ form .shipping-method .shipping-grid{
 form .shipping-method{
     border: solid black 0.5px;
     border-radius: 10px;
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
 }
 }
 </style>

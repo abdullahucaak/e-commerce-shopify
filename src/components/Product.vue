@@ -17,7 +17,7 @@
       >
         <span
           v-if="isDiscounted"
-          class="image-discount-label"
+          class="image-discount-label discount-badge discount-badge--outline"
         >
           %{{ discountPercentage }} DISCOUNT
         </span>
@@ -31,7 +31,7 @@
       >
         <span
           v-if="isDiscounted"
-          class="image-discount-label"
+          class="image-discount-label discount-badge discount-badge--outline"
         >
           %{{ discountPercentage }} DISCOUNT
         </span>
@@ -42,10 +42,10 @@
       </div>
 
       <div class="product-price">
-        <span>{{ formattedPrice }}</span>
+        <span class="price price-current">{{ formattedPrice }}</span>
         <span
           v-if="isDiscounted"
-          class="compare-at-price"
+          class="compare-at-price price price-original price-original--muted"
         >
           {{ formattedCompareAtPrice }}
         </span>
@@ -126,12 +126,12 @@ const discountPercentage = computed(() => {
 </script>
 <style scoped>
 .product-name{
-    font-size: 1.05rem;
+    font-size: var(--font-size-body-large);
     text-transform: uppercase;
     margin-top: 5px;
     letter-spacing: 0.8px;
-    color: #313c55;
-    font-weight: 500;
+    color: var(--color-product-text);
+    font-weight: var(--font-weight-medium);
 }
 .bs-item{
     width: 100%;
@@ -161,9 +161,9 @@ const discountPercentage = computed(() => {
     padding: 3px 8px;
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.9);
-    color: #147967;
-    font-size: 0.85rem;
-    font-weight: 500;
+    color: var(--color-brand-hover);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
     letter-spacing: 0.35px;
     line-height: 1;
     white-space: nowrap;
@@ -189,15 +189,15 @@ display: block;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 7px;
-    font-size: 1.05rem;
+    font-size: var(--font-size-body-large);
     text-transform: uppercase;
     margin-top: 5px;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 .compare-at-price{
-    color: #6e6e6e;
+    color: var(--color-price-original-muted);
     font-size: 0.85em;
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     text-decoration: line-through;
     text-decoration-thickness: 1px;
     white-space: nowrap;
@@ -205,16 +205,16 @@ display: block;
 
 @media (min-width: 393px) and (max-width: 524px){
     .image-discount-label{
-        font-size: 0.72rem;
+        font-size: var(--font-size-xs);
     }
 
     .product-name{
-        font-size: 0.86rem;
+        font-size: var(--font-size-sm);
         line-height: 1.3;
     }
 
     .product-price{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .compare-at-price{
@@ -224,13 +224,13 @@ display: block;
 @media (max-width: 392px){
     .product-name{
         margin-top: 5px;
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
     }
     .product-price{
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
         text-transform: uppercase;
         margin-top: 5px;
-        font-weight: 600;
+        font-weight: var(--font-weight-semibold);
     }
 }
 
@@ -252,16 +252,16 @@ display: block;
     }
     .product-name{
         margin-top: 2px;
-        font-size: 0.78rem;
+        font-size: var(--font-size-xs-relaxed);
         line-height: 1.3;
         letter-spacing: 0.35px;
     }
     .product-price{
         gap: 5px;
-        font-size: 0.82rem;
+        font-size: var(--font-size-sm);
         text-transform: uppercase;
         margin-top: 4px;
-        font-weight: 600;
+        font-weight: var(--font-weight-semibold);
     }
     .compare-at-price{
         font-size: 0.8em;

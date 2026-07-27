@@ -236,12 +236,12 @@ const applyDiscountCode = () =>{
 .main-checkouts .main-inner .inner-left .icons-content ul li.icons{
     display: inline-block;
     padding: 0 15px;
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
 }
 
 /* FORM CONTENT */
 h1, h2{
-    font-size: 1.3rem;
+    font-size: var(--font-size-xl);
 }
 .form-wrapper{
     padding-bottom: 40px ;
@@ -264,8 +264,8 @@ h1, h2{
 
 .field__label {
   color: var(--color-gray);
-  font-size: 0.6rem;
-  font-weight: 300;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-light);
   text-transform: uppercase;
   margin-bottom: 0.25rem
 }
@@ -275,30 +275,30 @@ h1, h2{
   margin: 0;
   border: 0;
   outline: 0;
-  font-weight: 300;
-  font-size: 1rem;
+  font-weight: var(--font-weight-light);
+  font-size: var(--font-size-body);
   width: 100%;
   -webkit-appearance: none;
   appearance: none;
   background-color: transparent;
 }
 .validDiscountCode{
-  border: 2px solid #1B9C85;
+  border: 2px solid var(--color-brand-primary);
 }
 .validDiscountCodeTextColor{
-  color: #1B9C85;
+  color: var(--color-brand-primary);
   font-weight: bold;
 }
 .notValidDiscountCode{
   margin-top: 5px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: red;
 }
 .discount-code-applied{
   margin-top: 10px;
-  font-weight: 500;
-  color: #1B9C85;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-brand-primary);
 }
 
 
@@ -316,8 +316,8 @@ h1, h2{
 .button {
   background-color: #000;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   display: block;
   color: #fff;
   width: 100%;
@@ -329,14 +329,14 @@ h1, h2{
 }
 .validDiscountCodeButton{
   background-color: white;
-  color: #1B9C85;
-  border: 1px solid #1B9C85;
-  border-left: 25px solid #1B9C85;
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-brand-primary);
+  border-left: 25px solid var(--color-brand-primary);
   transition: 0.4s;
 }
 .validDiscountCodeButton:hover{
-    font-size: 0.9rem;
-    border-left: 35px solid #1B9C85;
+    font-size: var(--font-size-body-sm);
+    border-left: 35px solid var(--color-brand-primary);
     transition: 0.2s;
 }
 .validDiscountCodeButton:focus{
@@ -345,7 +345,7 @@ h1, h2{
     border-left: 35px solid rgb(86, 86, 251);
 }
 .button:focus-visible {
-  background-color: #333;
+  background-color: var(--color-text-primary);
 }
 .form-footer{
     display: grid;
@@ -384,7 +384,7 @@ h1, h2{
 }
 .main-checkouts .main-inner .inner-right .inner-right-wrapper .total-price-wrapper .tp-item:nth-child(5),
 .main-checkouts .main-inner .inner-right .inner-right-wrapper .total-price-wrapper .tp-item:nth-child(6){
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .main-checkouts .main-inner .inner-right .inner-right-wrapper .total-price-wrapper .tp-right{
@@ -393,7 +393,7 @@ h1, h2{
 .main-checkouts .main-inner .inner-right .inner-right-wrapper .total-price-wrapper .tp-right .old-price{
   color: rgb(230, 69, 69);
   text-decoration:line-through;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   margin-right: 10px;
 }
 
@@ -422,7 +422,7 @@ h1, h2{
     width: 575px;
     margin: 0 auto 20px;
     padding: 10px 10px 30px 10px;
-    border-bottom: solid 0.5px #333;
+    border-bottom: solid 0.5px var(--color-text-primary);
   }
   .main-checkouts .main-inner .inner-left .icons-content{
     display: grid;
@@ -435,7 +435,7 @@ h1, h2{
   .main-checkouts .main-inner .inner-left .icons-content ul li.icons{
     display: inline-block;
     padding: 0 10px;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   } 
 }
 
@@ -444,7 +444,7 @@ h1, h2{
     width: 90%;
     margin: 0 auto 20px;
     padding: 10px 10px 30px 10px;
-    border-bottom: solid 0.5px #333;
+    border-bottom: solid 0.5px var(--color-text-primary);
   }
 }
 @media (max-width: 399px){
@@ -464,7 +464,7 @@ h1, h2{
       width: 100%;
       margin: 0 auto;
       padding: 0px 0px 30px;
-      border-bottom: solid 0.5px #333;
+      border-bottom: solid 0.5px var(--color-text-primary);
     }
   .main-checkouts .main-inner .inner-right .inner-right-wrapper .chosen-product{
     display: grid;
@@ -472,14 +472,14 @@ h1, h2{
     align-items: center;
     margin-top: 15px;
     padding: 0 0;
-    font-size: 0.7rem;
+    font-size: var(--font-size-2xs);
   }
   .main-checkouts .main-inner .inner-right .inner-right-wrapper .total-price-wrapper{
     display: grid;
     grid-template-columns: 1fr 2fr;
     margin-top: 20px;
     border-top: 0.5px solid gray;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
   }
 }
 

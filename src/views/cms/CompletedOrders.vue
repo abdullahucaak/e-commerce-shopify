@@ -75,7 +75,7 @@ const sortedOrders = computed(() => {
 
 .dashboard-content {
     padding: 2rem;
-    background-color: #f5f5f5;
+    background-color: var(--color-surface-subtle);
 }
 
 .content-header {
@@ -83,8 +83,8 @@ const sortedOrders = computed(() => {
 }
 
 .content-header h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
     opacity: 0.9;
 }
 
@@ -106,15 +106,15 @@ const sortedOrders = computed(() => {
     align-items: center;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .order-number {
-    color: #1B9C85;
+    color: var(--color-brand-primary);
 }
 
 .order-date {
-    color: #666;
+    color: var(--color-text-secondary);
 }
 
 .customer-info, .shipping-info {
@@ -141,20 +141,20 @@ const sortedOrders = computed(() => {
 
 .order-items li {
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .order-total {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--color-border-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .view-details-btn {
-    background-color: #1B9C85;
+    background-color: var(--color-brand-primary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -163,21 +163,21 @@ const sortedOrders = computed(() => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
     transition: background-color 0.3s;
 }
 
 .view-details-btn:hover {
-    background-color: #158c77;
+    background-color: var(--color-brand-hover);
 }
 
 .view-details-btn i {
-    font-size: 1rem;
+    font-size: var(--font-size-body);
 }
 
 .order-total p {
-    font-size: 1.1rem;
-    color: #1B9C85;
+    font-size: var(--font-size-lg);
+    color: var(--color-brand-primary);
 }
 
 @media (max-width: 768px) {
@@ -205,7 +205,7 @@ const sortedOrders = computed(() => {
     }
 
     .customer-info p, .shipping-info p {
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .order-total {
@@ -222,12 +222,12 @@ const sortedOrders = computed(() => {
 
 @media (max-width: 480px) {
     .content-header h1 {
-        font-size: 1.25rem;
+        font-size: var(--font-size-heading-md);
     }
 
     .order-items li {
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         padding: 0.75rem 0;
     }
 }
-</style> 
+</style>

@@ -156,7 +156,7 @@ const calculateSubtotal = () => {
 
 .dashboard-content {
     padding: 2rem;
-    background-color: #f5f5f5;
+    background-color: var(--color-surface-subtle);
 }
 
 .content-header {
@@ -175,12 +175,12 @@ const calculateSubtotal = () => {
 .back-btn {
     background: none;
     border: none;
-    color: #666;
+    color: var(--color-text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     padding: 0.5rem;
     border-radius: 4px;
     transition: background-color 0.3s;
@@ -191,18 +191,18 @@ const calculateSubtotal = () => {
 }
 
 .content-header h1 {
-    font-size: 1.2rem;
+    font-size: var(--font-size-heading-sm);
     opacity: 0.8;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     margin: 0;
 }
 
 .status-badge {
-    background-color: #1B9C85;
+    background-color: var(--color-brand-primary);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
 }
 
 .order-details-container {
@@ -221,10 +221,10 @@ const calculateSubtotal = () => {
 }
 
 h2 {
-    font-size: 1.2rem;
-    font-weight: 500;
+    font-size: var(--font-size-heading-sm);
+    font-weight: var(--font-weight-medium);
     margin: 0 0 1rem 0;
-    color: #333;
+    color: var(--color-text-primary);
     opacity: 0.8;
 }
 
@@ -236,21 +236,21 @@ h2 {
 
 .info-item label {
     display: block;
-    font-size: 0.9rem;
-    color: #666;
+    font-size: var(--font-size-body-sm);
+    color: var(--color-text-secondary);
     margin-bottom: 0.25rem;
 }
 
 .info-item p {
     margin: 0;
     opacity: 0.8;
-    font-size: 1rem;
-    color: #333;
+    font-size: var(--font-size-body);
+    color: var(--color-text-primary);
 }
 
 .price {
-    color: #1B9C85;
-    font-weight: 500;
+    color: var(--color-brand-primary);
+    font-weight: var(--font-weight-medium);
 }
 
 .products-list {
@@ -262,7 +262,7 @@ h2 {
     display: flex;
     gap: 1.5rem;
     padding: 1.5rem;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-light);
     border-radius: 8px;
     background-color: #fff;
 }
@@ -273,9 +273,9 @@ h2 {
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: #f8f9fa;
+    background-color: var(--color-surface-muted);
     border-radius: 8px;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-light);
 }
 
 .product-details {
@@ -284,9 +284,9 @@ h2 {
 
 .product-details h3 {
     margin: 0 0 1rem 0;
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: #333;
+    font-size: var(--font-size-heading-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
     opacity: 0.8;
 }
 
@@ -300,7 +300,7 @@ h2 {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .info-row:last-child {
@@ -308,18 +308,18 @@ h2 {
 }
 
 .label {
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body-sm);
 }
 
 .value {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .order-summary {
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 2px solid #eee;
+    border-top: 2px solid var(--color-border-light);
 }
 
 .summary-row {
@@ -327,22 +327,22 @@ h2 {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     opacity: 0.8;
 }
 
 .summary-row.total {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 2px solid #eee;
-    font-size: 1.2rem;
-    font-weight: 500;
+    border-top: 2px solid var(--color-border-light);
+    font-size: var(--font-size-heading-sm);
+    font-weight: var(--font-weight-medium);
 }
 
 .loading {
     text-align: center;
     padding: 2rem;
-    color: #666;
+    color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {
@@ -420,7 +420,7 @@ h2 {
     }
 
     .content-header h1 {
-        font-size: 1.25rem;
+        font-size: var(--font-size-heading-md);
         text-align: center;
     }
 
@@ -430,23 +430,23 @@ h2 {
     }
 
     .info-item label {
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
     }
 
     .info-item p {
-        font-size: 0.95rem;
+        font-size: var(--font-size-body-compact);
     }
 
     .product-details h3 {
-        font-size: 1.1rem;
+        font-size: var(--font-size-lg);
     }
 
     .summary-row {
-        font-size: 0.95rem;
+        font-size: var(--font-size-body-compact);
     }
 
     .summary-row.total {
-        font-size: 1.1rem;
+        font-size: var(--font-size-lg);
     }
 }
 </style> 

@@ -1,0 +1,145 @@
+:root {
+  /* Brand and interface colors */
+/*   --color-brand-primary: #1b9c85;
+  --color-brand-secondary: #4c4c6d; */
+  --color-brand-primary: #F8B2B2;
+  --color-brand-secondary: #403D88;
+
+  --color-brand-hover: color-mix(
+    in srgb,
+    var(--color-brand-primary) 82%,
+    black
+  );
+  --color-brand-soft: color-mix(
+    in srgb,
+    var(--color-brand-primary) 12%,
+    white
+  );
+  --color-brand-contrast: #ffffff;
+  --color-secondary-contrast: #ffffff;
+
+  --color-text-primary: #313c55;
+  --color-text-strong: #1b2430;
+  --color-text-secondary: #535e6f;
+  --color-text-muted: #8e8e8e;
+  --color-text-subtle: #b6b6b6;
+  --color-text-inverse: #ffffff;
+  --color-gray: #a8a8a8;
+  --color-product-text: #465168;
+
+  --color-announcement-bg: var(--color-brand-secondary);
+  --color-announcement-text: #f5f5f5;
+  --color-footer-bg: var(--color-brand-secondary);
+  --color-footer-text: var(--color-secondary-contrast);
+  --color-footer-link: var(--color-secondary-contrast);
+
+  --color-price-current: var(--color-product-text);
+  --color-price-original-muted: #8e8e8e;
+  --color-price-original-danger: #c6473a;
+  --color-discount: var(--color-brand-primary);
+  --color-product-savings: #147967;
+  --color-product-savings-soft: #e5f4f0;
+  --color-rating: #ffc107;
+
+  --color-success: var(--color-brand-primary);
+  --color-success-soft: var(--color-brand-soft);
+  --color-danger: #dc3545;
+  --color-danger-soft: #fdebec;
+  --color-warning: #a66a00;
+  --color-warning-soft: #fff4d6;
+  --color-info: #5656fb;
+  --color-info-soft: #eeeeff;
+
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8f9fa;
+  --color-surface-subtle: #f5f5f5;
+  --color-border: rgba(0, 0, 0, 0.2);
+  --color-border-light: rgba(65, 61, 61, 0.18);
+  --color-border-strong: #8e8e8e;
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-focus: var(--color-brand-primary);
+  --color-payment: #5a31f4;
+  --color-form-label: rgba(27, 26, 26, 0.7);
+
+  /* Font families */
+  --font-family-primary: 'Futura Std', 'Montserrat', sans-serif;
+  --font-family-form: 'Montserrat', sans-serif;
+
+  /* Type scale */
+  --font-size-3xs: 0.6rem;
+  --font-size-2xs: 0.7rem;
+  --font-size-xs: 0.75rem;
+  --font-size-xs-relaxed: 0.78rem;
+  --font-size-sm: 0.82rem;
+  --font-size-sm-relaxed: 0.88rem;
+  --font-size-body-sm: 0.9rem;
+  --font-size-body-compact: 0.95rem;
+  --font-size-body: 1rem;
+  --font-size-body-large: 1.05rem;
+  --font-size-lg: 1.1rem;
+  --font-size-heading-sm: 1.2rem;
+  --font-size-heading-md: 1.25rem;
+  --font-size-xl: 1.3rem;
+  --font-size-heading-lg: 1.35rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-heading-xl: 1.75rem;
+  --font-size-3xl: 2rem;
+  --font-size-display: 2.2rem;
+  --font-size-page-title: clamp(1.7rem, 3vw, 2.5rem);
+  --font-size-product-title: clamp(1.55rem, 2.5vw, 2.25rem);
+  --font-size-section-title: clamp(1.2rem, 2vw, 1.6rem);
+
+  /* Font weights and line heights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --page-padding-inline: clamp(1rem, 5vw, 5rem);
+  --section-spacing: clamp(2rem, 6vw, 6rem);
+  --card-gap: clamp(0.75rem, 2vw, 1.5rem);
+  --form-gap: 1rem;
+
+  /* Layout */
+  --page-max-width: 1440px;
+  --content-max-width: 1200px;
+  --product-grid-max-width: 1200px;
+  --shop-grid-max-width: 1050px;
+  --form-max-width: 720px;
+  --header-min-height: 147px;
+  --control-height: 44px;
+  --control-height-small: 40px;
+
+  /* Borders, radii, and shadows */
+  --border-width: 1px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.14);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.18);
+
+  /* Motion and stacking */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.6s ease;
+  --z-content: 1;
+  --z-dropdown: 100;
+  --z-sticky: 1000;
+  --z-modal: 1100;
+}

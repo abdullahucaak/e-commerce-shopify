@@ -88,7 +88,7 @@ const deleteProduct = async (productId) => {
 
 .dashboard-content {
     padding: 2rem;
-    background-color: #f5f5f5;
+    background-color: var(--color-surface-subtle);
 }
 
 .content-header {
@@ -99,13 +99,13 @@ const deleteProduct = async (productId) => {
 }
 
 .content-header h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-medium);
     opacity: 0.9;
 }
 
 .add-product-btn {
-    background-color: #1B9C85;
+    background-color: var(--color-brand-primary);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -114,12 +114,12 @@ const deleteProduct = async (productId) => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     transition: background-color 0.3s;
 }
 
 .add-product-btn:hover {
-    background-color: #158c77;
+    background-color: var(--color-brand-hover);
 }
 
 .products-table-container {
@@ -141,13 +141,13 @@ table {
 th, td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 th {
-    font-weight: 500;
-    color: #666;
-    background-color: #f8f9fa;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    background-color: var(--color-surface-muted);
 }
 
 .product-image {
@@ -156,14 +156,14 @@ th {
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: #f8f9fa;
+    background-color: var(--color-surface-muted);
     border-radius: 4px;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-light);
 }
 
 .price {
-    color: #1B9C85;
-    font-weight: 500;
+    color: var(--color-brand-primary);
+    font-weight: var(--font-weight-medium);
 }
 
 .actions {
@@ -179,14 +179,14 @@ th {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.9rem;
+    font-size: var(--font-size-body-sm);
     transition: background-color 0.3s;
     opacity: 0.9;
 }
 
 .edit-btn {
-    background-color: #f8f9fa;
-    color: #333;
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-primary);
 }
 
 .edit-btn:hover {
@@ -194,7 +194,7 @@ th {
 }
 
 .delete-btn {
-    background-color: #dc3545;
+    background-color: var(--color-danger);
     color: white;
 }
 
@@ -229,7 +229,7 @@ th {
 
     th, td {
         padding: 0.75rem;
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
 
     .product-image {
@@ -249,7 +249,7 @@ th {
 
 @media (max-width: 480px) {
     .content-header h1 {
-        font-size: 1.25rem;
+        font-size: var(--font-size-heading-md);
         text-align: center;
     }
 
@@ -258,7 +258,7 @@ th {
     }
 
     table {
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
     }
 
     th, td {
@@ -276,7 +276,7 @@ th {
 
     .edit-btn, .delete-btn {
         padding: 0.4rem 0.75rem;
-        font-size: 0.8rem;
+        font-size: var(--font-size-sm);
     }
 }
-</style> 
+</style>

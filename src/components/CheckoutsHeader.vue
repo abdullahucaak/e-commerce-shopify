@@ -22,8 +22,8 @@
     width: 70%;
     margin: 0 auto 20px;
     color: white;
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 </style>

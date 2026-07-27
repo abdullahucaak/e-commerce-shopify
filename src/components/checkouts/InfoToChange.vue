@@ -42,14 +42,14 @@ const shippingAddress = productStore.order.shippingInfo.shippingAddress
     display: grid;
     grid-template-columns: 1fr 5fr;
     column-gap: 10px;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     border-bottom: solid black 0.5px;
     padding: 20px 0;
 }
  .itc-inner .itc-grid:last-child{
     display: grid;
     grid-template-columns: 1fr 5fr;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     border-bottom: none;
     padding: 20px 0 0 0;
 }
@@ -58,18 +58,18 @@ const shippingAddress = productStore.order.shippingInfo.shippingAddress
 }
 
  .itc-inner .itc-grid div:nth-child(2){
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-body-sm);
 } 
 @media (max-width: 490px) {
     .itc-inner .itc-grid{
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     }
     .itc-inner .itc-grid:last-child{
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     }
     .itc-inner .itc-grid div:nth-child(2){
-        font-size: 0.7rem;
+        font-size: var(--font-size-2xs);
     } 
 }
 

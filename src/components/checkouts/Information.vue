@@ -346,8 +346,8 @@ const completeForm = () => {
 }
 
 .field__label {
-  font-size: 0.6rem;
-  font-weight: 300;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-light);
   text-transform: uppercase;
   margin-bottom: 0.25rem
 }
@@ -358,7 +358,7 @@ const completeForm = () => {
   border: 0;
   outline: 0;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: var(--font-size-body);
   width: 100%;
   -webkit-appearance: none;
   appearance: none;
@@ -392,8 +392,8 @@ const completeForm = () => {
 
 .field__label {
   color: var(--color-gray);
-  font-size: 0.6rem;
-  font-weight: 300;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-light);
   text-transform: uppercase;
   margin-bottom: 0.25rem
 }
@@ -403,8 +403,8 @@ const completeForm = () => {
   margin: 0;
   border: 0;
   outline: 0;
-  font-weight: 300;
-  font-size: 1rem;
+  font-weight: var(--font-weight-light);
+  font-size: var(--font-size-body);
   width: 100%;
   -webkit-appearance: none;
   appearance: none;
@@ -425,8 +425,8 @@ const completeForm = () => {
 .button {
   background-color: #000;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   display: block;
   color: #fff;
   width: 100%;
@@ -437,7 +437,7 @@ const completeForm = () => {
   outline: 0;
 }
 .button:focus-visible {
-  background-color: #333;
+  background-color: var(--color-text-primary);
 }
 .form-footer{
     display: grid;
@@ -456,8 +456,8 @@ const completeForm = () => {
     transition: transform 0.3s;
 }
 div.title{
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
 }
 @media (max-width: 399px){
   .return-to-cart{
@@ -466,8 +466,8 @@ div.title{
   .button {
     background-color: #000;
     text-transform: uppercase;
-    font-size: 0.6rem;
-    font-weight: 600;
+    font-size: var(--font-size-3xs);
+    font-weight: var(--font-weight-semibold);
     display: block;
     color: #fff;
     width: 100%;
@@ -489,8 +489,8 @@ div.title{
   .button {
     background-color: #000;
     text-transform: uppercase;
-    font-size: 0.6rem;
-    font-weight: 500;
+    font-size: var(--font-size-3xs);
+    font-weight: var(--font-weight-medium);
     display: block;
     color: #fff;
     width: 100%;
@@ -505,16 +505,16 @@ div.title{
     margin: 0;
     border: 0;
     outline: 0;
-    font-weight: 300;
-    font-size: 0.8rem;
+    font-weight: var(--font-weight-light);
+    font-size: var(--font-size-sm);
     width: 100%;
     -webkit-appearance: none;
     appearance: none;
     background-color: transparent;
   }
   small{
-    font-size: 0.7rem;
-    font-weight: 500;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-medium);
   }
   .invalid{
     border: solid 1.5px rgb(228, 59, 59);

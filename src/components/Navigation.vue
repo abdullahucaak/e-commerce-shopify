@@ -1,22 +1,26 @@
 <template>
   <div class="announce-nav-container">
-    <div ref="announceBar" class="announce-bar">
+    <div
+      ref="announceBar"
+      class="announce-bar site-announcement"
+      :class="{ 'announce-bar--over-footer': isAnnounceOverFooter }"
+    >
       <span> Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'! </span>
     </div>
-    <nav ref="navigationElement">
+    <nav ref="navigationElement" class="site-navigation">
       <div class="logo">
-        <img src="../assets/Alaya-Logo_300x300.jpg" alt="Logo">
+        <img class="site-navigation__logo" src="../assets/Alaya-Logo_300x300.jpg" alt="Logo">
       </div>
       <div class="main-nav">
         <ul>
           <li>
-            <RouterLink class="nav-item" :to="{name:'home'}">Home</RouterLink>
+            <RouterLink class="nav-item site-navigation__link" :to="{name:'home'}">Home</RouterLink>
           </li>
           <li>
-            <RouterLink class="nav-item" :to="{name:'shop'}">Shop <span class="dropdown-icon"></span></RouterLink>
+            <RouterLink class="nav-item site-navigation__link" :to="{name:'shop'}">Shop <span class="dropdown-icon"></span></RouterLink>
           </li>
           <li>
-            <RouterLink class="nav-item" :to="{name:'about-us'}">About Us</RouterLink>
+            <RouterLink class="nav-item site-navigation__link" :to="{name:'about-us'}">About Us</RouterLink>
           </li>
         </ul>
       </div>
@@ -26,7 +30,7 @@
           <i class="fa fa-cart-shopping">
             <div
              v-if="totalProductNumberOnCart > 0"
-             class="cp-count">
+            class="cp-count cart-count-badge">
                 <div class="cp-count-inner">
                     {{ totalProductNumberOnCart }}
                 </div>
@@ -37,7 +41,7 @@
         <i @click="hideToBars" v-if="isBarsOpen" class="fa-solid fa-xmark xmark-vertical-bars"></i>
       </div>
       <div 
-        class="searching-div-wrapper"
+              class="searching-div-wrapper search-panel"
         ref="isSearchButtonOn"
         v-if="isSearchButtonOn" 
       >
@@ -53,13 +57,13 @@
           </div>
           <div
            v-if="search.length > 0"
-           class="results-wrapper">
+              class="results-wrapper search-results">
             <div class="results-inner">
               <div class="searched-products">
                 <p class="product-header">Products</p>
                 <div v-for="product in productsFound" :key="product.id">
                   <RouterLink 
-                    class="searched-product" 
+                    class="searched-product search-result-item"
                     :to="{ name: 'product-page', params: { handle: product.handle } }"
                   >
                     <div 
@@ -113,15 +117,26 @@ const isSearchButtonOn = ref(false)
 const search = ref('')
 const isBarsOpen = ref(false)
 const isAnimationWorked = ref(false)
+const isAnnounceOverFooter = ref(false)
 const announceBar = ref(null)
 const navigationElement = ref(null)
 let announceBarObserver
 
 const updateNavigationOffsets = () => {
-  const announceHeight = announceBar.value?.getBoundingClientRect().height || 0
+  const announceRect = announceBar.value?.getBoundingClientRect()
+  const announceHeight = announceRect?.height || 0
   const navigationBottom =
     navigationElement.value?.getBoundingClientRect().bottom || announceHeight
   const visibleHeaderBottom = Math.max(announceHeight, navigationBottom)
+  const footerRect = document.querySelector('.site-footer')?.getBoundingClientRect()
+
+  isAnnounceOverFooter.value = Boolean(
+    window.innerWidth <= 804 &&
+    announceRect &&
+    footerRect &&
+    footerRect.top <= announceRect.bottom &&
+    footerRect.bottom > announceRect.top
+  )
 
   document.documentElement.style.setProperty(
     '--announce-bar-height',
@@ -139,13 +154,16 @@ onMounted(async () => {
   if (announceBar.value) announceBarObserver.observe(announceBar.value)
   if (navigationElement.value) announceBarObserver.observe(navigationElement.value)
   window.addEventListener('scroll', updateNavigationOffsets, { passive: true })
+  window.addEventListener('resize', updateNavigationOffsets, { passive: true })
 
   await productStore.initializeCart()
+  updateNavigationOffsets()
 })
 
 onBeforeUnmount(() => {
   announceBarObserver?.disconnect()
   window.removeEventListener('scroll', updateNavigationOffsets)
+  window.removeEventListener('resize', updateNavigationOffsets)
   document.documentElement.style.removeProperty('--announce-bar-height')
   document.documentElement.style.removeProperty('--navigation-visible-bottom')
 })
@@ -219,7 +237,7 @@ const totalProductNumberOnCart = computed(() => {
     display: contents;
   }
   .announce-nav-container .announce-bar{
-    background-color: #4C4C6D;
+    background-color: var(--color-announcement-bg);
     width: 100%;
     min-height: 46px;
     padding: 10px 0px;
@@ -230,10 +248,14 @@ const totalProductNumberOnCart = computed(() => {
     text-align: center;
     line-height: 1.4;
     overflow-wrap: anywhere;
-    color: whitesmoke;
+    color: var(--color-announcement-text);
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: background-color 0.45s ease;
+  }
+  .announce-nav-container .announce-bar.announce-bar--over-footer{
+    background-color: var(--color-brand-primary);
   }
   .announce-nav-container nav{
     display: grid;
@@ -243,7 +265,7 @@ const totalProductNumberOnCart = computed(() => {
     background-color: white;
     z-index: 100;
     position: relative;
-    min-height: 147px;
+    min-height: var(--header-min-height);
     border-bottom: solid rgba(0,0,0, 0.2) 0.5px;
   }
 /* nav-inner */
@@ -277,7 +299,7 @@ const totalProductNumberOnCart = computed(() => {
   }
   .announce-nav-container nav .shop-search i {
     padding: 0 8px ;
-    font-size: 1.1rem;
+    font-size: var(--font-size-lg);
     cursor: pointer;
   }
   .announce-nav-container nav .searching-div-wrapper{
@@ -302,20 +324,20 @@ const totalProductNumberOnCart = computed(() => {
     width: 100%;
     height: 40px;
     box-sizing: border-box;
-    border: 0.5px solid #4C4C6D;
+    border: 0.5px solid var(--color-announcement-bg);
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     padding: 5px;
   }
   .announce-nav-container nav .sd-inner input:focus{
-      border: 2px solid #4C4C6D;
+      border: 2px solid var(--color-announcement-bg);
   }
   .announce-nav-container nav .sd-inner .xmark-search{
     position: absolute;
     top: 50%;
     left: calc(100% + 10px);
     transform: translateY(-50%);
-    font-size: 1.2rem;
+    font-size: var(--font-size-heading-sm);
     margin-left: 0;
     padding: 0;
     cursor: pointer;
@@ -336,7 +358,7 @@ const totalProductNumberOnCart = computed(() => {
   }
   .announce-nav-container nav .results-wrapper .results-inner .searched-products .product-header{
     width: 100%;
-    font-size: 1.1rem;
+    font-size: var(--font-size-lg);
     border-bottom: 0.5px solid gray;
     padding-bottom: 20px;
   }
@@ -371,8 +393,8 @@ const totalProductNumberOnCart = computed(() => {
   .cp-count{
         width: 19px;
         height: 19px;
-        background-color: #1B9C85;
-        border: 1px solid #1B9C85;
+        background-color: var(--color-brand-primary);
+        border: 1px solid var(--color-brand-primary);
         border-radius: 50%;
         position: absolute;
         top: -10px;
@@ -415,7 +437,7 @@ const totalProductNumberOnCart = computed(() => {
     .bars li{
       padding: 20px 20px;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: var(--font-weight-medium);
       border-bottom: 0.5px solid rgba(0,0,0, 0.2);
       user-select: none;
     }
@@ -463,8 +485,8 @@ const totalProductNumberOnCart = computed(() => {
   }
   @media (max-width: 700px){
     .announce-bar{
-      font-size: 1rem;
-      font-weight: 400;
+      font-size: var(--font-size-body);
+      font-weight: var(--font-weight-regular);
     }
   }
   @media (max-width: 392px){
@@ -473,10 +495,10 @@ const totalProductNumberOnCart = computed(() => {
     }
 
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{
-        font-size: 0.95rem;
+        font-size: var(--font-size-body-compact);
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-price{
-        font-size: 1rem;
+        font-size: var(--font-size-body);
     }
     .announce-nav-container nav .searching-div{
       width: calc(100% - 80px);
@@ -485,7 +507,7 @@ const totalProductNumberOnCart = computed(() => {
       position: relative;
     }
       .announce-nav-container nav .sd-inner .xmark-search{
-      font-size: 1rem;
+      font-size: var(--font-size-body);
       margin-left: 0;
       cursor: pointer;
     }
@@ -496,10 +518,10 @@ const totalProductNumberOnCart = computed(() => {
       width: 135px;
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{
-        font-size: 0.85rem;
+        font-size: var(--font-size-sm);
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-price{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
     }
   }
 </style>

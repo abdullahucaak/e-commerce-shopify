@@ -7,21 +7,21 @@
             <!-- Picture -->
             <div class="banner-message">
                 <div class="bm-inner">
-                    <div class="bm-title">
+                    <div class="bm-title text-hero-title">
                         Meet Assam Golden Tippy
                     </div>
-                    <div class="bm-content">
+                    <div class="bm-content text-hero-copy">
                         A new, limited quantity, golden tipped black tea for the spring.
                     </div>
-                    <RouterLink :to="{name: 'shop'}"><button class="btn bm-btn"> SHOP NOW </button></RouterLink>
+                    <RouterLink :to="{name: 'shop'}"><button class="btn bm-btn button button-primary"> SHOP NOW </button></RouterLink>
                 </div>
             </div>
         </div>
-        <div class="content c-message">
+        <div class="content c-message text-body">
             We source organic and biodynamic teas, directly from people and planet-friendly farms in India.
         </div>
         <div class="content c-best-selling">
-            <div class="bs-title">Best Selling Products:</div>
+            <div class="bs-title text-section-title">Best Selling Products:</div>
             <div class="bs-item-container">
                 <Product
                     v-for="product in productStore.bestSellingProducts"
@@ -30,7 +30,7 @@
                 />
             </div>
             <div class="bs-footer">
-                <RouterLink :to="{name:'shop' }"><button class="btn bs-btn">VIEW ALL</button></RouterLink>
+                <RouterLink :to="{name:'shop' }"><button class="btn bs-btn button button-outline">VIEW ALL</button></RouterLink>
             </div>
         </div> 
         <Footer/>
@@ -79,12 +79,12 @@ body{
 }
 .home-container .c-banner .banner-message .bm-inner .bm-content{
      margin-top: 10px;
-     font-size: 1.5rem;
+     font-size: var(--font-size-2xl);
      text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
 }
 .home-container .c-banner .banner-message .bm-inner .bm-btn{
-     font-size: 1rem;
-     font-weight: 300;
+     font-size: var(--font-size-body);
+     font-weight: var(--font-weight-light);
      padding: 15px 60px;
      border-radius: 2px;
      margin-top: 20px;
@@ -95,8 +95,8 @@ body{
     align-self: center;
     padding: 0 20%;
     text-align: center;
-    font-weight: 300;
-    font-size: 1.5rem;
+    font-weight: var(--font-weight-light);
+    font-size: var(--font-size-2xl);
     font-style: italic;
 }
 .home-container .c-best-selling{
@@ -107,7 +107,7 @@ body{
 .home-container .c-best-selling .bs-title{
     text-align: center;
     align-self: center;
-    font-size: 1.3rem;
+    font-size: var(--font-size-xl);
     text-transform: uppercase;
     margin-bottom: 20px;
 }
@@ -115,8 +115,11 @@ body{
     display: grid;
     grid-template-rows: 1fr 1fr;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-gap: 10px;
-    width: 1197px;
+    gap: var(--card-gap);
+    width: min(
+      calc(100% - (2 * var(--page-padding-inline))),
+      var(--product-grid-max-width)
+    );
     margin: 0 auto;
     overflow: visible;
 } 
@@ -129,18 +132,18 @@ body{
     align-self: center;
 }
 .bs-btn{
-    color: #1B9C85;
+    color: var(--color-brand-primary);
     background-color: white;
     padding: 13px 70px;
-    border: 0.5px #1B9C85 solid;
+    border: 0.5px var(--color-brand-primary) solid;
     border-radius: 0px;
     transition: 0.3s;
 }
 .bs-btn:hover{
-    color: #1B9C85;
+    color: var(--color-brand-primary);
     background-color: white;
     padding: 13px 75px;
-    border: 0.5px #1B9C85 solid;
+    border: 0.5px var(--color-brand-primary) solid;
     transition: 0.3s;
 }
 /* responsive | banner-message */
@@ -165,7 +168,7 @@ body{
         font-size: 2.5rem;
     }  
     .home-container .c-banner .banner-message .bm-inner .bm-content{
-        font-size: 1.2rem;
+        font-size: var(--font-size-heading-sm);
     }  
 }
 /* responsive | stop shrinking */
@@ -204,14 +207,14 @@ body{
         border-radius: 10px;
     }   
     .home-container .c-banner .banner-message .bm-inner .bm-title{
-        font-size: 2rem;
+        font-size: var(--font-size-3xl);
     }  
     .home-container .c-banner .banner-message .bm-inner .bm-content{
-        font-size: 1rem;
-        font-weight: 500;
+        font-size: var(--font-size-body);
+        font-weight: var(--font-weight-medium);
     }  
     .home-container .c-banner .banner-message .bm-inner .bm-btn{
-        font-size: 1rem;
+        font-size: var(--font-size-body);
         padding: 10px 50px;
     }  
     .home-container .c-message{
@@ -219,8 +222,8 @@ body{
         align-self: center;
         padding: 0 20%;
         text-align: center;
-        font-weight: 300;
-        font-size: 1.2rem;
+        font-weight: var(--font-weight-light);
+        font-size: var(--font-size-heading-sm);
         font-style: italic;
     }
     .home-container .c-best-selling{
@@ -246,25 +249,25 @@ body{
     }
 
     .home-container .c-banner .banner-message .bm-inner .bm-content{
-        font-size: 0.9rem;
+        font-size: var(--font-size-body-sm);
         line-height: 1.5;
     }
 
     .home-container .c-banner .banner-message .bm-inner .bm-btn{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 
     .home-container .c-message{
-        font-size: 1rem;
+        font-size: var(--font-size-body);
         line-height: 1.55;
     }
 
     .home-container .c-best-selling .bs-title{
-        font-size: 1.05rem;
+        font-size: var(--font-size-body-large);
     }
 
     .home-container .c-best-selling .bs-footer .bs-btn{
-        font-size: 0.88rem;
+        font-size: var(--font-size-sm-relaxed);
     }
 }
 @media (max-width: 392px){
@@ -272,7 +275,7 @@ body{
         margin-bottom: 15px;
     }
     .home-container .c-message{
-        font-size: 1rem;
+        font-size: var(--font-size-body);
         line-height: 1.55;
     }
 }
@@ -281,11 +284,11 @@ body{
         font-size: 1.4rem;
     }  
     .home-container .c-banner .banner-message .bm-inner .bm-content{
-        font-size: 0.9rem;
-        font-weight: 500;
+        font-size: var(--font-size-body-sm);
+        font-weight: var(--font-weight-medium);
     }
     .home-container .c-message{
-        font-size: 1rem;
+        font-size: var(--font-size-body);
         line-height: 1.55;
     }
 

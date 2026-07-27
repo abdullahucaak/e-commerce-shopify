@@ -242,14 +242,14 @@ watch(() => route.params.id, async (newId) => {
          margin-top: 8px;
      }
      .left .c-customer-details div:nth-child(1){
-         font-weight: 600;
+         font-weight: var(--font-weight-semibold);
      }
      .left .c-customer-details div:not(:first-child){
          color: gray;
          text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
      }
      .left .c-customer-details div:last-child{
-         color: #1B9C85;
+         color: var(--color-brand-primary);
          font-size: 24px;
          margin-top: 10px;
      }
@@ -286,7 +286,7 @@ watch(() => route.params.id, async (newId) => {
      }
      .total-price-wrapper .tp-item:nth-child(5),
      .total-price-wrapper .tp-item:nth-child(6){
-         font-weight: 600;
+         font-weight: var(--font-weight-semibold);
      }
 
      .total-price-wrapper .tp-right{
@@ -295,12 +295,12 @@ watch(() => route.params.id, async (newId) => {
      .total-price-wrapper .tp-right .old-price{
          color: rgb(230, 69, 69);
          text-decoration:line-through;
-         font-weight: 600;
+         font-weight: var(--font-weight-semibold);
          margin-right: 10px;
      }
 
      .paid{
-         color: #1B9C85;
+         color: var(--color-brand-primary);
      }
      .old-price{
          color: rgb(230, 69, 69);

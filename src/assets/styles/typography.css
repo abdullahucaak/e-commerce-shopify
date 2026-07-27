@@ -1,0 +1,150 @@
+.text-page-title {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-page-title);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+}
+
+.text-hero-title {
+  color: var(--color-text-inverse);
+  font-size: clamp(1.4rem, 4vw, 3.5rem);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-tight);
+}
+
+.text-hero-copy {
+  color: var(--color-text-inverse);
+  font-size: clamp(
+    var(--font-size-body-sm),
+    2vw,
+    var(--font-size-2xl)
+  );
+  line-height: var(--line-height-normal);
+}
+
+.text-product-title {
+  color: var(--color-product-text);
+  font-size: var(--font-size-product-title);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+}
+
+.text-section-title {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-section-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.text-card-title,
+.text-subtitle {
+  color: var(--color-product-text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.text-body {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+
+.text-body-small,
+.text-caption {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-normal);
+}
+
+.text-overline,
+.table-heading {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.link-primary,
+.link-secondary,
+.link-muted,
+.link-danger {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.link-primary {
+  color: var(--color-brand-primary);
+}
+
+.link-secondary {
+  color: var(--color-text-secondary);
+}
+
+.link-muted {
+  color: var(--color-text-muted);
+}
+
+.link-danger {
+  color: var(--color-danger);
+}
+
+.link-underline {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.price {
+  color: var(--color-price-current);
+  font-weight: var(--font-weight-medium);
+}
+
+.price-current,
+.price-total,
+.price-subtotal {
+  color: var(--color-price-current);
+  font-weight: var(--font-weight-semibold);
+}
+
+.price-original {
+  color: var(--color-price-original-muted);
+  font-weight: var(--font-weight-regular);
+  text-decoration: line-through;
+}
+
+.price-original--muted {
+  color: var(--color-price-original-muted);
+}
+
+.price-original--danger {
+  color: var(--color-price-original-danger);
+}
+
+.price-savings {
+  color: var(--color-success);
+  font-weight: var(--font-weight-medium);
+}

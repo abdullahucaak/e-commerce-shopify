@@ -1,5 +1,9 @@
 @import url('https://fonts.cdnfonts.com/css/futura-std-4');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+@import './styles/tokens.css';
+@import './styles/typography.css';
+@import './styles/components.css';
+@import './styles/layout.css';
 *{
   margin: 0;
   padding: 0;
@@ -9,13 +13,14 @@
   border: none; outline: none;
 }
 body{
-  font-family: 'Futura Std', 'Montserrat', sans-serif;
-  color: #313c55;
+  font-family: var(--font-family-primary);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
   letter-spacing: 0.5px;
   /* color: rgba(27, 26, 26, 0.7); */
 }
 a{
-  color: #313c55;
+  color: var(--color-text-primary);
 }
 .nav-item{
   text-decoration: none;
@@ -27,19 +32,18 @@ button{
 }
 .btn{
   padding: 10px 20px;
-  background-color:  #1B9C85;
-  color: white;
+  background-color: var(--color-brand-primary);
+  color: var(--color-brand-contrast);
   border: none;
   border-radius: 3px;
   transition: 0.6s;
 }
 .btn:hover{
   background-color: aliceblue;
-  color: #1B9C85;
+  color: var(--color-brand-primary);
   transition: 0.6s;
 }
-input, textarea{
-  font-weight: 400;
-  font-family: 'Montserrat', sans-serif;
+input, textarea, select{
+  font-weight: var(--font-weight-regular);
+  font-family: var(--font-family-primary);
 }
-
