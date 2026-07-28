@@ -64,7 +64,7 @@
                 <div v-for="product in productsFound" :key="product.id">
                   <RouterLink 
                     class="searched-product search-result-item"
-                    :to="{ name: 'product-page', params: { handle: product.handle } }"
+                    :to="getSearchProductRoute(product)"
                   >
                     <div 
                       class="sp-product-img"
@@ -74,7 +74,17 @@
                     </div>
                     <div class="sp-content">
                       <div class="sp-product-name">{{ product.title }}</div>
-                      <div class="sp-product-price"><small>{{ formatProductPrice(product) }}</small></div>
+                      <div class="sp-product-price">
+                        <small class="sp-current-price">
+                          {{ formatProductPrice(product) }}
+                        </small>
+                        <small
+                          v-if="isSearchVariantDiscounted(product)"
+                          class="sp-compare-at-price"
+                        >
+                          {{ formatSearchCompareAtPrice(product) }}
+                        </small>
+                      </div>
                     </div>
                   </RouterLink>
                   </div>
@@ -193,9 +203,21 @@ const productsFound = computed(() => {
     .slice(0, 5)
 })
 
-const formatProductPrice = product => {
-  const money = product.priceRange?.minVariantPrice
+const getDisplayedSearchVariant = product => {
+  const variants = product.variants?.nodes || []
+  const minimumPrice = product.priceRange?.minVariantPrice
 
+  if (!minimumPrice) {
+    return variants[0] || null
+  }
+
+  return variants.find(variant => (
+    variant.price?.currencyCode === minimumPrice.currencyCode &&
+    Number(variant.price?.amount) === Number(minimumPrice.amount)
+  )) || variants[0] || null
+}
+
+const formatMoney = money => {
   if (!money) {
     return ''
   }
@@ -204,6 +226,48 @@ const formatProductPrice = product => {
     style: 'currency',
     currency: money.currencyCode
   }).format(Number(money.amount))
+}
+
+const formatProductPrice = product => {
+  const displayedVariant = getDisplayedSearchVariant(product)
+  const money = displayedVariant?.price || product.priceRange?.minVariantPrice
+
+  return formatMoney(money)
+}
+
+const isSearchVariantDiscounted = product => {
+  const displayedVariant = getDisplayedSearchVariant(product)
+  const price = displayedVariant?.price
+  const compareAtPrice = displayedVariant?.compareAtPrice
+
+  return Boolean(
+    price &&
+    compareAtPrice &&
+    price.currencyCode === compareAtPrice.currencyCode &&
+    Number(compareAtPrice.amount) > Number(price.amount)
+  )
+}
+
+const formatSearchCompareAtPrice = product => {
+  if (!isSearchVariantDiscounted(product)) {
+    return ''
+  }
+
+  return formatMoney(getDisplayedSearchVariant(product)?.compareAtPrice)
+}
+
+const getSearchProductRoute = product => {
+  const displayedVariant = getDisplayedSearchVariant(product)
+
+  return {
+    name: 'product-page',
+    params: {
+      handle: product.handle
+    },
+    query: displayedVariant?.id
+      ? { variant: displayedVariant.id }
+      : {}
+  }
 }
 
 const openBars = () => {
@@ -379,6 +443,20 @@ const totalProductNumberOnCart = computed(() => {
   }
   .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content{
     margin-left: 20px;
+  }
+  .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-product-price{
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-compare-at-price{
+    color: var(--color-price-original-muted);
+    font-size: 0.82em;
+    font-weight: var(--font-weight-regular);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    white-space: nowrap;
   }
   .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name:hover{
       text-decoration: underline;

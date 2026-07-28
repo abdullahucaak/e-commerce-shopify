@@ -194,6 +194,7 @@ display: block;
     margin-top: 5px;
     font-weight: var(--font-weight-semibold);
 }
+
 .compare-at-price{
     color: var(--color-price-original-muted);
     font-size: 0.85em;
