@@ -132,18 +132,18 @@ body{
     align-self: center;
 }
 .bs-btn{
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
     background-color: white;
     padding: 13px 70px;
-    border: 0.5px var(--color-brand-primary) solid;
+    border: 0.5px var(--color-brand-secondary) solid;
     border-radius: 0px;
     transition: 0.3s;
 }
 .bs-btn:hover{
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
     background-color: white;
     padding: 13px 75px;
-    border: 0.5px var(--color-brand-primary) solid;
+    border: 0.5px var(--color-brand-secondary) solid;
     transition: 0.3s;
 }
 /* responsive | banner-message */

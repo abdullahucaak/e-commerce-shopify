@@ -108,7 +108,7 @@ const recentOrders = computed(() => {
 
 <style scoped>
 .green{
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 
 .dashboard {
@@ -154,7 +154,7 @@ const recentOrders = computed(() => {
 
 .stat-icon {
     font-size: var(--font-size-3xl);
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 
 .stat-info h3 {
@@ -167,7 +167,7 @@ const recentOrders = computed(() => {
 .stat-info p {
     font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-medium);
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 
 .recent-orders {

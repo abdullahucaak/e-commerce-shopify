@@ -377,7 +377,7 @@ const subscribe = async () => {
         }
 
     }
-    @media (min-width: 341px) and (max-width: 370px) {
+    @media (min-width: 341px) and (max-width: 392px) {
 
         .footer .f-container .f-item .f-item-inner .f-content .subscription {
             display: flex;

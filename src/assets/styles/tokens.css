@@ -2,23 +2,23 @@
   /* Brand and interface colors */
 /*   --color-brand-primary: #1b9c85;
   --color-brand-secondary: #4c4c6d; */
-  --color-brand-primary: #F8B2B2;
-  --color-brand-secondary: #403D88;
+  --color-brand-primary: #403D88;
+  --color-brand-secondary: #AF719D;
 
   --color-brand-hover: color-mix(
     in srgb,
-    var(--color-brand-primary) 82%,
+    var(--color-brand-secondary) 82%,
     black
   );
   --color-brand-soft: color-mix(
     in srgb,
-    var(--color-brand-primary) 12%,
+    var(--color-brand-secondary) 12%,
     white
   );
   --color-brand-contrast: #ffffff;
   --color-secondary-contrast: #ffffff;
 
-  --color-text-primary: #313c55;
+  --color-text-primary: #465168;
   --color-text-strong: #1b2430;
   --color-text-secondary: #535e6f;
   --color-text-muted: #8e8e8e;
@@ -27,21 +27,21 @@
   --color-gray: #a8a8a8;
   --color-product-text: #465168;
 
-  --color-announcement-bg: var(--color-brand-secondary);
+  --color-announcement-bg: var(--color-brand-primary);
   --color-announcement-text: #f5f5f5;
-  --color-footer-bg: var(--color-brand-secondary);
+  --color-footer-bg: var(--color-brand-primary);
   --color-footer-text: var(--color-secondary-contrast);
   --color-footer-link: var(--color-secondary-contrast);
 
   --color-price-current: var(--color-product-text);
   --color-price-original-muted: #8e8e8e;
   --color-price-original-danger: #c6473a;
-  --color-discount: var(--color-brand-primary);
+  --color-discount: var(--color-brand-secondary);
   --color-product-savings: #147967;
   --color-product-savings-soft: #e5f4f0;
   --color-rating: #ffc107;
 
-  --color-success: var(--color-brand-primary);
+  --color-success: var(--color-brand-secondary);
   --color-success-soft: var(--color-brand-soft);
   --color-danger: #dc3545;
   --color-danger-soft: #fdebec;
@@ -57,7 +57,7 @@
   --color-border-light: rgba(65, 61, 61, 0.18);
   --color-border-strong: #8e8e8e;
   --color-overlay: rgba(0, 0, 0, 0.5);
-  --color-focus: var(--color-brand-primary);
+  --color-focus: var(--color-brand-secondary);
   --color-payment: #5a31f4;
   --color-form-label: rgba(27, 26, 26, 0.7);
 

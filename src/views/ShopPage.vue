@@ -8,12 +8,21 @@
          We source our teas from organic estates and farms that are building soil health and going back to regenerative practices: no tilling, no pesticides, and no synthetic inputs. All our teas come from biodynamic estates. All our herbals come from organic farms, which have transitioned to regenerative agriculture. Picked fresh and sent in small batches, our products celebrate simple and pure ingredients free of pesticides or added flavorings.
       </div>
       <div class="sort-by-container">
-         <div class="sort-by">SORT BY
-            <select v-model="sortBy" class="sort-select">
-                <option value="featured">Featured</option>
-                <option value="low-to-high">Price, low to high</option>
-                <option value="high-to-low">Price, high to low</option>
-            </select>
+         <div class="sort-by">
+            SORT BY
+            <div class="sort-select-display">
+               <span>{{ selectedSortLabel }}</span>
+               <span class="sort-select-arrow" aria-hidden="true"></span>
+               <select
+                  v-model="sortBy"
+                  class="sort-select-control"
+                  aria-label="Sort products"
+               >
+                  <option value="featured">Featured</option>
+                  <option value="low-to-high">Price, low to high</option>
+                  <option value="high-to-low">Price, high to low</option>
+               </select>
+            </div>
          </div>
          <div class="s-products">
             {{ productStore.totalProducts }} Products
@@ -48,6 +57,11 @@ import { useProductStore } from '../stores/productStore'
 
 const productStore = useProductStore()
 const sortBy = ref('featured')
+const selectedSortLabel = computed(() => ({
+  featured: 'Featured',
+  'low-to-high': 'Price, low to high',
+  'high-to-low': 'Price, high to low'
+})[sortBy.value])
 
 const sortedProducts = computed(() => {
   const products = [...productStore.products]
@@ -120,6 +134,22 @@ const sortedProducts = computed(() => {
    .shop-container .sort-by-container .sort-by select{
       margin-left: 10px;
       font-size: var(--font-size-body);
+   }
+   .sort-select-display{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 10px;
+      white-space: nowrap;
+      cursor: pointer;
+   }
+   .sort-select-arrow{
+      width: 7px;
+      height: 7px;
+      border-right: 1px solid currentColor;
+      border-bottom: 1px solid currentColor;
+      transform: translateY(-2px) rotate(45deg);
    }
 
    .shop-container .s-products-container{
@@ -281,5 +311,17 @@ const sortedProducts = computed(() => {
          width: calc(100% - 24px);
          margin: 26px auto 38px;
       }
+   }
+   .shop-container .sort-by-container .sort-by .sort-select-display .sort-select-control{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      cursor: pointer;
    }
 </style>

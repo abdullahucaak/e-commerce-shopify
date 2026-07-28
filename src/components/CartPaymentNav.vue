@@ -65,7 +65,7 @@ display: none;
 }
 .currentPage{
   text-decoration: underline;
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
 }
 @media (max-width: 537px){
   .main-checkouts .inner-navbar ul{

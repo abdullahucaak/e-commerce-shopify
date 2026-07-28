@@ -479,10 +479,10 @@ onBeforeUnmount(() => {
     width: 75%;
     margin-top: 24px;
     padding: 12px 18px;
-    border: 1px solid var(--color-brand-primary);
+    border: 1px solid var(--color-brand-secondary);
     border-radius: 4px;
     background-color: white;
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
     font-size: var(--font-size-body-compact);
     cursor: pointer;
     transition: 0.3s;
@@ -491,7 +491,7 @@ onBeforeUnmount(() => {
 .cart-popup-button:hover {
     width: 80%;
     background-color: white;
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 
 @media (max-width: 480px) {
@@ -533,8 +533,8 @@ onBeforeUnmount(() => {
 }
 .main .main-inner-cart-empty .mice-inner button{
     background-color: white;
-    color: var(--color-brand-primary);
-    border: 1px solid var(--color-brand-primary);
+    color: var(--color-brand-secondary);
+    border: 1px solid var(--color-brand-secondary);
     font-size: var(--font-size-sm);
     letter-spacing: 1px;
     padding: 15px 35px;
@@ -543,7 +543,7 @@ onBeforeUnmount(() => {
     transition: 0.5s;
 }
 .main .main-inner-cart-empty .mice-inner button:hover{
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: var(--color-text-inverse);
     font-size: var(--font-size-sm);
     letter-spacing: 0.1px;
@@ -569,7 +569,7 @@ onBeforeUnmount(() => {
     text-decoration: underline;
 }
 .main .main-inner .cart-header a:hover{
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 .main .main-inner form .cart-table{
     border-collapse: collapse;
@@ -632,7 +632,7 @@ onBeforeUnmount(() => {
     padding: 10px;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-left textarea:focus{
-    border: 0.5px solid var(--color-brand-primary);
+    border: 0.5px solid var(--color-brand-secondary);
     border-width: 1.5px;
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right{
@@ -678,7 +678,7 @@ onBeforeUnmount(() => {
 }
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
     padding: 10px 30px;
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: white;
     font-size: 1em;
     border-radius: 3px;
@@ -714,7 +714,7 @@ onBeforeUnmount(() => {
     letter-spacing: 1.1px;
 }
 .main .main-inner .how-did-you-hear .options select:focus{
-    border: solid 0.5px var(--color-brand-primary);
+    border: solid 0.5px var(--color-brand-secondary);
     border-width: 1.5px;
 }
 .subtotal{
@@ -833,8 +833,8 @@ onBeforeUnmount(() => {
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input:hover{
         padding: 10px 100px;
         background-color: white;
-        color: var(--color-brand-primary);
-        border: var(--color-brand-primary) 0.5px solid;
+        color: var(--color-brand-secondary);
+        border: var(--color-brand-secondary) 0.5px solid;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{
         display: inline-block;

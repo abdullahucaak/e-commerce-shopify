@@ -105,7 +105,7 @@ const deleteProduct = async (productId) => {
 }
 
 .add-product-btn {
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -162,7 +162,7 @@ th {
 }
 
 .price {
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
     font-weight: var(--font-weight-medium);
 }
 

@@ -283,10 +283,10 @@ h1, h2{
   background-color: transparent;
 }
 .validDiscountCode{
-  border: 2px solid var(--color-brand-primary);
+  border: 2px solid var(--color-brand-secondary);
 }
 .validDiscountCodeTextColor{
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
   font-weight: bold;
 }
 .notValidDiscountCode{
@@ -298,7 +298,7 @@ h1, h2{
 .discount-code-applied{
   margin-top: 10px;
   font-weight: var(--font-weight-medium);
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
 }
 
 
@@ -329,14 +329,14 @@ h1, h2{
 }
 .validDiscountCodeButton{
   background-color: white;
-  color: var(--color-brand-primary);
-  border: 1px solid var(--color-brand-primary);
-  border-left: 25px solid var(--color-brand-primary);
+  color: var(--color-brand-secondary);
+  border: 1px solid var(--color-brand-secondary);
+  border-left: 25px solid var(--color-brand-secondary);
   transition: 0.4s;
 }
 .validDiscountCodeButton:hover{
     font-size: var(--font-size-body-sm);
-    border-left: 35px solid var(--color-brand-primary);
+    border-left: 35px solid var(--color-brand-secondary);
     transition: 0.2s;
 }
 .validDiscountCodeButton:focus{

@@ -12,8 +12,8 @@ layout remains in each Vue component, while shared visual decisions live here.
 
 ## Common changes
 
-- All primary brand accents: `--color-brand-primary`
-- Announcement and footer backgrounds: `--color-brand-secondary`
+- Main brand backgrounds (announcement and footer): `--color-brand-primary`
+- Buttons, selectors, discounts, and interface accents: `--color-brand-secondary`
 - Main text: `--color-text-primary`
 - Muted text: `--color-text-muted`
 - Product-page/home old price: `--color-price-original-muted`

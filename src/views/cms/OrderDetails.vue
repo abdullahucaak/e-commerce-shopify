@@ -198,7 +198,7 @@ const calculateSubtotal = () => {
 }
 
 .status-badge {
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 4px;
@@ -249,7 +249,7 @@ h2 {
 }
 
 .price {
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
     font-weight: var(--font-weight-medium);
 }
 

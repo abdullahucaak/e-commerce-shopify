@@ -255,7 +255,7 @@ const totalProductNumberOnCart = computed(() => {
     transition: background-color 0.45s ease;
   }
   .announce-nav-container .announce-bar.announce-bar--over-footer{
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
   }
   .announce-nav-container nav{
     display: grid;
@@ -393,8 +393,8 @@ const totalProductNumberOnCart = computed(() => {
   .cp-count{
         width: 19px;
         height: 19px;
-        background-color: var(--color-brand-primary);
-        border: 1px solid var(--color-brand-primary);
+        background-color: var(--color-brand-secondary);
+        border: 1px solid var(--color-brand-secondary);
         border-radius: 50%;
         position: absolute;
         top: -10px;

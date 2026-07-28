@@ -110,7 +110,7 @@ const sortedOrders = computed(() => {
 }
 
 .order-number {
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 
 .order-date {
@@ -154,7 +154,7 @@ const sortedOrders = computed(() => {
 }
 
 .view-details-btn {
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -177,7 +177,7 @@ const sortedOrders = computed(() => {
 
 .order-total p {
     font-size: var(--font-size-lg);
-    color: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
 }
 
 @media (max-width: 768px) {

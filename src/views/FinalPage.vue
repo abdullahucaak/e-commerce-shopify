@@ -249,7 +249,7 @@ watch(() => route.params.id, async (newId) => {
          text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
      }
      .left .c-customer-details div:last-child{
-         color: var(--color-brand-primary);
+         color: var(--color-brand-secondary);
          font-size: 24px;
          margin-top: 10px;
      }
@@ -300,7 +300,7 @@ watch(() => route.params.id, async (newId) => {
      }
 
      .paid{
-         color: var(--color-brand-primary);
+         color: var(--color-brand-secondary);
      }
      .old-price{
          color: rgb(230, 69, 69);

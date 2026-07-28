@@ -137,7 +137,7 @@ input.error {
 button {
     width: 100%;
     padding: 0.75rem;
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: white;
     border: none;
     border-radius: 4px;

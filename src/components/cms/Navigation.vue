@@ -111,7 +111,7 @@ img.logo:hover {
 }
 
 .dashboard-nav {
-    background-color: var(--color-brand-primary);
+    background-color: var(--color-brand-secondary);
     color: white;
     padding: 2rem;
 }
@@ -173,7 +173,7 @@ img.logo:hover {
         padding: 0.75rem;
         z-index: 100;
         box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        background-color: var(--color-brand-primary);
+        background-color: var(--color-brand-secondary);
     }
     
     .logo {

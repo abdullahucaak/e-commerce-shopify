@@ -121,8 +121,14 @@
   <div
     v-if="productStore.loading"
     class="loading"
+    role="status"
+    aria-live="polite"
   >
-    Loading product...
+    <span
+      class="loading-indicator"
+      aria-hidden="true"
+    ></span>
+    <span class="loading-text">Loading product...</span>
   </div>
 
   <div
@@ -235,6 +241,14 @@
                   aria-hidden="true"
                 ></span>
                 <span class="variant-color-name">{{ colorValue }}</span>
+                <span
+                  v-if="isOptionValueDiscounted(colorOption.name, colorValue)"
+                  v-discount-bounce
+                  class="variant-discount-tab"
+                  aria-hidden="true"
+                >
+                  DISCOUNT
+                </span>
               </button>
             </div>
           </div>
@@ -269,7 +283,15 @@
                 :disabled="!isOptionValueAvailable(option.name, optionValue)"
                 @click="selectOption(option.name, optionValue)"
               >
-                {{ optionValue }}
+                <span>{{ optionValue }}</span>
+                <span
+                  v-if="isOptionValueDiscounted(option.name, optionValue)"
+                  v-discount-bounce
+                  class="variant-discount-tab"
+                  aria-hidden="true"
+                >
+                  DISCOUNT
+                </span>
               </button>
             </div>
           </div>
@@ -396,6 +418,61 @@ import { useRoute } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import Navigation from '../components/Navigation.vue'
 import { useProductStore } from '../stores/productStore'
+
+const discountBounceObservers = new WeakMap()
+
+const vDiscountBounce = {
+  mounted(element) {
+    if (
+      !('IntersectionObserver' in window) ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      const entry = entries[0]
+
+      if (!entry?.isIntersecting) {
+        return
+      }
+
+      const variantButton = element.closest(
+        '.variant-color-button, .variant-option-button'
+      )
+
+      element.classList.add('variant-discount-tab--bounce')
+
+      if (variantButton) {
+        const handleAttentionEnd = event => {
+          if (
+            event.target === variantButton &&
+            event.animationName === 'variant-button-color-flash'
+          ) {
+            variantButton.classList.remove('variant-button--attention')
+            variantButton.removeEventListener('animationend', handleAttentionEnd)
+          }
+        }
+
+        variantButton.classList.add('variant-button--attention')
+        variantButton.addEventListener('animationend', handleAttentionEnd)
+      }
+
+      observer.unobserve(element)
+      discountBounceObservers.delete(element)
+    }, {
+      threshold: 0.65
+    })
+
+    discountBounceObservers.set(element, observer)
+    observer.observe(element)
+  },
+
+  unmounted(element) {
+    discountBounceObservers.get(element)?.disconnect()
+    discountBounceObservers.delete(element)
+  }
+}
 
 const route = useRoute()
 const productStore = useProductStore()
@@ -555,6 +632,34 @@ const variantMatchesSelections = (variant, selections) => {
     ))
   ))
 }
+
+const isVariantDiscounted = variant => {
+  const price = variant?.price
+  const compareAtPrice = variant?.compareAtPrice
+
+  return Boolean(
+    price &&
+    compareAtPrice &&
+    price.currencyCode === compareAtPrice.currencyCode &&
+    Number(compareAtPrice.amount) > Number(price.amount)
+  )
+}
+
+const getVariantForOptionValue = (optionName, optionValue) => {
+  const variants = currentProduct.value?.variants?.nodes || []
+  const selections = {
+    ...selectedOptions.value,
+    [optionName]: optionValue
+  }
+
+  return variants.find(variant => (
+    variantMatchesSelections(variant, selections)
+  )) || null
+}
+
+const isOptionValueDiscounted = (optionName, optionValue) => (
+  isVariantDiscounted(getVariantForOptionValue(optionName, optionValue))
+)
 
 const selectedVariant = computed(() => {
   const variants = currentProduct.value?.variants?.nodes || []
@@ -1058,10 +1163,10 @@ watch(
   width: 75%;
   margin-top: 24px;
   padding: 12px 18px;
-  border: 1px solid var(--color-brand-primary);
+  border: 1px solid var(--color-brand-secondary);
   border-radius: 4px;
   background-color: white;
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
   font-size: var(--font-size-body-compact);
   cursor: pointer;
   transition: 0.3s;
@@ -1070,7 +1175,7 @@ watch(
 .cart-popup-button:hover {
   width: 80%;
   background-color: white;
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
 }
 .product-variant-title {
   margin-top: -10px;
@@ -1180,16 +1285,16 @@ watch(
   width: 100%;
   background-color: white;
   line-height: 1.4;
-  border: solid var(--color-brand-primary) 0.5px;
+  border: solid var(--color-brand-secondary) 0.5px;
   border-radius: 2px;
   font-size: var(--font-size-body);
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
   padding: 12px 0;
 }
 
 .view-cart .view-cart-button .cart-button:hover {
-  border: solid var(--color-brand-primary) 1px;
-  color: var(--color-brand-primary);
+  border: solid var(--color-brand-secondary) 1px;
+  color: var(--color-brand-secondary);
   padding: 11.5px 0;
 }
 
@@ -1200,7 +1305,7 @@ watch(
   background: transparent;
   text-align: center;
   letter-spacing: 0.7px;
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
   text-decoration: underline;
   font-size: var(--font-size-body-sm);
   padding: 20px;
@@ -1286,7 +1391,7 @@ watch(
   align-items: center;
   min-height: 24px;
   padding: 6px 16px;
-  border: 1px solid var(--color-brand-primary);
+  border: 1px solid var(--color-brand-secondary);
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.9);
   color: var(--color-brand-hover);
@@ -1305,12 +1410,12 @@ watch(
   aspect-ratio: 1 / 1;
   border: 1px solid color-mix(
     in srgb,
-    var(--color-brand-primary) 75%,
+    var(--color-brand-secondary) 75%,
     transparent
   );
   background-color: color-mix(
     in srgb,
-    var(--color-brand-primary) 16%,
+    var(--color-brand-secondary) 16%,
     transparent
   );
   box-sizing: border-box;
@@ -1364,7 +1469,7 @@ watch(
 }
 
 .main .main-inner .main-inner-left .other-images .other-images-product.active {
-  outline: 2px solid var(--color-brand-primary);
+  outline: 2px solid var(--color-brand-secondary);
   outline-offset: 2px;
 }
 
@@ -1386,20 +1491,31 @@ watch(
 }
 
 .variant-color-label {
-  color: rgb(65, 61, 61);
+  color: var(--color-text-primary);
   font-size: var(--font-size-body-large);
   font-weight: var(--font-weight-medium);
 }
 
 .variant-color-value {
-  color: rgba(65, 61, 61, 0.75);
+  color: color-mix(
+    in srgb,
+    var(--color-text-primary) 75%,
+    transparent
+  );
   font-size: var(--font-size-body-compact);
 }
 
 .variant-color-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: 18px;
+}
+
+.variant-color-button,
+.variant-option-button {
+  position: relative;
+  overflow: visible;
 }
 
 .variant-color-button {
@@ -1413,7 +1529,7 @@ watch(
   border: 1px solid rgba(65, 61, 61, 0.28);
   border-radius: 4px;
   background-color: #fff;
-  color: rgb(65, 61, 61);
+  color: var(--color-text-primary);
   box-sizing: border-box;
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -1421,13 +1537,13 @@ watch(
 }
 
 .variant-color-button:hover {
-  border-color: var(--color-brand-primary);
+  border-color: var(--color-brand-secondary);
   transform: translateY(-1px);
 }
 
 .variant-color-button.active {
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 1px var(--color-brand-primary);
+  border-color: var(--color-brand-secondary);
+  box-shadow: 0 0 0 1px var(--color-brand-secondary);
 }
 
 .variant-color-button.unavailable:not(.active) {
@@ -1442,25 +1558,165 @@ watch(
   border: 1px solid rgba(65, 61, 61, 0.28);
   border-radius: 4px;
   background-color: #fff;
-  color: rgb(65, 61, 61);
+  color: var(--color-text-primary);
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .variant-option-button:hover {
-  border-color: var(--color-brand-primary);
+  border-color: var(--color-brand-secondary);
   transform: translateY(-1px);
 }
 
 .variant-option-button.active {
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 1px var(--color-brand-primary);
+  border-color: var(--color-brand-secondary);
+  box-shadow: 0 0 0 1px var(--color-brand-secondary);
 }
 
 .variant-option-button.unavailable:not(.active) {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+}
+
+.variant-discount-tab {
+  position: absolute;
+  left: 56%;
+  bottom: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16px;
+  padding: 2px 7px;
+  border: 1px solid var(--color-brand-secondary);
+  border-radius: 3px;
+  background-color: var(--color-surface, #fff);
+  color: var(--color-brand-secondary);
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(50% + 3px));
+}
+
+.variant-discount-tab--bounce {
+  animation: variant-discount-bounce 1.25s ease-out both;
+}
+
+.variant-color-button.variant-button--attention,
+.variant-option-button.variant-button--attention {
+  --attention-rest-border: rgba(65, 61, 61, 0.28);
+  --attention-rest-color: var(--color-text-primary);
+
+  transform-origin: center;
+  animation:
+    variant-button-color-flash 1s ease-in-out 1,
+    variant-button-wiggle 1s ease 1;
+}
+
+.variant-color-button.active.variant-button--attention,
+.variant-option-button.active.variant-button--attention {
+  --attention-rest-border: var(--color-brand-secondary);
+}
+
+@keyframes variant-button-color-flash {
+  0% {
+    border-color: var(--attention-rest-border);
+    color: var(--attention-rest-color);
+  }
+
+  16%,
+  64% {
+    border-color: var(--color-brand-primary);
+    color: var(--color-brand-primary);
+  }
+
+  40%,
+  82% {
+    border-color: var(--color-brand-secondary);
+    color: var(--color-brand-secondary);
+  }
+
+  100% {
+    border-color: var(--attention-rest-border);
+    color: var(--attention-rest-color);
+  }
+}
+
+@keyframes variant-button-wiggle {
+  0% {
+    transform: rotate(-1.5deg);
+  }
+
+  20% {
+    transform: rotate(8deg);
+  }
+
+  40% {
+    transform: rotate(-6deg);
+  }
+
+  60% {
+    transform: rotate(3deg);
+  }
+
+  90% {
+    transform: rotate(-0.5deg);
+  }
+
+  100% {
+    transform: rotate(0);
+  }
+}
+
+@keyframes variant-discount-bounce {
+  0% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(0);
+  }
+
+  16% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(-17px);
+  }
+
+  31% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(0);
+  }
+
+  43% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(-10px);
+  }
+
+  55% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(0);
+  }
+
+  64% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(-5px);
+  }
+
+  73% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(0);
+  }
+
+  80% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(-2px);
+  }
+
+  87%,
+  100% {
+    transform: translate(-50%, calc(50% + 3px)) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .variant-discount-tab--bounce,
+  .variant-color-button.variant-button--attention,
+  .variant-option-button.variant-button--attention {
+    animation: none;
+  }
 }
 
 .variant-color-swatch {
@@ -1530,7 +1786,7 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout .quantity .q-header {
-  color: rgb(65, 61, 61);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-regular);
   font-size: var(--font-size-lg);
   margin-bottom: 10px;
@@ -1568,14 +1824,14 @@ watch(
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card {
   background-color: white;
-  border: solid var(--color-brand-primary) 0.5px;
-  color: var(--color-brand-primary);
+  border: solid var(--color-brand-secondary) 0.5px;
+  color: var(--color-brand-secondary);
   transition: 0.6s;
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:hover {
-  background-color: var(--color-brand-primary);
-  border: solid var(--color-brand-primary) 0.5px;
+  background-color: var(--color-brand-secondary);
+  border: solid var(--color-brand-secondary) 0.5px;
   color: white;
   transition: 0.6s;
 }
@@ -1587,7 +1843,7 @@ watch(
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:disabled:hover {
   background-color: white;
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
 }
 
 .cart-message {
@@ -1597,7 +1853,7 @@ watch(
 }
 
 .cart-message.success {
-  color: var(--color-brand-primary);
+  color: var(--color-brand-secondary);
 }
 
 .cart-message.error {
@@ -1643,8 +1899,8 @@ watch(
   margin: 20px auto 50px;
   padding: 20px 30px;
   background-color: white;
-  border: solid var(--color-brand-primary) 0.5px;
-  color: var(--color-brand-primary);
+  border: solid var(--color-brand-secondary) 0.5px;
+  color: var(--color-brand-secondary);
   transition: 0.6s;
 }
 
@@ -1658,6 +1914,19 @@ watch(
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .variant-color-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 8px;
+    row-gap: 16px;
+  }
+
+  .variant-color-button,
+  .variant-option-button {
+    width: 100%;
+    min-width: 0;
   }
 
   .main .main-inner .main-inner-left {
@@ -1735,7 +2004,8 @@ watch(
   .variant-color-options {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    column-gap: 8px;
+    row-gap: 16px;
   }
 
   .variant-color-button {
@@ -1860,7 +2130,7 @@ watch(
   }
 
   .variant-color-options {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .main .main-inner .main-inner-right .payout h1 {
@@ -1902,7 +2172,7 @@ watch(
 
   .main .main-inner .main-inner-right .payout .quantity .q-header {
     display: inline-block;
-    color: rgb(65, 61, 61);
+    color: var(--color-text-primary);
     font-weight: var(--font-weight-regular);
     font-size: var(--font-size-body-compact);
     margin-bottom: 10px;
@@ -1945,12 +2215,75 @@ watch(
 
 }
 
-.loading,
-.error {
+.loading {
+  display: grid;
+  place-content: center;
+  width: 100%;
+  min-height: clamp(360px, 65dvh, 720px);
+  margin: 0;
+  padding: clamp(24px, 5vw, 60px);
+  box-sizing: border-box;
+  color: var(--color-text-primary);
+  font-size: clamp(
+    var(--font-size-body),
+    1.2vw,
+    var(--font-size-heading-md)
+  );
+  letter-spacing: 0.04em;
+}
+
+.loading-indicator,
+.loading-text {
+  grid-area: 1 / 1;
+  place-self: center;
+}
+
+.loading-indicator {
+  width: clamp(150px, 18vw, 220px);
+  aspect-ratio: 1;
+  border: clamp(2px, 0.25vw, 4px) solid var(--color-brand-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: loading-circle-spin 2.4s linear infinite;
+}
+
+.loading-text {
+  position: relative;
+  z-index: 1;
+  max-width: 120px;
+  line-height: 1.4;
   text-align: center;
+}
+
+@keyframes loading-circle-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 700px) {
+  .loading {
+    min-height: clamp(320px, 58dvh, 520px);
+    padding: 24px 16px;
+  }
+
+  .loading-indicator {
+    width: clamp(140px, 46vw, 175px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator {
+    animation: none;
+  }
+}
+
+.error {
   margin: 2rem 25%;
   padding: 2rem;
   font-size: var(--font-size-heading-sm);
+  text-align: center;
 }
 
 .error {
@@ -2066,7 +2399,4 @@ watch(
     font-size: var(--font-size-sm);
   }
 }
-
-
-
 </style>
