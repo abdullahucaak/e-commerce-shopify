@@ -118,18 +118,10 @@
 
   <Navigation />
 
-  <div
-    v-if="productStore.loading"
-    class="loading"
-    role="status"
-    aria-live="polite"
-  >
-    <span
-      class="loading-indicator"
-      aria-hidden="true"
-    ></span>
-    <span class="loading-text">Loading product...</span>
-  </div>
+  <LoadingSpinner
+    v-if="productStore.loading || !hasProductLoadCompleted"
+    label="Loading product..."
+  />
 
   <div
     v-else-if="productStore.error"
@@ -416,6 +408,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import Footer from '../components/Footer.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Navigation from '../components/Navigation.vue'
 import { useProductStore } from '../stores/productStore'
 
@@ -489,6 +482,7 @@ const recentlyAddedQuantity = ref(0)
 const isImageZoomVisible = ref(false)
 const imageZoomX = ref(50)
 const imageZoomY = ref(50)
+const hasProductLoadCompleted = ref(false)
 
 const highResImageUrl = computed(() => {
   return activeImageUrl.value
@@ -835,6 +829,7 @@ const initializeSelectedOptions = product => {
 
 const loadProduct = async () => {
   const handle = route.params.handle
+  hasProductLoadCompleted.value = false
 
   try {
     const product = await productStore.getProductByHandle(handle)
@@ -844,6 +839,8 @@ const loadProduct = async () => {
   } catch (error) {
     console.error('Failed to load product page:', error)
     activeImageUrl.value = ''
+  } finally {
+    hasProductLoadCompleted.value = true
   }
 }
 
@@ -2213,70 +2210,6 @@ watch(
     line-height: 1.6;
   }
 
-}
-
-.loading {
-  display: grid;
-  place-content: center;
-  width: 100%;
-  min-height: clamp(360px, 65dvh, 720px);
-  margin: 0;
-  padding: clamp(24px, 5vw, 60px);
-  box-sizing: border-box;
-  color: var(--color-text-primary);
-  font-size: clamp(
-    var(--font-size-body),
-    1.2vw,
-    var(--font-size-heading-md)
-  );
-  letter-spacing: 0.04em;
-}
-
-.loading-indicator,
-.loading-text {
-  grid-area: 1 / 1;
-  place-self: center;
-}
-
-.loading-indicator {
-  width: clamp(150px, 18vw, 220px);
-  aspect-ratio: 1;
-  border: clamp(2px, 0.25vw, 4px) solid var(--color-brand-primary);
-  border-top-color: transparent;
-  border-radius: 50%;
-  box-sizing: border-box;
-  animation: loading-circle-spin 2.4s linear infinite;
-}
-
-.loading-text {
-  position: relative;
-  z-index: 1;
-  max-width: 120px;
-  line-height: 1.4;
-  text-align: center;
-}
-
-@keyframes loading-circle-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 700px) {
-  .loading {
-    min-height: clamp(320px, 58dvh, 520px);
-    padding: 24px 16px;
-  }
-
-  .loading-indicator {
-    width: clamp(140px, 46vw, 175px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loading-indicator {
-    animation: none;
-  }
 }
 
 .error {

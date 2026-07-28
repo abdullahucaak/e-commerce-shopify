@@ -41,12 +41,10 @@
 
     <Navigation/>
     <div class="main">
-        <div
+        <LoadingSpinner
             v-if="productStore.cartLoading && !productStore.cart"
-            class="cart-status"
-        >
-            Loading cart...
-        </div>
+            label="Loading cart..."
+        />
 
         <div
             v-else-if="productStore.cartError"
@@ -226,6 +224,7 @@ import {
 } from 'vue'
 
 import Footer from '../components/Footer.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 import Navigation from '../components/Navigation.vue'
 import CartProduct from '../components/CartProduct.vue'
 
