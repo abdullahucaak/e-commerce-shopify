@@ -328,7 +328,7 @@ h1, h2{
   outline: 0;
 }
 .validDiscountCodeButton{
-  background-color: white;
+  background-color: var(--color-surface);
   color: var(--color-brand-secondary);
   border: 1px solid var(--color-brand-secondary);
   border-left: 25px solid var(--color-brand-secondary);

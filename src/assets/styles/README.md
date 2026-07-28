@@ -14,6 +14,8 @@ layout remains in each Vue component, while shared visual decisions live here.
 
 - Main brand backgrounds (announcement and footer): `--color-brand-primary`
 - Buttons, selectors, discounts, and interface accents: `--color-brand-secondary`
+- Optional white-surface override: uncomment and set `--color-brand-tertiary`
+- Optional regular-text override: uncomment and set `--color-brand-quaternary`
 - Main text: `--color-text-primary`
 - Muted text: `--color-text-muted`
 - Product-page/home old price: `--color-price-original-muted`
@@ -22,6 +24,11 @@ layout remains in each Vue component, while shared visual decisions live here.
 - Section spacing: `--section-spacing`
 - Product grid width: `--product-grid-max-width`
 - Shop grid width: `--shop-grid-max-width`
+
+When tertiary and quaternary are left commented out in `tokens.css`, the
+existing white surfaces and current text palette remain unchanged. Contrast
+text on colored buttons/backgrounds and semantic status colors remain separate
+for readability.
 
 ## Semantic class examples
 

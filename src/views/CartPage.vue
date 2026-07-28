@@ -436,7 +436,7 @@ onBeforeUnmount(() => {
     width: min(100%, 430px);
     padding: 34px 30px 28px;
     border-radius: 8px;
-    background-color: white;
+    background-color: var(--color-surface);
     box-shadow: 0 16px 45px rgba(0, 0, 0, 0.22);
     box-sizing: border-box;
     text-align: center;
@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
 
 .cart-popup-icon {
     margin-bottom: 14px;
-    color: rgb(71, 71, 71);
+    color: var(--color-text-ui);
     font-size: var(--font-size-display);
 }
 
@@ -480,7 +480,7 @@ onBeforeUnmount(() => {
     padding: 12px 18px;
     border: 1px solid var(--color-brand-secondary);
     border-radius: 4px;
-    background-color: white;
+    background-color: var(--color-surface);
     color: var(--color-brand-secondary);
     font-size: var(--font-size-body-compact);
     cursor: pointer;
@@ -489,7 +489,7 @@ onBeforeUnmount(() => {
 
 .cart-popup-button:hover {
     width: 80%;
-    background-color: white;
+    background-color: var(--color-surface);
     color: var(--color-brand-secondary);
 }
 
@@ -531,7 +531,7 @@ onBeforeUnmount(() => {
     letter-spacing: 1px;
 }
 .main .main-inner-cart-empty .mice-inner button{
-    background-color: white;
+    background-color: var(--color-surface);
     color: var(--color-brand-secondary);
     border: 1px solid var(--color-brand-secondary);
     font-size: var(--font-size-sm);
@@ -698,12 +698,12 @@ onBeforeUnmount(() => {
     margin-bottom: 50px;
 }
 .main .main-inner .how-did-you-hear .head {
-    color: rgba(27, 26, 26, 0.7);
+    color: var(--color-form-label);
     font-weight: var(--font-weight-semibold);
 }
 .main .main-inner .how-did-you-hear .options select{
-    background-color: none;
-    color: rgba(27, 26, 26, 0.9);
+    background-color: var(--color-input-surface);
+    color: var(--color-referral-select-text);
     border: solid 0.5px black;
     margin-top: 10px;
     padding: 10px 20px;
@@ -831,7 +831,7 @@ onBeforeUnmount(() => {
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input:hover{
         padding: 10px 100px;
-        background-color: white;
+        background-color: var(--color-surface);
         color: var(--color-brand-secondary);
         border: var(--color-brand-secondary) 0.5px solid;
     }

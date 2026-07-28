@@ -232,7 +232,7 @@ div.title{
 }
 .r-btn{
     font-family: 'Montserrat', sans-serif;
-    background-color: white;
+    background-color: var(--color-surface);
     font-size: var(--font-size-body-compact);
     letter-spacing: 0.06rem;
 }
@@ -278,7 +278,7 @@ form .shipping-method .shipping-grid{
     display: inline;
     width: 80px;
     font-family: 'Montserrat', sans-serif;
-    background-color: white;
+    background-color: var(--color-surface);
     font-size: var(--font-size-2xs);
     letter-spacing: 0.06rem;
 }

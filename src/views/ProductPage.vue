@@ -1118,7 +1118,7 @@ watch(
   width: min(100%, 430px);
   padding: 34px 30px 28px;
   border-radius: 8px;
-  background-color: white;
+  background-color: var(--color-surface);
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.22);
   box-sizing: border-box;
   text-align: center;
@@ -1138,7 +1138,7 @@ watch(
 
 .cart-popup-icon {
   margin-bottom: 14px;
-  color: rgb(71, 71, 71);
+  color: var(--color-text-ui);
   font-size: var(--font-size-display);
 }
 
@@ -1162,7 +1162,7 @@ watch(
   padding: 12px 18px;
   border: 1px solid var(--color-brand-secondary);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--color-surface);
   color: var(--color-brand-secondary);
   font-size: var(--font-size-body-compact);
   cursor: pointer;
@@ -1171,7 +1171,7 @@ watch(
 
 .cart-popup-button:hover {
   width: 80%;
-  background-color: white;
+  background-color: var(--color-surface);
   color: var(--color-brand-secondary);
 }
 .product-variant-title {
@@ -1179,7 +1179,7 @@ watch(
   margin-bottom: 20px;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  color: rgb(110, 110, 110);
+  color: var(--color-text-ui-muted);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -1203,7 +1203,7 @@ watch(
 }
 
 .view-cart {
-  background-color: white;
+  background-color: var(--color-surface);
   border: 1px solid #ebebeb;
   width: 350px;
   position: fixed;
@@ -1265,7 +1265,7 @@ watch(
 
 .view-cart .middle .product-variant-name {
   margin-top: 4px;
-  color: rgba(27, 36, 48, 0.58);
+  color: var(--color-text-detail-muted);
   font-size: 0.86em;
   line-height: 1.3;
 }
@@ -1280,7 +1280,7 @@ watch(
 
 .view-cart .view-cart-button .cart-button {
   width: 100%;
-  background-color: white;
+  background-color: var(--color-surface);
   line-height: 1.4;
   border: solid var(--color-brand-secondary) 0.5px;
   border-radius: 2px;
@@ -1428,7 +1428,7 @@ watch(
   aspect-ratio: 1 / 1;
   background-size: 180%;
   background-repeat: no-repeat;
-  background-color: white;
+  background-color: var(--color-surface);
   box-sizing: border-box;
   overflow: hidden;
   z-index: 20;
@@ -1525,7 +1525,7 @@ watch(
   padding: 8px 12px;
   border: 1px solid rgba(65, 61, 61, 0.28);
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: var(--color-text-primary);
   box-sizing: border-box;
   cursor: pointer;
@@ -1554,7 +1554,7 @@ watch(
   padding: 8px 14px;
   border: 1px solid rgba(65, 61, 61, 0.28);
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -1820,7 +1820,7 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card {
-  background-color: white;
+  background-color: var(--color-surface);
   border: solid var(--color-brand-secondary) 0.5px;
   color: var(--color-brand-secondary);
   transition: 0.6s;
@@ -1839,7 +1839,7 @@ watch(
 }
 
 .main .main-inner .main-inner-right .payout .purchase-buttons .add-to-card:disabled:hover {
-  background-color: white;
+  background-color: var(--color-surface);
   color: var(--color-brand-secondary);
 }
 
@@ -1868,8 +1868,8 @@ watch(
   text-decoration: underline;
   font-size: var(--font-size-body-sm);
   margin: 0 auto 20px;
-  color: rgb(63, 63, 63);
-  background-color: white;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
 }
 
 .main .main-inner .main-inner-right .description {
@@ -1895,7 +1895,7 @@ watch(
   display: block;
   margin: 20px auto 50px;
   padding: 20px 30px;
-  background-color: white;
+  background-color: var(--color-surface);
   border: solid var(--color-brand-secondary) 0.5px;
   color: var(--color-brand-secondary);
   transition: 0.6s;
@@ -1948,7 +1948,7 @@ watch(
 
   .main .main-inner .main-inner-right .description {
     width: 90%;
-    color: rgba(0, 0, 0, 0.7);
+    color: var(--color-text-body-muted);
     line-height: 22px;
     font-size: var(--font-size-sm);
   }
@@ -2147,7 +2147,7 @@ watch(
   }
 
   .main .main-inner .main-inner-right .payout .product-price {
-    color: rgb(60, 60, 60);
+    color: var(--color-text-primary);
     font-weight: var(--font-weight-semibold);
     font-size: var(--font-size-lg);
     margin-bottom: 15px;

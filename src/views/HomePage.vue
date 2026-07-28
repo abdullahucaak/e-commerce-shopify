@@ -133,7 +133,7 @@ body{
 }
 .bs-btn{
     color: var(--color-brand-secondary);
-    background-color: white;
+    background-color: var(--color-surface);
     padding: 13px 70px;
     border: 0.5px var(--color-brand-secondary) solid;
     border-radius: 0px;
@@ -141,7 +141,7 @@ body{
 }
 .bs-btn:hover{
     color: var(--color-brand-secondary);
-    background-color: white;
+    background-color: var(--color-surface);
     padding: 13px 75px;
     border: 0.5px var(--color-brand-secondary) solid;
     transition: 0.3s;

@@ -123,7 +123,7 @@ const deleteProduct = async (productId) => {
 }
 
 .products-table-container {
-    background: white;
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);

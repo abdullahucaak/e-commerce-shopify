@@ -2,9 +2,15 @@
   /* Brand and interface colors */
 /*   --color-brand-primary: #1b9c85;
   --color-brand-secondary: #4c4c6d; */
-  --color-brand-primary: #403D88;
-  --color-brand-secondary: #AF719D;
+  --color-brand-primary: #0F3040;
+  --color-brand-secondary: #A56F63;
 
+  /*
+   * Optional brand colors:
+   * Uncomment either line only when that brand role is needed.
+   */
+/*   --color-brand-tertiary: #0F3040;
+  --color-brand-quaternary: #E9C46A; */
 
   --color-brand-hover: color-mix(
     in srgb,
@@ -19,14 +25,28 @@
   --color-brand-contrast: #ffffff;
   --color-secondary-contrast: #ffffff;
 
-  --color-text-primary: #465168;
-  --color-text-strong: #1b2430;
-  --color-text-secondary: #535e6f;
-  --color-text-muted: #8e8e8e;
-  --color-text-subtle: #b6b6b6;
+  --color-text-primary: var(--color-brand-quaternary, #465168);
+  --color-text-strong: var(--color-brand-quaternary, #1b2430);
+  --color-text-secondary: var(--color-brand-quaternary, #535e6f);
+  --color-text-muted: var(--color-brand-quaternary, #8e8e8e);
+  --color-text-subtle: var(--color-brand-quaternary, #b6b6b6);
+  --color-text-ui: var(--color-brand-quaternary, rgb(71, 71, 71));
+  --color-text-ui-muted: var(--color-brand-quaternary, rgb(110, 110, 110));
+  --color-text-detail-muted: var(
+    --color-brand-quaternary,
+    rgba(27, 36, 48, 0.58)
+  );
+  --color-text-body-muted: var(
+    --color-brand-quaternary,
+    rgba(0, 0, 0, 0.7)
+  );
+  --color-text-form-strong: var(
+    --color-brand-quaternary,
+    rgba(27, 26, 26, 0.9)
+  );
   --color-text-inverse: #ffffff;
-  --color-gray: #a8a8a8;
-  --color-product-text: #465168;
+  --color-gray: var(--color-brand-quaternary, #a8a8a8);
+  --color-product-text: var(--color-brand-quaternary, #465168);
 
   --color-announcement-bg: var(--color-brand-primary);
   --color-announcement-text: #f5f5f5;
@@ -35,7 +55,7 @@
   --color-footer-link: var(--color-secondary-contrast);
 
   --color-price-current: var(--color-product-text);
-  --color-price-original-muted: #8e8e8e;
+  --color-price-original-muted: var(--color-brand-quaternary, #8e8e8e);
   --color-price-original-danger: #c6473a;
   --color-discount: var(--color-brand-secondary);
   --color-product-savings: #147967;
@@ -51,7 +71,8 @@
   --color-info: #5656fb;
   --color-info-soft: #eeeeff;
 
-  --color-surface: #ffffff;
+  --color-surface: var(--color-brand-tertiary, #ffffff);
+  --color-input-surface: #ffffff;
   --color-surface-muted: #f8f9fa;
   --color-surface-subtle: #f5f5f5;
   --color-border: rgba(0, 0, 0, 0.2);
@@ -60,7 +81,11 @@
   --color-overlay: rgba(0, 0, 0, 0.5);
   --color-focus: var(--color-brand-secondary);
   --color-payment: #5a31f4;
-  --color-form-label: rgba(27, 26, 26, 0.7);
+  --color-form-label: var(
+    --color-brand-quaternary,
+    rgba(27, 26, 26, 0.7)
+  );
+  --color-referral-select-text: rgba(27, 26, 26, 0.9);
 
   /* Font families */
   --font-family-primary: 'Futura Std', 'Montserrat', sans-serif;

@@ -214,7 +214,7 @@ const calculateSubtotal = () => {
 .customer-info-card,
 .shipping-info-card,
 .products-card {
-    background: white;
+    background: var(--color-surface);
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -264,7 +264,7 @@ h2 {
     padding: 1.5rem;
     border: 1px solid var(--color-border-light);
     border-radius: 8px;
-    background-color: #fff;
+    background-color: var(--color-surface);
 }
 
 .product-image {

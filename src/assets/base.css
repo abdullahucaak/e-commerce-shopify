@@ -17,7 +17,7 @@ body{
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   letter-spacing: 0.5px;
-  /* color: rgba(27, 26, 26, 0.7); */
+  /* color: var(--color-form-label); */
 }
 a{
   color: var(--color-text-primary);

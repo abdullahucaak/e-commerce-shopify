@@ -320,7 +320,7 @@ const removeProduct = async () => {
 }
 .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-variant-title{
     margin-top: 4px;
-    color: rgba(27, 36, 48, 0.58);
+    color: var(--color-text-detail-muted);
     font-size: 0.86em;
     line-height: 1.3;
     text-transform: uppercase;
@@ -396,12 +396,12 @@ const removeProduct = async () => {
     margin-bottom: 50px;
 }
 .main .main-inner .how-did-you-hear p {
-    color: rgba(27, 26, 26, 0.7);
+    color: var(--color-form-label);
     font-weight: var(--font-weight-semibold);
 }
 .main .main-inner .how-did-you-hear .options select{
     background-color: none;
-    color: rgba(27, 26, 26, 0.9);
+    color: var(--color-text-form-strong);
     border: solid 0.5px black;
     margin-top: 10px;
     padding: 10px 20px;

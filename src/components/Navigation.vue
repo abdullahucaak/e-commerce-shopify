@@ -326,7 +326,7 @@ const totalProductNumberOnCart = computed(() => {
     grid-template-columns: 1fr 3fr 1fr;
     justify-items: center;
     align-items: center;
-    background-color: white;
+    background-color: var(--color-surface);
     z-index: 100;
     position: relative;
     min-height: var(--header-min-height);
@@ -372,7 +372,7 @@ const totalProductNumberOnCart = computed(() => {
     z-index: 1;
     width: 100%;
     height: 100%;
-    background-color: white;
+    background-color: var(--color-surface);
   }
   .announce-nav-container nav .searching-div{
     width: 60%; 
@@ -408,7 +408,7 @@ const totalProductNumberOnCart = computed(() => {
   }
   .announce-nav-container nav .results-wrapper{
     width: 100%;
-    background-color: white;
+    background-color: var(--color-surface);
     border: 0.5px solid gray;
     position: absolute;
     z-index: 2;

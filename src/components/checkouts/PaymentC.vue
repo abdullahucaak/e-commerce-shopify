@@ -393,7 +393,7 @@ p.payment-info{
 .r-btn{
     margin-left: 3px;
     font-family: 'Montserrat', sans-serif;
-    background-color: white;
+    background-color: var(--color-surface);
     font-size: var(--font-size-body-compact);
     letter-spacing: 0.06rem;
 }
@@ -443,7 +443,7 @@ p.payment-info{
     display: inline;
     width: 80px;
     font-family: 'Montserrat', sans-serif;
-    background-color: white;
+    background-color: var(--color-surface);
     font-size: var(--font-size-2xs);
     letter-spacing: 0.06rem;
 }

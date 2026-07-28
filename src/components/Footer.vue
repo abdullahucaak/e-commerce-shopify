@@ -233,6 +233,7 @@ const subscribe = async () => {
         padding: 10px 0;
         margin-right: 5px;
         border-radius: 2px;
+        background-color: var(--color-input-surface);
         font-size: var(--font-size-body);
         text-indent: 10px;
     }
