@@ -11,7 +11,8 @@
                     class="searched-product"
                     :to="{
                         name: 'product-page',
-                        params: { handle: cartLine.merchandise.product.handle }
+                        params: { handle: cartLine.merchandise.product.handle },
+                        query: { variant: cartLine.merchandise.id }
                     }"
                 >
                     <div class="cart-product-name text-card-title">
@@ -69,7 +70,7 @@
                 </span>
                 <span
                     v-if="isDiscounted"
-                    class="cart-item-compare-at-price price price-original price-original--danger"
+                    class="cart-item-compare-at-price price price-original price-original--muted"
                 >
                     {{ formattedCompareAtLineTotal }}
                 </span>
@@ -421,20 +422,20 @@ const removeProduct = async () => {
 .cart-item-regular-price-group {
     display: flex;
     align-items: baseline;
-    flex-wrap: wrap;
     gap: 7px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 .cart-item-regular-price-group .cart-item-regular-price {
     font-weight: var(--font-weight-semibold);
 }
 .cart-item-compare-at-price {
-    color: var(--color-price-original-danger);
+    color: var(--color-price-original-muted);
     font-size: 0.85em;
     font-weight: var(--font-weight-regular);
     text-decoration: line-through;
     text-decoration-thickness: 1px;
     white-space: nowrap;
-    padding-left: 5px;
 }
 .cart-total-cell {
     position: relative;
@@ -473,11 +474,32 @@ const removeProduct = async () => {
 }
 @media (max-width: 867px) {
 
-    .main .main-inner form .cart-table tbody tr{
-    height: auto;
+    tr {
+        display: grid;
+        grid-template-columns: minmax(0, 65%) minmax(0, 35%);
+        height: auto;
+        border-bottom: solid 0.5px rgb(184, 184, 184);
     }
     .main .main-inner form .cart-table tbody tr td{
         font-size: var(--font-size-body-sm);
+        border-bottom: 0;
+    }
+    .cart-total-cell {
+        text-align: left;
+    }
+    .cart-item-regular-price-group {
+        justify-content: flex-start;
+    }
+    .cart-product-information,
+    .cart-product-name-wrapper,
+    .cart-product-name {
+        min-width: 0;
+    }
+    .cart-product-information {
+        overflow: hidden;
+    }
+    .cart-product-name {
+        overflow-wrap: break-word;
     }
     .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
         aspect-ratio: 1/1;
@@ -543,6 +565,11 @@ const removeProduct = async () => {
         font-size: var(--font-size-body);
     }
 }
+@media (max-width: 700px) {
+    tr {
+        grid-template-columns: minmax(0, 70%) minmax(0, 30%);
+    }
+}
 @media (max-width:391px){
 
     .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
@@ -558,6 +585,34 @@ const removeProduct = async () => {
     }
     .cart-product-name-wrapper{
         margin-left: 11px;
+    }
+}
+@media (min-width: 525px) and (max-width: 700px) {
+    .cart-product-name {
+        font-size: var(--font-size-body-compact);
+        line-height: 1.3;
+    }
+
+    .cart-product-variant-title {
+        font-size: var(--font-size-sm);
+        line-height: 1.3;
+    }
+
+    .remove {
+        font-size: var(--font-size-sm-relaxed);
+    }
+
+    .cart-item-current-price,
+    .cart-item-regular-price {
+        font-size: var(--font-size-body-compact);
+    }
+
+    .cart-item-compare-at-price {
+        font-size: var(--font-size-xs-relaxed);
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone {
+        font-size: var(--font-size-body-sm);
     }
 }
 @media (min-width:393px) and (max-width:524px){

@@ -84,6 +84,13 @@
 
             <form @submit.prevent="goToCheckout">
                 <table class="cart-table">
+                    <colgroup>
+                        <col class="cart-column-product">
+                        <col class="cart-column-price">
+                        <col class="cart-column-quantity">
+                        <col class="cart-column-total">
+                    </colgroup>
+
                     <thead class="t-heading table-heading">
                         <tr>
                             <th>PRODUCT</th>
@@ -134,11 +141,16 @@
                                         <span
                                             ref="subtotalPricesElement"
                                             class="subtotal subtotal-prices"
+                                            :class="{
+                                                'has-original-subtotal': formattedOriginalSubtotal
+                                            }"
                                         >
-                                            <span>{{ formattedSubtotal }}</span>
+                                            <span class="current-subtotal">
+                                                {{ formattedSubtotal }}
+                                            </span>
                                             <span
                                                 v-if="formattedOriginalSubtotal"
-                                                class="original-subtotal price price-original price-original--danger"
+                                                class="original-subtotal price price-original price-original--muted"
                                             >
                                                 {{ formattedOriginalSubtotal }}
                                             </span>
@@ -347,10 +359,6 @@ const alignSingleSubtotalPrice = async () => {
     }
 
     subtotalElement.style.transform = ''
-
-    if (formattedOriginalSubtotal.value) {
-        return
-    }
 
     requestAnimationFrame(() => {
         const cartTotalElement = document.querySelector(
@@ -573,8 +581,42 @@ onBeforeUnmount(() => {
 .main .main-inner form .cart-table{
     border-collapse: collapse;
     margin: 25px 0;
+    table-layout: fixed;
     width: 100%;
     text-align: left;
+}
+@media (min-width: 868px) {
+    .cart-column-product {
+        width: 58%;
+    }
+
+    .cart-column-price {
+        width: 12%;
+    }
+
+    .cart-column-quantity {
+        width: 18%;
+    }
+
+    .cart-column-total {
+        width: 12%;
+    }
+}
+@media (max-width: 867px) {
+    .main .main-inner form .cart-table colgroup {
+        display: none;
+    }
+
+    .main .main-inner form .cart-table thead tr {
+        display: grid;
+        grid-template-columns: minmax(0, 65%) minmax(0, 35%);
+        border-bottom: solid 0.5px rgb(184, 184, 184);
+    }
+}
+@media (max-width: 700px) {
+    .main .main-inner form .cart-table thead tr {
+        grid-template-columns: minmax(0, 70%) minmax(0, 30%);
+    }
 }
 .main .main-inner form .cart-table thead tr th,
 .main .main-inner form .cart-table tbody tr td{
@@ -725,9 +767,10 @@ onBeforeUnmount(() => {
     justify-content: flex-end;
     gap: 9px;
     font-size: 1.05em;
+    padding-right: 5px;
 }
 .original-subtotal {
-    color: var(--color-price-original-danger);
+    color: var(--color-price-original-muted);
     font-size: 0.85em;
     font-weight: var(--font-weight-regular);
     text-decoration: line-through;
@@ -735,26 +778,6 @@ onBeforeUnmount(() => {
     white-space: nowrap;
     padding-left: 5px;
 }
-
-@media (min-width: 868px) {
-    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total {
-        display: grid;
-        grid-template-columns: 65.5% minmax(0, 1fr);
-        align-items: baseline;
-    }
-    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total span.subtotal-prices:nth-child(2) {
-        justify-content: flex-start;
-        margin-left: 0;
-        padding-left: 0;
-        gap: 7px;
-        text-align: left;
-    }
-    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total.single-subtotal-price span.subtotal-prices:nth-child(2) {
-        justify-content: center;
-    }
-
-}
-
 .continue-shopping{
     letter-spacing: 0.5px;
     opacity: 0.8;
@@ -764,8 +787,48 @@ onBeforeUnmount(() => {
     .main .main-inner{
         width: 95%;
     }
+    .subtotal-prices {
+    padding-right: 0px;
 }
+}
+
+@media (min-width: 868px) {
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total {
+        display: grid;
+        grid-template-columns: 65.5% minmax(0, 1fr);
+        align-items: baseline;
+    }
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total span.subtotal-prices:nth-child(2) {
+        justify-content: flex-end;
+        margin-left: 0;
+        padding-left: 0;
+        gap: 7px;
+        text-align: right;
+    }
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total.single-subtotal-price span.subtotal-prices:nth-child(2) {
+        justify-content: center;
+    }
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total span.subtotal-prices.has-original-subtotal:nth-child(2) {
+        position: relative;
+        width: max-content;
+        justify-self: start;
+        justify-content: flex-start;
+    }
+    .subtotal-prices.has-original-subtotal .original-subtotal {
+        position: absolute;
+        top: 50%;
+        left: calc(100% + 7px);
+        padding-left: 0;
+        transform: translateY(-50%);
+    }
+
+}
+
 @media (max-width: 867px) {
+    .main .main-inner form .cart-table thead tr th {
+        border-bottom: 0;
+    }
+
     .main .main-inner form .cart-table tbody tr{
     height: auto;
     }
@@ -842,34 +905,11 @@ onBeforeUnmount(() => {
         font-size: var(--font-size-body);
     }
 }
-@media (max-width:391px){
-    .main .main-inner{
-        width: 95%;
-        padding: 5px;
-    }
-    .main .main-inner form .cart-table{
-        border-collapse: collapse;
-        margin: 25px 0;
-        width: 100%;
-        text-align: left;
-    }
-    .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img{
-        aspect-ratio: 1/1;
-        width: 50px;
-        height: auto;
-        /* background-image: url(../assets/products/assam-black-600x600.webp); */
-        background-size: contain;
-        background-repeat: no-repeat;
-    }
-    .main .main-inner form .cart-table tbody tr td{
-        font-size: var(--font-size-2xs);
-    }
 
-    .cart-product-name-wrapper{
-        padding-left: 3px;
-    }
+@media (min-width:600px) and (max-width:867px){
 
 }
+
 
 @media (min-width:393px) and (max-width:524px){
     .main .main-inner .cart-header h1{
