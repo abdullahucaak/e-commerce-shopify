@@ -404,7 +404,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import Footer from '../components/Footer.vue'
@@ -973,18 +973,6 @@ const hideImageZoom = () => {
   isImageZoomVisible.value = false
 }
 
-const resetToMainImage = () => {
-  activeImageUrl.value = getMainImageUrl()
-}
-
-const handleDocumentPointerDown = event => {
-  if (event.target.closest('.other-images-product, .variant-color-picker, .variant-option-picker')) {
-    return
-  }
-
-  resetToMainImage()
-}
-
 const handleAddToCart = async () => {
   cartMessage.value = ''
 
@@ -1073,11 +1061,6 @@ const handleCartPanelAnimationEnd = () => {
 
 onMounted(() => {
   loadProduct()
-  document.addEventListener('pointerdown', handleDocumentPointerDown)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('pointerdown', handleDocumentPointerDown)
 })
 
 watch(

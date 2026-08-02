@@ -112,13 +112,13 @@
         <div class="bars-inner">
           <ul>
             <li>
-              <RouterLink :to="{name:'home'}">Home</RouterLink>
+              <RouterLink :to="{name:'home'}" @click="continueMenuCloseOnNextPage('home')">Home</RouterLink>
             </li>
             <li>
-              <RouterLink :to="{name:'shop'}">Shop <span class="dropdown-icon"></span></RouterLink>
+              <RouterLink :to="{name:'shop'}" @click="continueMenuCloseOnNextPage('shop')">Shop <span class="dropdown-icon"></span></RouterLink>
             </li>
             <li>
-              <RouterLink :to="{name:'about-us'}">About Us</RouterLink>
+              <RouterLink :to="{name:'about-us'}" @click="continueMenuCloseOnNextPage('about-us')">About Us</RouterLink>
             </li>
           </ul>
         </div>
@@ -130,15 +130,19 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
+import { useRoute } from 'vue-router'
 import { useProductStore } from '../stores/productStore'
 
 const productStore = useProductStore()
+const route = useRoute()
 
 const isSearchButtonOn = ref(false)
 const searchPanel = ref(null)
 const searchInput = ref(null)
 const search = ref('')
-const isBarsOpen = ref(false)
+const mobileMenuTransitionKey = 'mobile-menu-closing'
+const shouldResumeMenuClose = sessionStorage.getItem(mobileMenuTransitionKey) === 'true'
+const isBarsOpen = ref(shouldResumeMenuClose)
 const isAnnounceOverFooter = ref(false)
 const announceBar = ref(null)
 const navigationElement = ref(null)
@@ -171,6 +175,15 @@ const updateNavigationOffsets = () => {
 }
 
 onMounted(async () => {
+  if (shouldResumeMenuClose) {
+    sessionStorage.removeItem(mobileMenuTransitionKey)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isBarsOpen.value = false
+      })
+    })
+  }
+
   updateNavigationOffsets()
   announceBarObserver = new ResizeObserver(updateNavigationOffsets)
   if (announceBar.value) announceBarObserver.observe(announceBar.value)
@@ -286,6 +299,13 @@ const getSearchProductRoute = product => {
 
 const toggleBars = () => {
   isBarsOpen.value = !isBarsOpen.value
+}
+
+const continueMenuCloseOnNextPage = routeName => {
+  if (route.name !== routeName) {
+    sessionStorage.setItem(mobileMenuTransitionKey, 'true')
+  }
+  isBarsOpen.value = false
 }
 
 window.addEventListener('resize', () => {
@@ -523,11 +543,15 @@ const totalProductNumberOnCart = computed(() => {
       display: none;
     }
     .bars li{
-      padding: 20px 20px;
       font-size: 14px;
       font-weight: var(--font-weight-medium);
       border-bottom: 0.5px solid rgba(0,0,0, 0.2);
       user-select: none;
+    }
+    .bars li a{
+      display: block;
+      width: 100%;
+      padding: 20px;
     }
     .bars li:first-child{
       border-top: none;
