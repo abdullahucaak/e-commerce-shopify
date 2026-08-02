@@ -41,8 +41,8 @@
         <i @click="hideToBars" v-if="isBarsOpen" class="fa-solid fa-xmark xmark-vertical-bars"></i>
       </div>
       <div 
-              class="searching-div-wrapper search-panel"
-        ref="isSearchButtonOn"
+        class="searching-div-wrapper search-panel"
+        ref="searchPanel"
         v-if="isSearchButtonOn" 
       >
         <div class="searching-div">
@@ -50,8 +50,7 @@
             <input 
               v-model="search" 
               type="text" 
-              ref="input" 
-              :autofocus="isSearchButtonOn"
+              ref="searchInput"
             >
             <i @click="searchButtonOff" class="fa-solid fa-xmark xmark-search"></i>
           </div>
@@ -61,6 +60,12 @@
             <div class="results-inner">
               <div class="searched-products">
                 <p class="product-header">Products</p>
+                <p
+                  v-if="productsFound.length === 0"
+                  class="product-not-found"
+                >
+                  Product Not Found
+                </p>
                 <div v-for="product in productsFound" :key="product.id">
                   <RouterLink 
                     class="searched-product search-result-item"
@@ -117,13 +122,15 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useProductStore } from '../stores/productStore'
 
 const productStore = useProductStore()
 
 const isSearchButtonOn = ref(false)
+const searchPanel = ref(null)
+const searchInput = ref(null)
 const search = ref('')
 const isBarsOpen = ref(false)
 const isAnimationWorked = ref(false)
@@ -178,16 +185,18 @@ onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--navigation-visible-bottom')
 })
 
-const searchButtonOn = () => {
+const searchButtonOn = async () => {
   isSearchButtonOn.value = true
   isBarsOpen.value = false
+  await nextTick()
+  searchInput.value?.focus()
 }
 
 const searchButtonOff = () => {
   isSearchButtonOn.value = false
 }
 
-onClickOutside(isSearchButtonOn, searchButtonOff)
+onClickOutside(searchPanel, searchButtonOff)
 
 const productsFound = computed(() => {
   const searchTerm = search.value.trim().toLowerCase()
@@ -425,6 +434,11 @@ const totalProductNumberOnCart = computed(() => {
     font-size: var(--font-size-lg);
     border-bottom: 0.5px solid gray;
     padding-bottom: 20px;
+  }
+  .announce-nav-container nav .results-wrapper .results-inner .searched-products .product-not-found{
+    margin: 20px 0 0;
+    color: var(--color-text, inherit);
+    font-size: var(--font-size-body);
   }
   .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product{
     display: grid;

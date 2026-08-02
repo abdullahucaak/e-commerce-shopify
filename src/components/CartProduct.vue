@@ -725,4 +725,141 @@ const removeProduct = async () => {
 }
 
 
+/* Unified cart row layout. Keep these tracks in sync with CartPage.vue. */
+.main .main-inner form .cart-table tbody tr td {
+    vertical-align: middle;
+}
+
+.cart-product-information,
+.cart-product-name-wrapper,
+.searched-product,
+.cart-product-name,
+.cart-product-variant-title {
+    min-width: 0;
+}
+
+.cart-product-name,
+.cart-product-variant-title {
+    overflow-wrap: anywhere;
+}
+
+.cart-item-regular-price-group {
+    min-width: 0;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+@media (min-width: 868px) {
+    .main .main-inner form .cart-table tbody tr .cart-product-information {
+        grid-template-columns: clamp(78px, 8vw, 100px) minmax(0, 1fr);
+        column-gap: clamp(16px, 2vw, 28px);
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img {
+        width: 100%;
+        max-width: 100px;
+    }
+}
+
+@media (max-width: 867px) {
+    tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) clamp(124px, 32%, 190px);
+        width: 100%;
+        min-height: 0;
+        border-bottom: solid 0.5px rgb(184, 184, 184);
+    }
+
+    tr > td {
+        min-width: 0;
+        padding: 24px 15px;
+        border-bottom: 0;
+    }
+
+    tr > td:nth-child(2),
+    tr > td:nth-child(3) {
+        display: none;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information {
+        display: grid;
+        grid-template-columns: clamp(68px, 17vw, 96px) minmax(0, 1fr);
+        column-gap: clamp(12px, 2.4vw, 22px);
+        align-items: center;
+        overflow: visible;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img {
+        width: 100%;
+        max-width: 96px;
+    }
+
+    .cart-total-cell {
+        display: grid;
+        grid-template-rows: auto auto;
+        align-content: center;
+        justify-items: start;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .cart-item-regular-price-group,
+    .cart-total-cell > .cart-quantity {
+        width: max-content;
+        max-width: 100%;
+        justify-self: start;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone {
+        display: block;
+        width: 92px;
+        max-width: 100%;
+        margin-top: 8px;
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    tr {
+        grid-template-columns: minmax(0, 1fr) clamp(112px, 34%, 145px);
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information {
+        grid-template-columns: clamp(60px, 18vw, 82px) minmax(0, 1fr);
+        column-gap: 12px;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img {
+        max-width: 82px;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone {
+        width: 82px;
+    }
+}
+
+@media (max-width: 480px) {
+    tr {
+        grid-template-columns: minmax(0, 1fr) clamp(105px, 34%, 120px);
+    }
+
+    tr > td {
+        padding: 20px 8px;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information {
+        grid-template-columns: clamp(54px, 18vw, 68px) minmax(0, 1fr);
+        column-gap: 10px;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-product-information .cart-product-img {
+        max-width: 68px;
+    }
+
+    .main .main-inner form .cart-table tbody tr .cart-quantity .q-input-smart-phone {
+        width: 76px;
+        padding: 6px 8px;
+    }
+}
+
 </style>
