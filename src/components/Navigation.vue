@@ -530,7 +530,7 @@ const totalProductNumberOnCart = computed(() => {
       user-select: none;
     }
     .bars li:first-child{
-      border-top: 0.5px solid rgba(0,0,0, 0.2);
+      border-top: none;
     }
     .bars li:last-child{
       border-bottom: 0.5px solid rgba(0,0,0, 0.2);
