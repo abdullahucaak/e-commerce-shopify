@@ -37,8 +37,13 @@
             </div>
           </i>
         </RouterLink>
-        <i @click="openBars" v-if="!isBarsOpen" class="fa-solid fa-bars"></i>
-        <i @click="hideToBars" v-if="isBarsOpen" class="fa-solid fa-xmark xmark-vertical-bars"></i>
+        <i
+          @click="toggleBars"
+          class="fa-solid fa-bars"
+          role="button"
+          aria-label="Toggle navigation menu"
+          :aria-expanded="isBarsOpen"
+        ></i>
       </div>
       <div 
         class="searching-div-wrapper search-panel"
@@ -99,25 +104,26 @@
         </div>
       </div>
     </nav>
-    <div 
-      v-if="isBarsOpen" 
-      class="bars"
-      :class="{'slide-in': isAnimationWorked, 'slide-out': !isAnimationWorked}"
-    >
-      <div>
-        <ul>
-          <li>
-            <RouterLink :to="{name:'home'}">Home</RouterLink>
-          </li>
-          <li>
-            <RouterLink :to="{name:'shop'}">Shop <span class="dropdown-icon"></span></RouterLink>
-          </li>
-          <li>
-            <RouterLink :to="{name:'about-us'}">About Us</RouterLink>
-          </li>
-        </ul>
+    <Transition name="mobile-menu">
+      <div
+        v-if="isBarsOpen"
+        class="bars"
+      >
+        <div class="bars-inner">
+          <ul>
+            <li>
+              <RouterLink :to="{name:'home'}">Home</RouterLink>
+            </li>
+            <li>
+              <RouterLink :to="{name:'shop'}">Shop <span class="dropdown-icon"></span></RouterLink>
+            </li>
+            <li>
+              <RouterLink :to="{name:'about-us'}">About Us</RouterLink>
+            </li>
+          </ul>
+        </div>
       </div>
-  </div>
+    </Transition>
   </div>
 </template>
 
@@ -133,7 +139,6 @@ const searchPanel = ref(null)
 const searchInput = ref(null)
 const search = ref('')
 const isBarsOpen = ref(false)
-const isAnimationWorked = ref(false)
 const isAnnounceOverFooter = ref(false)
 const announceBar = ref(null)
 const navigationElement = ref(null)
@@ -279,17 +284,8 @@ const getSearchProductRoute = product => {
   }
 }
 
-const openBars = () => {
-  isBarsOpen.value = true
-  isAnimationWorked.value = true
-}
-
-const hideToBars = () => {
-  setTimeout(() => {
-    isBarsOpen.value = false
-  }, 100)
-
-  isAnimationWorked.value = false
+const toggleBars = () => {
+  isBarsOpen.value = !isBarsOpen.value
 }
 
 window.addEventListener('resize', () => {
@@ -537,31 +533,29 @@ const totalProductNumberOnCart = computed(() => {
       border-top: 0.5px solid rgba(0,0,0, 0.2);
     }
     .bars li:last-child{
-      border-bottom: none;
+      border-bottom: 0.5px solid rgba(0,0,0, 0.2);
     }
-    @keyframes slide-in {
-        from {
-            transform: translateY(-100%);
-        }
-        to {
-            transform: translateY(0);
-        }
+    .bars{
+      max-height: 200px;
+      overflow: hidden;
+      opacity: 1;
+      transition:
+        max-height 0.5s ease,
+        opacity 0.5s ease;
     }
-    @keyframes slide-out {
-        from {
-            transform: translateY(0);
-        }
-        to {
-            transform: translateY(-100%);
-        }
+    .bars-inner{
+      min-height: 0;
+      overflow: hidden;
     }
-    .slide-in{
-        animation: slide-in 0.3s ease;
-        z-index: +1;
-      }
-      .slide-out{
-        animation: slide-out 0.3s ease;
-        z-index: +1;
+    .mobile-menu-enter-from,
+    .mobile-menu-leave-to{
+      max-height: 0;
+      opacity: 0;
+    }
+    .mobile-menu-enter-to,
+    .mobile-menu-leave-from{
+      max-height: 200px;
+      opacity: 1;
     }
     .announce-nav-container nav .searching-div{
       width: calc(100% - 80px);
