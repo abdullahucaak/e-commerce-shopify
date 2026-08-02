@@ -1001,7 +1001,7 @@ const handleAddToCart = async () => {
     quantity.value > selectedVariant.value.quantityAvailable
   ) {
     cartMessageType.value = 'error'
-    cartMessage.value = `Only ${selectedVariant.value.quantityAvailable} item(s) are currently available.`
+    cartMessage.value = 'The requested quantity is not available.'
     return
   }
 

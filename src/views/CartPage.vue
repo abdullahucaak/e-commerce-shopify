@@ -824,6 +824,30 @@ onBeforeUnmount(() => {
 
 }
 
+/* Stack discounted subtotal prices where the total track cannot safely fit
+   both values side by side. */
+@media (min-width: 868px) and (max-width: 999px),
+       (max-width: 603px) {
+    .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-sub-total-wrapper .cart-sub-total > .subtotal-prices.has-original-subtotal {
+        width: auto;
+        max-width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .subtotal-prices.has-original-subtotal .original-subtotal {
+        position: static;
+        order: 1;
+        padding-left: 0;
+        transform: none;
+    }
+
+    .subtotal-prices.has-original-subtotal .current-subtotal {
+        order: 2;
+    }
+}
+
 @media (max-width: 867px) {
     .main .main-inner form .cart-table thead tr th {
         border-bottom: 0;

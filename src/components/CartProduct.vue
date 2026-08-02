@@ -749,6 +749,25 @@ const removeProduct = async () => {
     white-space: nowrap;
 }
 
+/* Keep long discounted totals inside the narrow total column. */
+@media (min-width: 868px) and (max-width: 999px),
+       (max-width: 603px) {
+    .cart-item-regular-price-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        max-width: 100%;
+    }
+
+    .cart-item-compare-at-price {
+        order: 1;
+    }
+
+    .cart-item-regular-price {
+        order: 2;
+    }
+}
+
 @media (min-width: 868px) {
     .main .main-inner form .cart-table tbody tr .cart-product-information {
         grid-template-columns: clamp(78px, 8vw, 100px) minmax(0, 1fr);

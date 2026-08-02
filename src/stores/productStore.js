@@ -6,6 +6,8 @@ const CART_ID_STORAGE_KEY = 'shopifyCartId'
 const STOREFRONT_COUNTRY_CODE = import.meta.env.VITE_SHOPIFY_COUNTRY_CODE || 'US'
 const LEGACY_STORAGE_KEYS = ['cartProducts', 'order']
 const MAX_QUANTITY_PER_CART_LINE = 50
+const INVENTORY_QUANTITY_ERROR_MESSAGE = 'The requested quantity is not available.'
+const CART_QUANTITY_ADJUSTED_MESSAGE = 'Your cart quantity was adjusted due to product availability.'
 
 const CART_FIELDS = `
   fragment CartFields on Cart {
@@ -98,10 +100,26 @@ const getCartWarningMessage = warnings => {
     return null
   }
 
-  return warnings
-    .map(warning => warning.message)
+  // Shopify inventory warnings can contain the supplier's exact available
+  // quantity. Keep that internal while preserving unrelated warning messages.
+  const messages = warnings
+    .map(warning => {
+      const inventoryWarningText = `${warning.code || ''} ${warning.message || ''}`.toLowerCase()
+      const isInventoryWarning = [
+        'stock',
+        'inventory',
+        'available',
+        'availability',
+        'quantity'
+      ].some(keyword => inventoryWarningText.includes(keyword))
+
+      return isInventoryWarning
+        ? CART_QUANTITY_ADJUSTED_MESSAGE
+        : warning.message
+    })
     .filter(Boolean)
-    .join(', ')
+
+  return [...new Set(messages)].join(', ')
 }
 
 const isInvalidCartMessage = message => {
@@ -444,7 +462,7 @@ export const useProductStore = defineStore('productStore', {
       }
 
       if (variant.quantityAvailable !== null && desiredQuantity > variant.quantityAvailable) {
-        throw new Error(`Only ${variant.quantityAvailable} item(s) of ${variant.product.title} are currently available.`)
+        throw new Error(INVENTORY_QUANTITY_ERROR_MESSAGE)
       }
 
       return variant
@@ -489,7 +507,7 @@ export const useProductStore = defineStore('productStore', {
         }
 
         if (variant.quantityAvailable !== null && line.quantity > variant.quantityAvailable) {
-          messages.push(`Only ${variant.quantityAvailable} item(s) of ${title} are currently available.`)
+          messages.push(`${title} does not have enough stock for the requested quantity.`)
         }
       }
 
@@ -850,7 +868,7 @@ export const useProductStore = defineStore('productStore', {
         // Keep that corrected cart instead of treating the warning as a fatal error.
         this.cart = payload.cart
         this.cartWarning = quantityWasLimited
-          ? `Only ${MAX_QUANTITY_PER_CART_LINE} items were added to your cart due to availability.`
+          ? CART_QUANTITY_ADJUSTED_MESSAGE
           : warningMessage
         this.storeCartId(payload.cart.id)
 
