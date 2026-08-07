@@ -282,6 +282,10 @@ const subscribe = async () => {
         color: var(--color-danger);
     }
 
+    .site-footer__button {
+        color: var(--color-brand-quinary, var(--color-brand-contrast));
+    }
+
     .f-btn:disabled {
         opacity: 1;
         cursor: not-allowed;

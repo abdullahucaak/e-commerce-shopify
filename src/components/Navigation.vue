@@ -9,7 +9,7 @@
     </div>
     <nav ref="navigationElement" class="site-navigation">
       <div class="logo">
-        <img class="site-navigation__logo" src="../assets/Alaya-Logo_300x300.jpg" alt="Logo">
+        <BrandLogo class="site-navigation__logo" />
       </div>
       <div class="main-nav">
         <ul>
@@ -131,6 +131,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useRoute } from 'vue-router'
+import BrandLogo from './BrandLogo.vue'
 import { useProductStore } from '../stores/productStore'
 
 const productStore = useProductStore()
@@ -341,14 +342,16 @@ const totalProductNumberOnCart = computed(() => {
     position: sticky;
     top: 0;
     z-index: 1000;
-    transition: background-color 0.45s ease;
+    transition: background-color 0.45s ease, color 0.45s ease;
   }
   .announce-nav-container .announce-bar.announce-bar--over-footer{
     background-color: var(--color-brand-secondary);
+    color: var(--color-brand-quinary, var(--color-announcement-text));
   }
   .announce-nav-container nav{
+    --navigation-edge-spacing: clamp(20px, 4.5vw, 90px);
     display: grid;
-    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr);
     justify-items: center;
     align-items: center;
     background-color: var(--color-surface);
@@ -357,12 +360,14 @@ const totalProductNumberOnCart = computed(() => {
     min-height: var(--header-min-height);
     border-bottom: solid rgba(0,0,0, 0.2) 0.5px;
   }
+  .announce-nav-container nav > .logo{
+    justify-self: start;
+    padding-inline-start: var(--navigation-edge-spacing);
+  }
 /* nav-inner */
-  .announce-nav-container nav .logo > img{
+  .announce-nav-container nav .logo > .brand-logo{
     width: 200px;
-    height: auto;
     display: block;
-    object-fit: contain;
   }
   .announce-nav-container nav .main-nav{
     width: 100%;
@@ -511,7 +516,7 @@ const totalProductNumberOnCart = computed(() => {
       }
       .cp-count-inner{
         position: absolute;
-        color: white;
+        color: var(--color-brand-quinary, white);
         font-size: 10px;
         top: 3px;
         width: 100%;
@@ -529,15 +534,12 @@ const totalProductNumberOnCart = computed(() => {
       justify-items: center;
       align-items: center;
     }
-    .announce-nav-container nav .logo{
-      justify-self: start;
-    }
-    .announce-nav-container nav .logo > img{
+    .announce-nav-container nav .logo > .brand-logo{
       width: 170px;
     }
     .announce-nav-container nav .shop-search{
       justify-self: end;
-      margin-right: 2rem;
+      margin-inline-end: max(0px, calc(var(--navigation-edge-spacing) - 8px));
     }
     .announce-nav-container nav .main-nav{
       display: none;
@@ -595,12 +597,12 @@ const totalProductNumberOnCart = computed(() => {
   }
   @media (max-width: 700px){
     .announce-bar{
-      font-size: var(--font-size-body);
+      font-size: var(--font-size-body-sm);
       font-weight: var(--font-weight-regular);
     }
   }
   @media (max-width: 392px){
-    .announce-nav-container nav .logo > img{
+    .announce-nav-container nav .logo > .brand-logo{
       width: 150px;
     }
 
@@ -624,7 +626,7 @@ const totalProductNumberOnCart = computed(() => {
 
   }
   @media (max-width: 362px){
-    .announce-nav-container nav .logo > img{
+    .announce-nav-container nav .logo > .brand-logo{
       width: 135px;
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{

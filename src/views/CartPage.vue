@@ -720,7 +720,7 @@ onBeforeUnmount(() => {
 .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input{
     padding: 10px 30px;
     background-color: var(--color-brand-secondary);
-    color: white;
+    color: var(--color-brand-quinary, white);
     font-size: 1em;
     border-radius: 3px;
     transition: 0.4s;
@@ -919,7 +919,7 @@ onBeforeUnmount(() => {
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .submit-control input:hover{
         padding: 10px 100px;
         background-color: var(--color-surface);
-        color: var(--color-brand-secondary);
+        color: var(--color-brand-quinary, var(--color-brand-secondary));
         border: var(--color-brand-secondary) 0.5px solid;
     }
     .main .main-inner form .cart-footer .cart-footer-inner .f-right .f-right-inner .cart-buttons-container .additional-checkout-buttons ul li.icons{

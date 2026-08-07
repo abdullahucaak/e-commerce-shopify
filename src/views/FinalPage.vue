@@ -2,7 +2,7 @@
     <div class="wrapper">
         <div class="header">
             <div class="header-inner">
-                <img src="../assets/Alaya-Logo_300x300.jpg" alt="Logo">
+                <BrandLogo />
             </div>
         </div>
         <div class="cards">
@@ -142,6 +142,7 @@
 console.log("FINAL PAGE ONLINE")
 import { ref, onMounted, watch } from 'vue';
 /* components */
+import BrandLogo from '../components/BrandLogo.vue'
 import ChosenProduct from '../components/checkouts/ChosenProduct.vue'
 
 /* pinia */
@@ -199,9 +200,8 @@ watch(() => route.params.id, async (newId) => {
      .header-inner{
          padding-left: 80px;
      }
-     .header .header-inner img{
+     .header .header-inner .brand-logo{
          width: 200px;
-         height: 147px;
      }
 
      .cards .cards-inner{
@@ -370,9 +370,8 @@ watch(() => route.params.id, async (newId) => {
          .header-inner{
              padding-left: 20px;
          }
-         .header .header-inner img{
+         .header .header-inner .brand-logo{
              width: 150px;
-             height: 110px;
          }
          .cards .cards-inner{
              display: grid;

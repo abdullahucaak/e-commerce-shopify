@@ -159,9 +159,10 @@ const discountPercentage = computed(() => {
     align-items: center;
     min-height: 24px;
     padding: 3px 8px;
+    border-color: var(--color-brand-quinary, var(--color-discount));
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.9);
-    color: var(--color-brand-hover);
+    color: var(--color-brand-quinary, var(--color-brand-hover));
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     letter-spacing: 0.35px;

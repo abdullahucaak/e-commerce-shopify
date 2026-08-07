@@ -8,7 +8,7 @@
                     <div class="circle c3"></div>
                     <div class="circle c4"></div>
                 </div>
-                <img class="logo" src="../../assets/Alaya-Logo_300x300.jpg" alt="Logo">
+                <BrandLogo class="logo" />
             </div>
         </div>
         <div class="nav-links">
@@ -30,6 +30,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import BrandLogo from '../BrandLogo.vue'
 
 const router = useRouter()
 
@@ -81,17 +82,16 @@ const handleLogout = () => {
     }
 }
 
-img.logo {
+span.logo {
     position: relative;
     border-radius: 50%;
-    object-fit: cover;
     animation: logoFloat 3s ease-in-out infinite;
     transition: transform 0.3s ease;
     margin-top: 50px;
     z-index: 1;
 }
 
-img.logo:hover {
+span.logo:hover {
     transform: scale(1.1) rotate(5deg);
 }
 
@@ -121,9 +121,8 @@ img.logo:hover {
     margin-bottom: 2rem;
 }
 
-.logo img {
+.logo .brand-logo {
     width: 120px;
-    height: auto;
 }
 
 .nav-links {
@@ -237,4 +236,4 @@ img.logo:hover {
         padding: 0.75rem;
     }
 }
-</style> 
+</style>

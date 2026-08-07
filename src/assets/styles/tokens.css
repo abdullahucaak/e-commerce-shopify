@@ -1,18 +1,26 @@
 :root {
   /* Brand and interface colors */
-/*   --color-brand-primary: #1b9c85;
-  --color-brand-secondary: #4c4c6d; */
-  --color-brand-primary: #007DCC;
-  --color-brand-secondary: #D10056;
-/*   --color-brand-primary: #0F3040;
-  --color-brand-secondary: #A56F63; */
+  /* Duyuru çubuğu ve footer arka planı; yükleme göstergesi ve bazı ürün vurgu durumları. */
+  --color-brand-primary: #303841;
+
+  /* Butonlar, link/vurgu metinleri, kenarlıklar, indirim/başarı/focus durumları ve CMS vurguları. */
+  --color-brand-secondary: #007DCC;
+
+  /* Sayfanın ana yüzey ve body arka planı. */
+/*   --color-brand-tertiary: #303841; */
+
+  /* Ana/ikincil/soluk metinler, ürün ve fiyat metinleri, form etiketleri ile genel gri metin tonları. */
+/*   --color-brand-quaternary: #F6D8BD; */
 
   /*
-   * Optional brand colors:
-   * Uncomment either line only when that brand role is needed.
+   * Opsiyonel: Açık renkli brand-secondary yüzeylerin üzerindeki kritik yazılar ve
+   * görsel indirim etiketlerinin yazı/çerçeve rengi. Kullanmak için aşağıdaki satırı açın.
    */
-/*   --color-brand-tertiary: #0F3040;
-  --color-brand-quaternary: #E9C46A; */
+   
+/*   --color-brand-quinary: #F6D8BD; */
+
+      /* Alaya Tea logosunun marka rengi. */
+/*   --color-brand-logo: #000; */
 
   --color-brand-hover: color-mix(
     in srgb,

@@ -2,7 +2,7 @@
     <div class="login-container">
         <div class="login-box">
             <div class="logo">
-                <img src="../../assets/Alaya-Logo_300x300.jpg" alt="Logo">
+                <BrandLogo />
             </div>
             <h2>Admin Girişi</h2>
             <form @submit.prevent="handleLogin">
@@ -39,6 +39,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import BrandLogo from '../../components/BrandLogo.vue'
 
 const router = useRouter()
 const username = ref('')
@@ -94,9 +95,8 @@ const handleLogin = async () => {
     margin-bottom: 1.5rem;
 }
 
-.logo img {
+.logo .brand-logo {
     width: 150px;
-    height: auto;
 }
 
 h2 {

@@ -83,11 +83,17 @@ body{
      text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
 }
 .home-container .c-banner .banner-message .bm-inner .bm-btn{
+     --bm-padding-inline: 60px;
+     color: var(--color-brand-quinary, var(--color-brand-contrast));
      font-size: var(--font-size-body);
      font-weight: var(--font-weight-light);
-     padding: 15px 60px;
+     padding: 15px var(--bm-padding-inline);
      border-radius: 2px;
      margin-top: 20px;
+}
+.home-container .c-banner .banner-message .bm-inner .bm-btn:hover{
+     background-color: var(--color-brand-secondary);
+     padding-right: calc(var(--bm-padding-inline) + clamp(8px, 1.5vw, 15px));
 }
 
 .home-container .c-message{
@@ -214,8 +220,9 @@ body{
         font-weight: var(--font-weight-medium);
     }  
     .home-container .c-banner .banner-message .bm-inner .bm-btn{
+        --bm-padding-inline: 50px;
         font-size: var(--font-size-body);
-        padding: 10px 50px;
+        padding: 10px var(--bm-padding-inline);
     }  
     .home-container .c-message{
         justify-self: center;

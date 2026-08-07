@@ -344,6 +344,7 @@
                   v-model.number="quantity"
                   class="q-input"
                   type="number"
+                  inputmode="numeric"
                   min="1"
                   :max="selectedVariant?.quantityAvailable || undefined"
                   step="1"
@@ -1371,10 +1372,10 @@ watch(
   align-items: center;
   min-height: 24px;
   padding: 6px 16px;
-  border: 1px solid var(--color-brand-secondary);
+  border: 1px solid var(--color-brand-quinary, var(--color-brand-secondary));
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.9);
-  color: var(--color-brand-hover);
+  color: var(--color-brand-quinary, var(--color-brand-hover));
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.35px;
@@ -2166,7 +2167,7 @@ watch(
   .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
     width: 90px;
     padding: 10px 0;
-    font-size: var(--font-size-body-compact);
+    font-size: 16px;
     text-indent: 15px;
     border: solid rgb(188, 188, 188, 0.6) 1px;
   }
@@ -2272,10 +2273,6 @@ watch(
 
   .main .main-inner .main-inner-right .payout .quantity .q-header {
     font-size: var(--font-size-body-compact);
-  }
-
-  .main .main-inner .main-inner-right .payout .quantity .q-input-div .q-input {
-    font-size: var(--font-size-body-sm);
   }
 
   .variant-color-label {

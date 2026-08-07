@@ -7,7 +7,7 @@ const STOREFRONT_COUNTRY_CODE = import.meta.env.VITE_SHOPIFY_COUNTRY_CODE || 'US
 const LEGACY_STORAGE_KEYS = ['cartProducts', 'order']
 const MAX_QUANTITY_PER_CART_LINE = 50
 const INVENTORY_QUANTITY_ERROR_MESSAGE = 'The requested quantity is not available.'
-const CART_QUANTITY_ADJUSTED_MESSAGE = 'Your cart quantity was adjusted due to product availability.'
+const CART_QUANTITY_ADJUSTED_MESSAGE = 'Only 50 items were added to your cart due to availability.'
 
 const CART_FIELDS = `
   fragment CartFields on Cart {
