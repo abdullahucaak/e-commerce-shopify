@@ -1,0 +1,6 @@
+name = "GlowField Commerce API"
+roles = ["frontend", "backend"]
+port = 3000
+
+[commands]
+dev = "npm run dev:api"

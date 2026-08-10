@@ -1,0 +1,13 @@
+{
+  "current": {
+    "use_cms_branding": true,
+    "logo_width": 180,
+    "primary_color": "#303841",
+    "secondary_color": "#007dcc",
+    "surface_color": "#ffffff",
+    "text_color": "#465168",
+    "page_width": 1450
+  },
+  "presets": {}
+}
+

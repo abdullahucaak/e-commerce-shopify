@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "heading": "Meet our newest collection",
+        "copy": "A thoughtful collection, selected for quality and made to be enjoyed.",
+        "button_label": "Shop now"
+      }
+    },
+    "message": {
+      "type": "brand-message",
+      "settings": {
+        "message": "We source products directly from people and planet-friendly partners."
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Best selling products",
+        "products_to_show": 8,
+        "show_view_all": true
+      }
+    }
+  },
+  "order": ["hero", "message", "featured"]
+}
+

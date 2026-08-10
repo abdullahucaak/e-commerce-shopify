@@ -1,21 +1,28 @@
 {
-  "name": "alayatea.co",
+  "name": "glowfield-commerce-platform",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@vueuse/core": "^10.4.1",
-    "axios": "^1.4.0",
-    "pinia": "^2.0.35",
-    "vue": "^3.2.47",
-    "vue-router": "^4.1.6"
+    "dev": "npm run dev:storefront",
+    "dev:storefront": "npm run dev --workspace @glowfield/storefront",
+    "dev:platform": "npm run dev --workspace @glowfield/platform",
+    "dev:api": "npm run dev --workspace @glowfield/api",
+    "shopify:dev": "shopify app dev --use-localhost --localhost-port 3458 --no-update",
+    "build": "npm run build:storefront && npm run build:platform",
+    "build:storefront": "npm run build --workspace @glowfield/storefront",
+    "build:platform": "npm run build --workspace @glowfield/platform",
+    "test": "npm run test:api",
+    "test:api": "npm run test --workspace @glowfield/api",
+    "test:theme": "node scripts/validate-shopify-theme.mjs",
+    "db:migrate:oauth": "npm run db:migrate:oauth --workspace @glowfield/api",
+    "db:seed:glowfield": "npm run db:seed:glowfield --workspace @glowfield/api",
+    "db:claim:glowfield-owner": "npm run db:claim:glowfield-owner --workspace @glowfield/api"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.2.1",
-    "vite": "^4.3.4"
+    "@shopify/cli": "^4.6.1"
   }
 }

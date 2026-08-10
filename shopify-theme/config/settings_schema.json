@@ -1,0 +1,92 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Store Builder",
+    "theme_author": "Store Builder",
+    "theme_version": "0.1.0",
+    "theme_documentation_url": "https://example.com/theme-docs",
+    "theme_support_url": "https://example.com/support"
+  },
+  {
+    "name": "CMS connection",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "use_cms_branding",
+        "label": "Use published Store Builder CMS values",
+        "default": true,
+        "info": "When a CMS value is empty, the matching theme setting below is used."
+      }
+    ]
+  },
+  {
+    "name": "Brand",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo"
+      },
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon"
+      },
+      {
+        "type": "range",
+        "id": "logo_width",
+        "min": 100,
+        "max": 320,
+        "step": 10,
+        "unit": "px",
+        "label": "Logo width",
+        "default": 180
+      }
+    ]
+  },
+  {
+    "name": "Colors",
+    "settings": [
+      {
+        "type": "color",
+        "id": "primary_color",
+        "label": "Primary color",
+        "default": "#303841"
+      },
+      {
+        "type": "color",
+        "id": "secondary_color",
+        "label": "Accent color",
+        "default": "#007dcc"
+      },
+      {
+        "type": "color",
+        "id": "surface_color",
+        "label": "Page background",
+        "default": "#ffffff"
+      },
+      {
+        "type": "color",
+        "id": "text_color",
+        "label": "Text color",
+        "default": "#465168"
+      }
+    ]
+  },
+  {
+    "name": "Layout",
+    "settings": [
+      {
+        "type": "range",
+        "id": "page_width",
+        "min": 1000,
+        "max": 1600,
+        "step": 50,
+        "unit": "px",
+        "label": "Maximum page width",
+        "default": 1450
+      }
+    ]
+  }
+]
+

@@ -1,0 +1,77 @@
+<!doctype html>
+<html class="no-js" lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="{{ settings.primary_color }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {%- if settings.favicon != blank -%}
+      <link
+        rel="icon"
+        type="image/png"
+        href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
+      >
+    {%- endif -%}
+
+    <title>
+      {{ page_title }}
+      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    {{ content_for_header }}
+
+    {%- liquid
+      assign primary_color = settings.primary_color
+      assign secondary_color = settings.secondary_color
+      assign surface_color = settings.surface_color
+      assign text_color = settings.text_color
+
+      if settings.use_cms_branding
+        if shop.metafields.store_builder.primary_color.value != blank
+          assign primary_color = shop.metafields.store_builder.primary_color.value
+        endif
+        if shop.metafields.store_builder.secondary_color.value != blank
+          assign secondary_color = shop.metafields.store_builder.secondary_color.value
+        endif
+        if shop.metafields.store_builder.surface_color.value != blank
+          assign surface_color = shop.metafields.store_builder.surface_color.value
+        endif
+        if shop.metafields.store_builder.text_color.value != blank
+          assign text_color = shop.metafields.store_builder.text_color.value
+        endif
+      endif
+    -%}
+
+    <style>
+      :root {
+        --color-brand-primary: {{ primary_color }};
+        --color-brand-secondary: {{ secondary_color }};
+        --color-surface: {{ surface_color }};
+        --color-text-primary: {{ text_color }};
+        --page-max-width: {{ settings.page_width }}px;
+      }
+    </style>
+
+    {{ 'theme.css' | asset_url | stylesheet_tag: preload: true }}
+    <script src="{{ 'theme.js' | asset_url }}" defer="defer"></script>
+  </head>
+
+  <body class="template-{{ template.name | handle }}">
+    <a class="skip-link" href="#MainContent">Skip to content</a>
+
+    {% sections 'header-group' %}
+
+    <main id="MainContent" class="site-main" role="main" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
+
+    {% sections 'footer-group' %}
+  </body>
+</html>

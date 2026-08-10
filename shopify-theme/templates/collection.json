@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-collection-product-grid",
+      "settings": {
+        "heading": "All Products",
+        "description": "<p>We source our teas from organic estates and farms that are building soil health and going back to regenerative practices: no tilling, no pesticides, and no synthetic inputs. All our teas come from biodynamic estates. All our herbals come from organic farms, which have transitioned to regenerative agriculture. Picked fresh and sent in small batches, our products celebrate simple and pure ingredients free of pesticides or added flavorings.</p>",
+        "products_per_page": 18
+      }
+    }
+  },
+  "order": ["main"]
+}

@@ -1,0 +1,61 @@
+<section class="cart-page page-width">
+  <h1>{{ 'cart.title' | t }}</h1>
+
+  {%- if cart.item_count == 0 -%}
+    <div class="cart-empty">
+      <p>{{ 'cart.empty' | t }}</p>
+      <a class="button button--outline" href="{{ routes.all_products_collection_url }}">Continue shopping</a>
+    </div>
+  {%- else -%}
+    <form action="{{ routes.cart_url }}" method="post" class="cart-form">
+      <div class="cart-items">
+        {%- for item in cart.items -%}
+          <article class="cart-item">
+            <a class="cart-item__image" href="{{ item.url }}">
+              {%- if item.image -%}
+                {{ item.image | image_url: width: 320 | image_tag: widths: '120, 180, 240, 320', loading: 'lazy', alt: item.image.alt }}
+              {%- endif -%}
+            </a>
+            <div class="cart-item__details">
+              <a href="{{ item.url }}"><h2>{{ item.product.title | escape }}</h2></a>
+              {%- unless item.product.has_only_default_variant -%}<p>{{ item.variant.title | escape }}</p>{%- endunless -%}
+              <p>{{ item.final_price | money }}</p>
+              <label for="Quantity-{{ item.key | handle }}">Quantity</label>
+              <input
+                id="Quantity-{{ item.key | handle }}"
+                type="number"
+                name="updates[]"
+                value="{{ item.quantity }}"
+                min="0"
+              >
+              <a href="{{ item.url_to_remove }}">Remove</a>
+            </div>
+            <strong>{{ item.final_line_price | money }}</strong>
+          </article>
+        {%- endfor -%}
+      </div>
+
+      <div class="cart-summary">
+        <label for="CartNote">Add a note to your order</label>
+        <textarea id="CartNote" name="note" rows="4">{{ cart.note }}</textarea>
+        <p class="cart-summary__subtotal">
+          <span>{{ 'cart.subtotal' | t }}</span>
+          <strong>{{ cart.total_price | money }}</strong>
+        </p>
+        <p>Taxes and shipping calculated at checkout.</p>
+        <div class="cart-summary__buttons">
+          <button class="button button--outline" type="submit" name="update">Update cart</button>
+          <button class="button button--primary" type="submit" name="checkout">{{ 'cart.checkout' | t }}</button>
+        </div>
+        {%- if additional_checkout_buttons -%}
+          <div class="additional-checkout-buttons">{{ content_for_additional_checkout_buttons }}</div>
+        {%- endif -%}
+      </div>
+    </form>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{ "name": "Cart" }
+{% endschema %}
+

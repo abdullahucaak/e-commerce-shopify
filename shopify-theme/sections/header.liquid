@@ -1,0 +1,94 @@
+{%- liquid
+  assign cms_brand_name = shop.metafields.store_builder.brand_name.value
+  assign brand_name = cms_brand_name | default: shop.name
+  assign cms_logo = shop.metafields.store_builder.logo.value
+  assign logo_render_width = settings.logo_width | times: 2
+-%}
+
+<header class="site-header{% if section.settings.sticky %} site-header--sticky{% endif %}">
+  <div class="site-header__inner page-width">
+    <a class="site-logo" href="{{ routes.root_url }}" aria-label="{{ brand_name | escape }}">
+      {%- if settings.use_cms_branding and cms_logo != blank -%}
+        {{
+          cms_logo
+          | image_url: width: logo_render_width
+          | image_tag: widths: '120, 180, 240, 320, 480, 640', width: settings.logo_width, alt: brand_name
+        }}
+      {%- elsif settings.logo != blank -%}
+        {{
+          settings.logo
+          | image_url: width: logo_render_width
+          | image_tag: widths: '120, 180, 240, 320, 480, 640', width: settings.logo_width, alt: brand_name
+        }}
+      {%- else -%}
+        <span class="site-logo__text">{{ brand_name | escape }}</span>
+      {%- endif -%}
+    </a>
+
+    <nav class="desktop-navigation" aria-label="Primary navigation">
+      <ul class="desktop-navigation__list" role="list">
+        {%- for link in section.settings.menu.links -%}
+          <li>
+            <a
+              class="desktop-navigation__link{% if link.current %} is-current{% endif %}"
+              href="{{ link.url }}"
+              {% if link.current %}aria-current="page"{% endif %}
+            >
+              {{ link.title | escape }}
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a class="header-action" href="{{ routes.search_url }}" aria-label="Search">
+        {% render 'icon-search' %}
+      </a>
+      <a class="header-action header-cart" href="{{ routes.cart_url }}" aria-label="Cart">
+        {% render 'icon-cart' %}
+        {%- if cart.item_count > 0 -%}
+          <span class="header-cart__count">{{ cart.item_count }}</span>
+        {%- endif -%}
+      </a>
+      <button
+        class="header-action mobile-menu-button"
+        type="button"
+        aria-expanded="false"
+        aria-controls="MobileNavigation"
+        data-menu-toggle
+      >
+        <span class="visually-hidden">Toggle navigation</span>
+        {% render 'icon-menu' %}
+      </button>
+    </div>
+  </div>
+
+  <nav id="MobileNavigation" class="mobile-navigation" aria-label="Mobile navigation" hidden>
+    <ul class="mobile-navigation__list" role="list">
+      {%- for link in section.settings.menu.links -%}
+        <li><a href="{{ link.url }}">{{ link.title | escape }}</a></li>
+      {%- endfor -%}
+    </ul>
+  </nav>
+</header>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky",
+      "label": "Sticky header",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

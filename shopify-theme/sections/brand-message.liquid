@@ -1,0 +1,28 @@
+{%- liquid
+  assign message = section.settings.message
+  if settings.use_cms_branding and shop.metafields.store_builder.brand_message.value != blank
+    assign message = shop.metafields.store_builder.brand_message.value
+  endif
+-%}
+
+{%- if message != blank -%}
+  <section class="brand-message page-width">
+    <p>{{ message | escape }}</p>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Brand message",
+  "settings": [
+    {
+      "type": "textarea",
+      "id": "message",
+      "label": "Message",
+      "default": "We source products directly from people and planet-friendly partners."
+    }
+  ],
+  "presets": [{ "name": "Brand message" }]
+}
+{% endschema %}
+

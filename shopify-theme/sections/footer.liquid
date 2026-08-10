@@ -1,0 +1,92 @@
+{%- assign cms_brand_name = shop.metafields.store_builder.brand_name.value -%}
+{%- assign brand_name = cms_brand_name | default: shop.name -%}
+
+<footer class="site-footer">
+  <div class="site-footer__grid page-width">
+    <div>
+      <h2 class="site-footer__title">{{ brand_name | escape }}</h2>
+      <ul class="site-footer__links" role="list">
+        {%- for link in section.settings.menu.links -%}
+          <li><a href="{{ link.url }}">{{ link.title | escape }}</a></li>
+        {%- endfor -%}
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="site-footer__title">{{ section.settings.newsletter_heading | escape }}</h2>
+      {% form 'customer', class: 'newsletter-form' %}
+        <input type="hidden" name="contact[tags]" value="newsletter">
+        <label class="visually-hidden" for="NewsletterEmail-{{ section.id }}">Email address</label>
+        <input
+          id="NewsletterEmail-{{ section.id }}"
+          type="email"
+          name="contact[email]"
+          value="{{ form.email }}"
+          placeholder="Email address"
+          autocorrect="off"
+          autocapitalize="off"
+          autocomplete="email"
+          required
+        >
+        <button type="submit">Subscribe</button>
+        {%- if form.posted_successfully? -%}<p>Thank you for subscribing.</p>{%- endif -%}
+        {%- if form.errors -%}<p>{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>{%- endif -%}
+      {% endform %}
+    </div>
+
+    <div>
+      <h2 class="site-footer__title">{{ section.settings.contact_heading | escape }}</h2>
+      <div class="rte">{{ section.settings.contact_text }}</div>
+    </div>
+  </div>
+
+  <div class="site-footer__bottom page-width">
+    <small>&copy; {{ 'now' | date: '%Y' }} {{ brand_name | escape }}</small>
+    {%- if section.settings.show_payment_icons -%}
+      <ul class="payment-icons" role="list">
+        {%- for type in shop.enabled_payment_types -%}
+          <li>{{ type | payment_type_svg_tag: class: 'payment-icon' }}</li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "default": "footer"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "Newsletter heading",
+      "default": "Stay in touch: join our newsletter"
+    },
+    {
+      "type": "text",
+      "id": "contact_heading",
+      "label": "Contact heading",
+      "default": "Contact"
+    },
+    {
+      "type": "richtext",
+      "id": "contact_text",
+      "label": "Contact information",
+      "default": "<p>hello@example.com</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Show payment icons",
+      "default": true
+    }
+  ]
+}
+{% endschema %}
+

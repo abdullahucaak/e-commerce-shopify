@@ -1,0 +1,14 @@
+handle = "glowfield-us"
+name = "GlowField Commerce"
+label = "GlowField Commerce - US"
+description = "Headless Shopify storefront powered by GlowField Commerce."
+productFeedManagement = "automatic"
+
+[requirements]
+expectsOnlineStoreParity = true
+merchantOfRecord = "merchant"
+
+[[countries]]
+code = "US"
+languages = ["en"]
+currency = "USD"

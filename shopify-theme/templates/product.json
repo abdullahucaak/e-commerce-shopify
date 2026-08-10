@@ -1,0 +1,20 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "details": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Shipping and returns",
+            "content": "<p>Add shipping and return information from the theme editor.</p>"
+          }
+        }
+      },
+      "block_order": ["details"],
+      "settings": { "show_vendor": false }
+    }
+  },
+  "order": ["main"]
+}
+

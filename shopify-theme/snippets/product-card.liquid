@@ -1,0 +1,56 @@
+{%- liquid
+  assign card_image = product.featured_media.preview_image
+  assign hover_image = product.media[1].preview_image
+  assign compare_price = product.compare_at_price_max
+  assign current_price = product.price
+  assign discount_percentage = 0
+  if compare_price > current_price and compare_price > 0
+    assign price_difference = compare_price | minus: current_price
+    assign discount_percentage = price_difference | times: 100.0 | divided_by: compare_price | round
+  endif
+-%}
+
+<article class="product-card">
+  <a class="product-card__link" href="{{ product.url }}">
+    <div class="product-card__media">
+      {%- if discount_percentage > 0 -%}
+        <span class="product-card__discount">%{{ discount_percentage }} discount</span>
+      {%- endif -%}
+
+      {%- if card_image != blank -%}
+        {{
+          card_image
+          | image_url: width: 900
+          | image_tag:
+            class: 'product-card__image product-card__image--primary',
+            widths: '240, 360, 480, 640, 900',
+            sizes: '(max-width: 749px) 45vw, 25vw',
+            loading: 'lazy',
+            alt: card_image.alt
+        }}
+        {%- if hover_image != blank -%}
+          {{
+            hover_image
+            | image_url: width: 900
+            | image_tag:
+              class: 'product-card__image product-card__image--hover',
+              widths: '240, 360, 480, 640, 900',
+              sizes: '(max-width: 749px) 45vw, 25vw',
+              loading: 'lazy',
+              alt: hover_image.alt
+          }}
+        {%- endif -%}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      {%- endif -%}
+    </div>
+
+    <h3 class="product-card__title">{{ product.title | escape }}</h3>
+    <div class="product-card__price">
+      <span>{{ product.price | money }}</span>
+      {%- if compare_price > current_price -%}
+        <s>{{ compare_price | money }}</s>
+      {%- endif -%}
+    </div>
+  </a>
+</article>

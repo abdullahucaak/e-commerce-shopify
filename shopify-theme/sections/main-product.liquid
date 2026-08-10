@@ -1,0 +1,169 @@
+{%- liquid
+  assign selected_variant = product.selected_or_first_available_variant
+  assign discount_percentage = 0
+  if selected_variant.compare_at_price > selected_variant.price and selected_variant.compare_at_price > 0
+    assign price_difference = selected_variant.compare_at_price | minus: selected_variant.price
+    assign discount_percentage = price_difference | times: 100.0 | divided_by: selected_variant.compare_at_price | round
+  endif
+-%}
+
+<section class="product-page page-width" data-product-section>
+  <div class="product-page__media" data-product-gallery>
+    <div class="product-gallery__stage">
+      {%- if discount_percentage > 0 -%}
+        <span class="product-gallery__discount">%{{ discount_percentage }} discount</span>
+      {%- endif -%}
+
+      {%- for media in product.media -%}
+        <div
+          class="product-media{% if forloop.first %} is-active{% endif %}"
+          data-product-media="{{ media.id }}"
+          {% unless forloop.first %}hidden{% endunless %}
+        >
+          {%- case media.media_type -%}
+            {%- when 'image' -%}
+              {{
+                media.preview_image
+                | image_url: width: 1600
+                | image_tag:
+                  widths: '480, 720, 960, 1200, 1600',
+                  sizes: '(max-width: 804px) 100vw, 50vw',
+                  loading: 'lazy',
+                  alt: media.alt
+              }}
+            {%- else -%}
+              {{ media | media_tag: image_size: '1200x', controls: true }}
+          {%- endcase -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    {%- if product.media.size > 1 -%}
+      <div class="product-gallery__thumbnails" aria-label="Product media">
+        {%- for media in product.media -%}
+          <button
+            class="product-gallery__thumbnail{% if forloop.first %} is-active{% endif %}"
+            type="button"
+            data-media-target="{{ media.id }}"
+            aria-label="{{ media.alt | default: product.title | escape }}"
+            aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+          >
+            {{
+              media.preview_image
+              | image_url: width: 360
+              | image_tag:
+                widths: '120, 180, 240, 360',
+                sizes: '(max-width: 804px) 22vw, 10vw',
+                loading: 'lazy',
+                alt: media.alt
+            }}
+          </button>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="product-page__details">
+    {%- if product.vendor != blank and section.settings.show_vendor -%}
+      <p class="product-vendor">{{ product.vendor | escape }}</p>
+    {%- endif -%}
+    <h1>{{ product.title | escape }}</h1>
+
+    <div class="product-price" data-product-price>
+      <span>{{ selected_variant.price | money }}</span>
+      {%- if selected_variant.compare_at_price > selected_variant.price -%}
+        <s>{{ selected_variant.compare_at_price | money }}</s>
+      {%- endif -%}
+    </div>
+
+    {%- form 'product', product, class: 'product-form', data-product-form: '' -%}
+      {%- unless product.has_only_default_variant -%}
+        <label for="Variant-{{ section.id }}">Options</label>
+        <select id="Variant-{{ section.id }}" name="id" data-variant-select>
+          {%- for variant in product.variants -%}
+            <option
+              value="{{ variant.id }}"
+              data-price="{{ variant.price | money | escape }}"
+              data-compare-price="{% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | money | escape }}{% endif %}"
+              {% if variant == selected_variant %}selected{% endif %}
+              {% unless variant.available %}disabled{% endunless %}
+            >
+              {{ variant.title | escape }}{% unless variant.available %} — Sold out{% endunless %}
+            </option>
+          {%- endfor -%}
+        </select>
+      {%- else -%}
+        <input type="hidden" name="id" value="{{ selected_variant.id }}">
+      {%- endunless -%}
+
+      <label for="Quantity-{{ section.id }}">{{ 'products.product.quantity' | t }}</label>
+      <input id="Quantity-{{ section.id }}" type="number" name="quantity" value="1" min="1">
+
+      <button
+        class="button button--primary product-form__submit"
+        type="submit"
+        name="add"
+        {% unless selected_variant.available %}disabled{% endunless %}
+      >
+        {%- if selected_variant.available -%}
+          {{ 'products.product.add_to_cart' | t }}
+        {%- else -%}
+          {{ 'products.product.sold_out' | t }}
+        {%- endif -%}
+      </button>
+
+      {{ form | payment_button }}
+    {%- endform -%}
+
+    {%- if product.description != blank -%}
+      <div class="product-description rte">{{ product.description }}</div>
+    {%- endif -%}
+
+    {%- for block in section.blocks -%}
+      {%- case block.type -%}
+        {%- when 'collapsible' -%}
+          <details class="product-accordion" {{ block.shopify_attributes }}>
+            <summary>{{ block.settings.heading | escape }}</summary>
+            <div class="rte">{{ block.settings.content }}</div>
+          </details>
+        {%- when '@app' -%}
+          {% render block %}
+      {%- endcase -%}
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product information",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collapsible",
+      "name": "Collapsible row",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Details"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content",
+          "default": "<p>Add product details here.</p>"
+        }
+      ]
+    },
+    { "type": "@app" }
+  ]
+}
+{% endschema %}

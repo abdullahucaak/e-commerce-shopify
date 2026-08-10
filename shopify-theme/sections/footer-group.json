@@ -1,0 +1,16 @@
+{
+  "type": "footer",
+  "name": "Footer group",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "menu": "footer",
+        "newsletter_heading": "Stay in touch: join our newsletter",
+        "contact_heading": "Contact"
+      }
+    }
+  },
+  "order": ["footer"]
+}
+
