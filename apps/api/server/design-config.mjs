@@ -20,6 +20,10 @@ export function normalizeDesignSettings(input) {
       throw new Error('invalid_design_settings')
     }
   }
+  const logoSize = Number(input?.logoSize || 180)
+  if (!Number.isInteger(logoSize) || logoSize < 80 || logoSize > 320) {
+    throw new Error('invalid_design_settings')
+  }
 
   return {
     brand: {
@@ -27,7 +31,8 @@ export function normalizeDesignSettings(input) {
       logo: {
         url: logoUrl || null,
         alt: cleanText(input?.name, 120),
-        position: 'left center'
+        position: 'left center',
+        size: logoSize
       },
       colors: { primary: primary.toLowerCase(), secondary: secondary.toLowerCase() }
     }

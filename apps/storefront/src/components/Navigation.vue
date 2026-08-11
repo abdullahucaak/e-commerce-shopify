@@ -363,10 +363,13 @@ const totalProductNumberOnCart = computed(() => {
   .announce-nav-container nav > .logo{
     justify-self: start;
     padding-inline-start: var(--navigation-edge-spacing);
+    width: 100%;
+    box-sizing: border-box;
   }
 /* nav-inner */
   .announce-nav-container nav .logo > .brand-logo{
-    width: 200px;
+    width: var(--brand-logo-size, 180px);
+    max-width: none;
     display: block;
   }
   .announce-nav-container nav .main-nav{
@@ -535,7 +538,10 @@ const totalProductNumberOnCart = computed(() => {
       align-items: center;
     }
     .announce-nav-container nav .logo > .brand-logo{
-      width: 170px;
+      width: min(var(--brand-logo-size, 170px), 170px);
+    }
+    .announce-nav-container nav > .logo{
+      width: 100%;
     }
     .announce-nav-container nav .shop-search{
       justify-self: end;
@@ -603,7 +609,7 @@ const totalProductNumberOnCart = computed(() => {
   }
   @media (max-width: 392px){
     .announce-nav-container nav .logo > .brand-logo{
-      width: 150px;
+      width: min(var(--brand-logo-size, 150px), 150px);
     }
 
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{
@@ -627,7 +633,7 @@ const totalProductNumberOnCart = computed(() => {
   }
   @media (max-width: 362px){
     .announce-nav-container nav .logo > .brand-logo{
-      width: 135px;
+      width: min(var(--brand-logo-size, 135px), 135px);
     }
     .announce-nav-container nav .results-wrapper .results-inner .searched-products .searched-product .sp-content .sp-product-name{
         font-size: var(--font-size-sm);

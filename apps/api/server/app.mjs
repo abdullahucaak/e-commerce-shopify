@@ -206,7 +206,9 @@ export function buildApp({
         return reply.code(404).send({ error: 'storefront_not_found' })
       }
 
-      reply.header('cache-control', 'public, max-age=60, stale-while-revalidate=300')
+      // CMS changes must be visible on the very next storefront load. A CDN can
+      // add version-aware caching later; browser-level stale caching is unsafe here.
+      reply.header('cache-control', 'no-store, no-cache, must-revalidate')
       return config
     } catch (error) {
       app.log.error({ err: error, hostname }, 'Storefront configuration lookup failed')

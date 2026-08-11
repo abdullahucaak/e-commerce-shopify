@@ -6,7 +6,8 @@ export const brand = reactive({
   logo: {
     src: logoSrc,
     alt: 'GlowField',
-    position: 'left center'
+    position: 'left center',
+    size: 180
   }
 })
 
@@ -27,13 +28,16 @@ const isValidColor = value => (
 export function applyStorefrontDesign(settings = {}) {
   const brandSettings = settings.brand || {}
   const logoSettings = brandSettings.logo || {}
+  const logoUrl = logoSettings.url || brandSettings.logoUrl
+  const hasLogoUrl = Object.prototype.hasOwnProperty.call(logoSettings, 'url') ||
+    Object.prototype.hasOwnProperty.call(brandSettings, 'logoUrl')
 
   if (typeof brandSettings.name === 'string' && brandSettings.name.trim()) {
     brand.name = brandSettings.name.trim().slice(0, 120)
   }
 
-  if (typeof logoSettings.url === 'string' && logoSettings.url.trim()) {
-    brand.logo.src = logoSettings.url.trim()
+  if (hasLogoUrl) {
+    brand.logo.src = typeof logoUrl === 'string' ? logoUrl.trim() : ''
   }
 
   if (typeof logoSettings.alt === 'string' && logoSettings.alt.trim()) {
@@ -42,11 +46,12 @@ export function applyStorefrontDesign(settings = {}) {
     brand.logo.alt = brand.name
   }
 
-  if (
-    typeof logoSettings.position === 'string' &&
-    /^(left|center|right) (top|center|bottom)$/.test(logoSettings.position)
-  ) {
-    brand.logo.position = logoSettings.position
+  brand.logo.position = 'left center'
+
+  const logoSize = Number(logoSettings.size)
+  if (Number.isInteger(logoSize) && logoSize >= 80 && logoSize <= 320) {
+    brand.logo.size = logoSize
+    document.documentElement.style.setProperty('--brand-logo-size', `${logoSize}px`)
   }
 
   const root = document.documentElement

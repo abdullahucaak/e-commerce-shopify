@@ -256,8 +256,8 @@ const handleLogoError = () => {
 
 <style scoped>
 .brand-logo {
-  --brand-logo-inline-size: clamp(135px, 16vw, 220px);
-  --brand-logo-block-size: clamp(56px, 7vw, 86px);
+  --brand-logo-inline-size: min(var(--brand-logo-size, 220px), 100%);
+  --brand-logo-block-size: min(var(--brand-logo-size, 180px), 160px);
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;

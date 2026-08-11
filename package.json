@@ -19,6 +19,7 @@
     "test:api": "npm run test --workspace @glowfield/api",
     "test:theme": "node scripts/validate-shopify-theme.mjs",
     "db:migrate:oauth": "npm run db:migrate:oauth --workspace @glowfield/api",
+    "db:migrate:storage": "npm run db:migrate:storage --workspace @glowfield/api",
     "db:seed:glowfield": "npm run db:seed:glowfield --workspace @glowfield/api",
     "db:claim:glowfield-owner": "npm run db:claim:glowfield-owner --workspace @glowfield/api"
   },

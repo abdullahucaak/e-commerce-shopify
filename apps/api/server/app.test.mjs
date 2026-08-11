@@ -258,7 +258,7 @@ test('returns the published runtime config for the request hostname', async t =>
   assert.deepEqual(receivedParameters, ['glowfield.co'])
   assert.equal(
     response.headers['cache-control'],
-    'public, max-age=60, stale-while-revalidate=300'
+    'no-store, no-cache, must-revalidate'
   )
   assert.deepEqual(response.json(), {
     storefront: {
