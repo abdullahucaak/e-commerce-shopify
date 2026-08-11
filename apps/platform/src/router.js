@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from './views/LoginPage.vue'
 import DashboardPage from './views/DashboardPage.vue'
 import DesignPage from './views/DesignPage.vue'
+import DomainsPage from './views/DomainsPage.vue'
 import { useAuthStore } from './stores/authStore'
 import { pinia } from './stores/pinia'
 
@@ -28,6 +29,12 @@ const router = createRouter({
       path: '/design',
       name: 'design',
       component: DesignPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/domains',
+      name: 'domains',
+      component: DomainsPage,
       meta: { requiresAuth: true }
     }
   ]

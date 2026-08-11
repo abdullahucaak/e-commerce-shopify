@@ -168,6 +168,59 @@ test('returns 503 when the database is unavailable', async t => {
   })
 })
 
+test('keeps domain reads scoped to the authenticated user and selected storefront', async t => {
+  const calls = []
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async token => ({ id: token === 'user-a-token' ? 'user-a' : 'user-b' }),
+    shopifyDomains: {
+      async read(input) {
+        calls.push(input)
+        return {
+          myshopifyDomain: `${input.storefrontId}.myshopify.com`,
+          shopifyPrimaryDomain: `${input.storefrontId}.example`,
+          domains: [{ hostname: `${input.storefrontId}.example`, status: 'active' }]
+        }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const first = await app.inject({
+    method: 'GET', url: '/api/storefronts/storefront-a/domains',
+    headers: { authorization: 'Bearer user-a-token' }
+  })
+  const second = await app.inject({
+    method: 'GET', url: '/api/storefronts/storefront-b/domains',
+    headers: { authorization: 'Bearer user-b-token' }
+  })
+
+  assert.equal(first.statusCode, 200)
+  assert.equal(second.statusCode, 200)
+  assert.notDeepEqual(first.json(), second.json())
+  assert.deepEqual(calls, [
+    { userId: 'user-a', storefrontId: 'storefront-a' },
+    { userId: 'user-b', storefrontId: 'storefront-b' }
+  ])
+})
+
+test('does not synchronize a storefront domain for an anonymous request', async t => {
+  let called = false
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    shopifyDomains: { sync: async () => { called = true } },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST', url: '/api/storefronts/storefront-a/domains/sync'
+  })
+  assert.equal(response.statusCode, 401)
+  assert.equal(called, false)
+})
+
 test('starts Shopify OAuth only for an authenticated platform user', async t => {
   let beginInput = null
   const app = buildApp({

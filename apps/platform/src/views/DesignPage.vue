@@ -16,7 +16,9 @@ const form = reactive({
   logoUrl: '',
   logoSize: 180,
   primary: '#303841',
-  secondary: '#007dcc'
+  secondary: '#007dcc',
+  announcementEnabled: true,
+  announcementText: "Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'!"
 })
 const selectedStore = computed(() => stores.value.find(store => store.id === selectedStoreId.value))
 
@@ -47,6 +49,8 @@ async function loadDesign() {
     form.logoSize = brand.logo?.size || 180
     form.primary = brand.colors?.primary || '#303841'
     form.secondary = brand.colors?.secondary || '#007dcc'
+    form.announcementEnabled = payload.settings?.announcement?.enabled !== false
+    form.announcementText = payload.settings?.announcement?.text || "Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'!"
   } catch {
     error.value = 'Tasarım ayarları yüklenemedi.'
   } finally {
@@ -65,7 +69,11 @@ async function saveDesign() {
         name: form.name,
         logoUrl: form.logoUrl,
         logoSize: Number(form.logoSize),
-        colors: { primary: form.primary, secondary: form.secondary }
+        colors: { primary: form.primary, secondary: form.secondary },
+        announcement: {
+          enabled: form.announcementEnabled,
+          text: form.announcementText
+        }
       })
     })
     const payload = await response.json()
@@ -130,6 +138,7 @@ onMounted(loadDesign)
       <nav>
         <RouterLink to="/dashboard">Genel bakış</RouterLink>
         <RouterLink to="/design">Tasarım ayarları</RouterLink>
+        <RouterLink to="/domains">Domain ayarları</RouterLink>
       </nav>
     </aside>
     <main>
@@ -155,12 +164,19 @@ onMounted(loadDesign)
             <label>Ana renk<input v-model="form.primary" type="color"></label>
             <label>İkincil renk<input v-model="form.secondary" type="color"></label>
           </div>
+          <div class="announcement-settings">
+            <h2>Duyuru bandı</h2>
+            <label class="toggle-label"><input v-model="form.announcementEnabled" type="checkbox"> Duyuru bandını göster</label>
+            <label>Duyuru metni<textarea v-model.trim="form.announcementText" maxlength="240" rows="3" :required="form.announcementEnabled"></textarea></label>
+            <small>{{ form.announcementText.length }}/240 karakter</small>
+          </div>
           <p v-if="message" class="success">{{ message }}</p>
           <p v-if="error" class="error">{{ error }}</p>
           <button :disabled="saving || loading">{{ saving ? 'Kaydediliyor…' : 'Değişiklikleri kaydet' }}</button>
         </section>
         <section class="preview" :style="{ '--primary': form.primary, '--secondary': form.secondary }">
           <p>Canlı önizleme</p>
+          <div v-if="form.announcementEnabled" class="preview-announcement">{{ form.announcementText || 'Duyuru metni' }}</div>
           <div class="preview-header">
             <img v-if="form.logoUrl" :src="form.logoUrl" alt="Logo önizlemesi" :style="{ width: `${form.logoSize}px` }">
             <strong v-else>{{ form.name || 'Marka adı' }}</strong>
@@ -175,4 +191,5 @@ onMounted(loadDesign)
 
 <style scoped>
 .page-shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh;background:#f5f7f9}aside{display:flex;flex-direction:column;gap:3rem;padding:2rem 1.5rem;color:#fff;background:#202934}.wordmark{margin:0;font-size:1.55rem;font-weight:750}aside small{color:#ffffff94;text-transform:uppercase;letter-spacing:.1em}nav{display:grid;gap:.5rem}nav a{padding:.8rem .9rem;border-radius:9px;color:#fff;text-decoration:none}.router-link-active{background:#ffffff1f}main{padding:2.5rem}header{display:flex;justify-content:space-between;align-items:center}.eyebrow{margin:0;color:#6a7683;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}h1,h2{margin:.35rem 0;color:#202934}select,input,button{padding:.75rem;border:1px solid #d8dee4;border-radius:8px;background:#fff}.editor{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:1rem;margin-top:2rem}.editor>section{padding:1.5rem;border:1px solid #e2e7eb;border-radius:14px;background:#fff}label{display:grid;gap:.45rem;margin:1rem 0;color:#576470;font-size:.86rem}.logo-size input{padding:0}.remove-logo{margin-bottom:1rem;color:#b42318;border-color:#f0c7c3;background:#fff}.colors{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.colors input{width:100%;height:48px;padding:.25rem}button{color:#fff;background:#303841;cursor:pointer}.success{color:#18794e}.error{color:#b42318}.preview{background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 12%,white),white)!important}.preview-header{display:flex;align-items:center;height:340px;padding:1rem;border-bottom:4px solid var(--primary);overflow:hidden}.preview-header img{display:block;max-width:100%;max-height:320px;object-fit:contain;object-position:left center}.preview-card{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding:1.25rem;border:1px solid #e2e7eb;border-radius:12px}.preview-card button{background:var(--secondary)}@media(max-width:760px){.page-shell{grid-template-columns:1fr}aside{padding:1rem;gap:1rem}.editor{grid-template-columns:1fr}main{padding:1.25rem}}
+.announcement-settings{margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e7eb}.announcement-settings textarea{padding:.75rem;border:1px solid #d8dee4;border-radius:8px;resize:vertical}.announcement-settings small{color:#6a7683}.toggle-label{display:flex;align-items:center;gap:.6rem}.toggle-label input{width:18px;height:18px;padding:0}.preview-announcement{margin:1rem 0 0;padding:.75rem;color:#fff;text-align:center;background:var(--primary)}
 </style>

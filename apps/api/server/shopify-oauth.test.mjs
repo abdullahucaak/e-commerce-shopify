@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
 import test from 'node:test'
 import {
+  decryptAdminToken,
   encryptAdminToken,
   normalizeShopDomain,
   verifyShopifyHmac
@@ -46,4 +47,10 @@ test('encrypts an Admin API token with a random authenticated cipher', () => {
   assert.match(first, /^v1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$/)
   assert.equal(first.includes('shpat_sensitive'), false)
   assert.notEqual(first, second)
+})
+
+test('decrypts only with the matching application secret', () => {
+  const encrypted = encryptAdminToken('shpat_test_token', 'encryption-secret')
+  assert.equal(decryptAdminToken(encrypted, 'encryption-secret'), 'shpat_test_token')
+  assert.throws(() => decryptAdminToken(encrypted, 'wrong-secret'))
 })

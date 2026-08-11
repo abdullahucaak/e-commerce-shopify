@@ -1,9 +1,12 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
 import { shopifyFetch } from '../services/shopify'
-import { getStorefrontCountryCode } from '../services/storefrontRuntime'
+import {
+  getLoadedStorefrontRuntimeConfig,
+  getStorefrontCountryCode
+} from '../services/storefrontRuntime'
 
-const CART_ID_STORAGE_KEY = 'shopifyCartId'
+const LEGACY_CART_ID_STORAGE_KEY = 'shopifyCartId'
 const LEGACY_STORAGE_KEYS = ['cartProducts', 'order']
 const MAX_QUANTITY_PER_CART_LINE = 50
 const INVENTORY_QUANTITY_ERROR_MESSAGE = 'The requested quantity is not available.'
@@ -132,6 +135,16 @@ const isInvalidCartMessage = message => {
     normalizedMessage.includes('could not find cart') ||
     normalizedMessage.includes('cart is completed')
   )
+}
+
+export const getCartStorageKey = () => {
+  const runtimeConfig = getLoadedStorefrontRuntimeConfig()
+  const storefrontIdentity =
+    runtimeConfig?.storefront?.id ||
+    runtimeConfig?.shopify?.domain ||
+    'unconfigured-storefront'
+
+  return `shopifyCartId:${storefrontIdentity}`
 }
 
 export const useProductStore = defineStore('productStore', {
@@ -522,20 +535,21 @@ export const useProductStore = defineStore('productStore', {
       LEGACY_STORAGE_KEYS.forEach(storageKey => {
         localStorage.removeItem(storageKey)
       })
+      localStorage.removeItem(LEGACY_CART_ID_STORAGE_KEY)
     },
 
     getStoredCartId() {
-      return localStorage.getItem(CART_ID_STORAGE_KEY)
+      return localStorage.getItem(getCartStorageKey())
     },
 
     storeCartId(cartId) {
       if (cartId) {
-        localStorage.setItem(CART_ID_STORAGE_KEY, cartId)
+        localStorage.setItem(getCartStorageKey(), cartId)
       }
     },
 
     clearStoredCart() {
-      localStorage.removeItem(CART_ID_STORAGE_KEY)
+      localStorage.removeItem(getCartStorageKey())
       this.cart = null
     },
 

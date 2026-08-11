@@ -8,6 +8,10 @@ export const brand = reactive({
     alt: 'GlowField',
     position: 'left center',
     size: 180
+  },
+  announcement: {
+    enabled: true,
+    text: "Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'!"
   }
 })
 
@@ -56,6 +60,13 @@ export function applyStorefrontDesign(settings = {}) {
 
   const root = document.documentElement
   const colors = brandSettings.colors || {}
+
+  if (settings.announcement && typeof settings.announcement === 'object') {
+    brand.announcement.enabled = settings.announcement.enabled !== false
+    if (typeof settings.announcement.text === 'string') {
+      brand.announcement.text = settings.announcement.text.trim().slice(0, 240)
+    }
+  }
 
   Object.entries(COLOR_VARIABLES).forEach(([key, cssVariable]) => {
     const value = colors[key]

@@ -76,6 +76,7 @@ async function signOut() {
       <nav aria-label="Platform menüsü">
         <RouterLink to="/dashboard" class="nav-link">Genel bakış</RouterLink>
         <RouterLink to="/design" class="nav-link">Tasarım ayarları</RouterLink>
+        <RouterLink to="/domains" class="nav-link">Domain ayarları</RouterLink>
         <span class="nav-link nav-link--disabled">Mağaza kurulumu <small>yakında</small></span>
       </nav>
 

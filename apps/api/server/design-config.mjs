@@ -25,6 +25,12 @@ export function normalizeDesignSettings(input) {
     throw new Error('invalid_design_settings')
   }
 
+  const announcementEnabled = input?.announcement?.enabled !== false
+  const announcementText = String(input?.announcement?.text || '').trim()
+  if ((announcementEnabled && !announcementText) || announcementText.length > 240) {
+    throw new Error('invalid_design_settings')
+  }
+
   return {
     brand: {
       name: cleanText(input?.name, 120),
@@ -35,6 +41,10 @@ export function normalizeDesignSettings(input) {
         size: logoSize
       },
       colors: { primary: primary.toLowerCase(), secondary: secondary.toLowerCase() }
+    },
+    announcement: {
+      enabled: announcementEnabled,
+      text: announcementText
     }
   }
 }

@@ -1,4 +1,5 @@
 import {
+  createDecipheriv,
   createCipheriv,
   createHash,
   createHmac,
@@ -79,6 +80,21 @@ export function encryptAdminToken(accessToken, encryptionSecret) {
     authTag.toString('base64url'),
     ciphertext.toString('base64url')
   ].join(':')
+}
+
+export function decryptAdminToken(encryptedToken, encryptionSecret) {
+  const [version, ivValue, tagValue, ciphertextValue] = String(encryptedToken || '').split(':')
+  if (version !== 'v1' || !ivValue || !tagValue || !ciphertextValue) {
+    throw new Error('invalid_encrypted_token')
+  }
+
+  const key = createHash('sha256').update(encryptionSecret).digest()
+  const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivValue, 'base64url'))
+  decipher.setAuthTag(Buffer.from(tagValue, 'base64url'))
+  return Buffer.concat([
+    decipher.update(Buffer.from(ciphertextValue, 'base64url')),
+    decipher.final()
+  ]).toString('utf8')
 }
 
 async function shopifyAdminGraphql({ shop, accessToken, apiVersion, query, variables }) {
@@ -395,11 +411,10 @@ export function createShopifyOAuthService({
         `update private.shopify_oauth_states
          set consumed_at = now()
          where nonce_hash = $1
-           and shop_domain = $2
            and consumed_at is null
            and expires_at > now()
-         returning user_id, workspace_id`,
-        [sha256(state), shop]
+         returning user_id, workspace_id, shop_domain`,
+        [sha256(state)]
       )
       const oauthState = stateResult.rows[0]
       if (!oauthState) throw new Error('invalid_or_expired_oauth_state')
@@ -431,7 +446,10 @@ export function createShopifyOAuthService({
         database,
         userId: oauthState.user_id,
         workspaceId: oauthState.workspace_id,
-        requestedShop: shop,
+        // Shopify can return the current myshopify.com hostname even when the
+        // authorization started from a historical hostname of the same shop.
+        // Keep both; the Admin API identity below is the canonical shop proof.
+        requestedShop: oauthState.shop_domain,
         identity,
         grantedScopes,
         adminAccessToken: tokenPayload.access_token,

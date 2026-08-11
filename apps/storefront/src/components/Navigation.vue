@@ -1,11 +1,12 @@
 <template>
   <div class="announce-nav-container">
     <div
+      v-if="brand.announcement.enabled"
       ref="announceBar"
       class="announce-bar site-announcement"
       :class="{ 'announce-bar--over-footer': isAnnounceOverFooter }"
     >
-      <span> Until October 20th, enjoy a 10% discount on every product with the code '1A18NM'! </span>
+      <span>{{ brand.announcement.text }}</span>
     </div>
     <nav ref="navigationElement" class="site-navigation">
       <div class="logo">
@@ -132,6 +133,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import BrandLogo from './BrandLogo.vue'
+import { brand } from '../config/brand'
 import { useProductStore } from '../stores/productStore'
 
 const productStore = useProductStore()

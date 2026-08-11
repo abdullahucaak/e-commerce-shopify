@@ -12,6 +12,7 @@ export function buildApp({
   database,
   verifyAccessToken = async () => null,
   shopifyOAuth = null,
+  shopifyDomains = null,
   logger = true,
   shopifyApiVersion = '2026-07',
   allowStorefrontHostOverride = false,
@@ -97,6 +98,47 @@ export function buildApp({
       }
       app.log.error({ err: error }, 'Design configuration publish failed')
       return reply.code(503).send({ error: 'design_config_unavailable' })
+    }
+  })
+
+  app.get('/api/storefronts/:storefrontId/domains', async (request, reply) => {
+    if (!shopifyDomains) return reply.code(503).send({ error: 'domain_service_unavailable' })
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      const result = await shopifyDomains.read({
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+      if (!result) return reply.code(404).send({ error: 'storefront_not_found' })
+      return result
+    } catch (error) {
+      app.log.error({ err: error }, 'Domain configuration lookup failed')
+      return reply.code(503).send({ error: 'domain_lookup_failed' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/domains/sync', async (request, reply) => {
+    if (!shopifyDomains) return reply.code(503).send({ error: 'domain_service_unavailable' })
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await shopifyDomains.sync({
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'domain_already_claimed') {
+        return reply.code(409).send({ error: error.message })
+      }
+      if (error.message === 'invalid_encrypted_token') {
+        return reply.code(409).send({ error: 'shopify_reconnect_required' })
+      }
+      app.log.error({ err: error }, 'Shopify domain synchronization failed')
+      return reply.code(503).send({ error: 'domain_sync_failed' })
     }
   })
 
