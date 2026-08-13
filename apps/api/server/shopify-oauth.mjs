@@ -43,6 +43,14 @@ function sha256(value) {
   return createHash('sha256').update(value).digest('hex')
 }
 
+function buildAuthorizationUrl({ shop, clientId, callbackUrl, nonce }) {
+  const authorizationUrl = new URL(`https://${shop}/admin/oauth/authorize`)
+  authorizationUrl.searchParams.set('client_id', clientId)
+  authorizationUrl.searchParams.set('redirect_uri', callbackUrl)
+  authorizationUrl.searchParams.set('state', nonce)
+  return authorizationUrl.toString()
+}
+
 function safeEqualHex(first, second) {
   if (!/^[a-f0-9]+$/i.test(first) || !/^[a-f0-9]+$/i.test(second)) return false
 
@@ -309,6 +317,39 @@ async function persistShopInstallation({
     const storefrontId = storefrontResult.rows[0].id
 
     await client.query(
+      `insert into public.store_subscriptions (
+         storefront_id, plan_key, status, unit_amount, currency_code
+       ) values ($1, 'starter_monthly', 'incomplete', 900, 'USD')
+       on conflict (storefront_id) do nothing`,
+      [storefrontId]
+    )
+
+    await client.query(
+      `insert into public.onboarding_progress (storefront_id, step_key, status)
+       select $1, step.step_key, 'not_started'::public.onboarding_step_status
+       from (values
+         ('shopify_connection'),
+         ('plan_selection'),
+         ('niche_selection'),
+         ('banner_selection'),
+         ('brand_setup'),
+         ('product_readiness'),
+         ('store_preview'),
+         ('domain_setup'),
+         ('publish')
+       ) as step(step_key)
+       on conflict (storefront_id, step_key) do nothing`,
+      [storefrontId]
+    )
+
+    await client.query(
+      `update public.onboarding_progress
+       set status = 'completed', completed_at = coalesce(completed_at, now())
+       where storefront_id = $1 and step_key = 'shopify_connection'`,
+      [storefrontId]
+    )
+
+    await client.query(
       `insert into public.storefront_config_versions (
          storefront_id, version, status, settings, created_by, published_at
        ) values ($1, 1, 'published', $2, $3, now())
@@ -348,6 +389,7 @@ export function createShopifyOAuthService({
   clientSecret,
   previousClientSecret = null,
   appUrl,
+  installUrl = null,
   platformUrl,
   apiVersion = '2026-07',
   tokenEncryptionSecret = clientSecret
@@ -357,6 +399,30 @@ export function createShopifyOAuthService({
   const callbackUrl = `${normalizedAppUrl}/api/shopify/callback`
 
   return {
+    async beginStoreSelection({ user, workspaceId }) {
+      if (!installUrl) throw new Error('shopify_install_url_missing')
+
+      const membership = await database.query(
+        `select role::text
+         from public.workspace_memberships
+         where workspace_id = $1 and user_id = $2`,
+        [workspaceId, user.id]
+      )
+      if (!membership.rows[0] || !['owner', 'admin'].includes(membership.rows[0].role)) {
+        throw new Error('workspace_access_denied')
+      }
+
+      const nonce = randomBytes(32).toString('base64url')
+      await database.query(
+        `insert into private.shopify_oauth_states (
+           nonce_hash, user_id, workspace_id, shop_domain, expires_at
+         ) values ($1, $2, $3, null, now() + interval '10 minutes')`,
+        [sha256(nonce), user.id, workspaceId]
+      )
+
+      return { redirectUrl: installUrl, nonce }
+    },
+
     async begin({ user, workspaceId, shop }) {
       const normalizedShop = normalizeShopDomain(shop)
       const membership = await database.query(
@@ -378,12 +444,36 @@ export function createShopifyOAuthService({
         [sha256(nonce), user.id, workspaceId, normalizedShop]
       )
 
-      const authorizationUrl = new URL(`https://${normalizedShop}/admin/oauth/authorize`)
-      authorizationUrl.searchParams.set('client_id', clientId)
-      authorizationUrl.searchParams.set('redirect_uri', callbackUrl)
-      authorizationUrl.searchParams.set('state', nonce)
+      return buildAuthorizationUrl({
+        shop: normalizedShop,
+        clientId,
+        callbackUrl,
+        nonce
+      })
+    },
 
-      return authorizationUrl.toString()
+    async continueStoreSelection({ shop, nonce }) {
+      const normalizedShop = normalizeShopDomain(shop)
+      if (!nonce) throw new Error('missing_shopify_install_intent')
+
+      const stateResult = await database.query(
+        `update private.shopify_oauth_states
+         set shop_domain = $2
+         where nonce_hash = $1
+           and shop_domain is null
+           and consumed_at is null
+           and expires_at > now()
+         returning id`,
+        [sha256(nonce), normalizedShop]
+      )
+      if (!stateResult.rows[0]) throw new Error('invalid_or_expired_install_intent')
+
+      return buildAuthorizationUrl({
+        shop: normalizedShop,
+        clientId,
+        callbackUrl,
+        nonce
+      })
     },
 
     async complete(requestUrl) {
@@ -457,11 +547,11 @@ export function createShopifyOAuthService({
         encryptionSecret: tokenEncryptionSecret
       })
 
-      return `${normalizedPlatformUrl}/dashboard?shopify=connected`
+      return `${normalizedPlatformUrl}/stores?shopify=connected`
     },
 
     installRedirect(shop) {
-      const url = new URL('/dashboard', normalizedPlatformUrl)
+      const url = new URL('/stores', normalizedPlatformUrl)
       if (shop) url.searchParams.set('shop', shop)
       return url.toString()
     }

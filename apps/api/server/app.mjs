@@ -7,12 +7,23 @@ import {
 } from './storefront-config.mjs'
 import { findAccountContext, readBearerToken } from './auth.mjs'
 import { publishDesignConfig, readDesignConfig } from './design-config.mjs'
+import { publishContentConfig, readContentConfig } from './content-config.mjs'
+import {
+  completeBrandSetup,
+  completeDomainSetup,
+  completeOnboarding,
+  completeStorePreview,
+  readOnboarding,
+  selectBannerPreset,
+  selectNiche
+} from './onboarding.mjs'
 
 export function buildApp({
   database,
   verifyAccessToken = async () => null,
   shopifyOAuth = null,
   shopifyDomains = null,
+  shopifyWebhooks = null,
   logger = true,
   shopifyApiVersion = '2026-07',
   allowStorefrontHostOverride = false,
@@ -21,16 +32,63 @@ export function buildApp({
   if (!database?.query) throw new Error('database.query is required.')
 
   const app = Fastify({ logger, trustProxy })
+  const installIntentCookie = 'yourprostore_shopify_intent'
+
+  function readCookie(header, name) {
+    return String(header || '').split(';').map(value => value.trim()).reduce((found, value) => {
+      if (found) return found
+      const separator = value.indexOf('=')
+      return separator > 0 && value.slice(0, separator) === name
+        ? decodeURIComponent(value.slice(separator + 1))
+        : ''
+    }, '')
+  }
+
+  // Shopify signs the exact bytes it sends. Preserve those bytes while still
+  // exposing parsed JSON to all existing API routes.
+  app.removeContentTypeParser('application/json')
+  app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (request, body, done) => {
+    request.rawBody = body
+    try {
+      done(null, JSON.parse(body.toString('utf8')))
+    } catch (error) {
+      error.statusCode = 400
+      done(error)
+    }
+  })
 
   app.register(helmet, {
     contentSecurityPolicy: false
   })
   app.register(cors, {
     origin: true,
-    methods: ['GET', 'POST', 'PUT']
+    methods: ['GET', 'POST', 'PUT', 'PATCH']
   })
 
   app.get('/api/health', async () => ({ status: 'ok' }))
+
+  app.post('/api/shopify/webhooks', async (request, reply) => {
+    if (!shopifyWebhooks) {
+      return reply.code(503).send({ error: 'shopify_webhooks_unavailable' })
+    }
+
+    try {
+      await shopifyWebhooks.handle({
+        rawBody: request.rawBody,
+        headers: request.headers
+      })
+      return reply.code(200).send({ received: true })
+    } catch (error) {
+      if (error.message === 'invalid_shopify_webhook_hmac') {
+        return reply.code(401).send({ error: error.message })
+      }
+      if (error.message.startsWith('invalid_shopify_webhook_')) {
+        return reply.code(400).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Shopify webhook processing failed')
+      return reply.code(500).send({ error: 'shopify_webhook_processing_failed' })
+    }
+  })
 
   app.get('/api/account', async (request, reply) => {
     const accessToken = readBearerToken(request.headers.authorization)
@@ -65,6 +123,120 @@ export function buildApp({
     if (!user) return reply.code(401).send({ error: 'invalid_access_token' })
     return user
   }
+
+  app.get('/api/storefronts/:storefrontId/onboarding', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      const result = await readOnboarding({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+      if (!result) return reply.code(404).send({ error: 'storefront_not_found' })
+      return result
+    } catch (error) {
+      app.log.error({ err: error }, 'Onboarding lookup failed')
+      return reply.code(503).send({ error: 'onboarding_unavailable' })
+    }
+  })
+
+  app.patch('/api/storefronts/:storefrontId/onboarding/niche', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      if (!request.body?.nicheId) return reply.code(400).send({ error: 'invalid_niche' })
+      return await selectNiche({
+        database, userId: user.id, storefrontId: request.params.storefrontId,
+        nicheId: request.body.nicheId
+      })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'invalid_niche') {
+        return reply.code(400).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Niche selection failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
+
+  app.patch('/api/storefronts/:storefrontId/onboarding/banner', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      if (!request.body?.bannerPresetId) return reply.code(400).send({ error: 'invalid_banner_preset' })
+      return await selectBannerPreset({ database, userId: user.id,
+        storefrontId: request.params.storefrontId, bannerPresetId: request.body.bannerPresetId })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') return reply.code(403).send({ error: error.message })
+      if (error.message === 'invalid_banner_preset') return reply.code(400).send({ error: error.message })
+      app.log.error({ err: error }, 'Banner preset selection failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
+
+  app.patch('/api/storefronts/:storefrontId/onboarding/brand', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      await publishDesignConfig({
+        database,
+        userId: user.id,
+        storefrontId: request.params.storefrontId,
+        settings: request.body
+      })
+      return await completeBrandSetup({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'invalid_design_settings') {
+        return reply.code(400).send({ error: error.message })
+      }
+      if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Brand setup failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
+
+  app.patch('/api/storefronts/:storefrontId/onboarding/preview', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await completeStorePreview({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Store preview completion failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/onboarding/complete', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await completeOnboarding({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'onboarding_incomplete') {
+        return reply.code(409).send({
+          error: error.message,
+          missingSteps: error.missingSteps
+        })
+      }
+      app.log.error({ err: error }, 'Onboarding completion failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
 
   app.get('/api/storefronts/:storefrontId/design', async (request, reply) => {
     try {
@@ -101,6 +273,41 @@ export function buildApp({
     }
   })
 
+  app.get('/api/storefronts/:storefrontId/content', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      const config = await readContentConfig({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+      if (!config) return reply.code(404).send({ error: 'storefront_not_found' })
+      return config
+    } catch (error) {
+      app.log.error({ err: error }, 'Content configuration lookup failed')
+      return reply.code(503).send({ error: 'content_config_unavailable' })
+    }
+  })
+
+  app.put('/api/storefronts/:storefrontId/content', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await publishContentConfig({
+        database, userId: user.id, storefrontId: request.params.storefrontId,
+        settings: request.body
+      })
+    } catch (error) {
+      if (error.message === 'invalid_content_settings') {
+        return reply.code(400).send({ error: 'invalid_content_settings' })
+      }
+      if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Content configuration publish failed')
+      return reply.code(503).send({ error: 'content_config_unavailable' })
+    }
+  })
+
   app.get('/api/storefronts/:storefrontId/domains', async (request, reply) => {
     if (!shopifyDomains) return reply.code(503).send({ error: 'domain_service_unavailable' })
     try {
@@ -123,10 +330,16 @@ export function buildApp({
     try {
       const user = await authenticatedUser(request, reply)
       if (!user?.id) return
-      return await shopifyDomains.sync({
+      const domains = await shopifyDomains.sync({
         userId: user.id,
         storefrontId: request.params.storefrontId
       })
+      const domainSetup = await completeDomainSetup({
+        database,
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+      return { ...domains, domainSetup }
     } catch (error) {
       if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
         return reply.code(403).send({ error: error.message })
@@ -165,11 +378,24 @@ export function buildApp({
     }
 
     try {
-      const authorizationUrl = await shopifyOAuth.begin({
-        user,
-        workspaceId: request.body?.workspaceId,
-        shop: request.body?.shop
-      })
+      let authorizationUrl
+      if (request.body?.shop) {
+        authorizationUrl = await shopifyOAuth.begin({
+          user,
+          workspaceId: request.body?.workspaceId,
+          shop: request.body.shop
+        })
+      } else {
+        const selection = await shopifyOAuth.beginStoreSelection({
+          user,
+          workspaceId: request.body?.workspaceId
+        })
+        authorizationUrl = selection.redirectUrl
+        reply.header(
+          'set-cookie',
+          `${installIntentCookie}=${encodeURIComponent(selection.nonce)}; Max-Age=600; Path=/api/shopify; HttpOnly; Secure; SameSite=Lax`
+        )
+      }
       return { authorizationUrl }
     } catch (error) {
       if (error.message === 'invalid_shop_domain') {
@@ -177,6 +403,9 @@ export function buildApp({
       }
       if (error.message === 'workspace_access_denied') {
         return reply.code(403).send({ error: 'workspace_access_denied' })
+      }
+      if (error.message === 'shopify_install_url_missing') {
+        return reply.code(503).send({ error: 'shopify_install_url_missing' })
       }
 
       app.log.error({ err: error, userId: user.id }, 'Shopify OAuth start failed')
@@ -198,13 +427,30 @@ export function buildApp({
     }
   })
 
-  app.get('/api/shopify/install', async (request, reply) => {
+  async function handleShopifyInstall(request, reply) {
     if (!shopifyOAuth) {
       return reply.code(503).send({ error: 'shopify_oauth_unavailable' })
     }
 
-    return reply.redirect(shopifyOAuth.installRedirect(request.query?.shop))
-  })
+    const nonce = readCookie(request.headers.cookie, installIntentCookie)
+    if (!nonce || !request.query?.shop) {
+      return reply.redirect(shopifyOAuth.installRedirect(request.query?.shop))
+    }
+
+    try {
+      const authorizationUrl = await shopifyOAuth.continueStoreSelection({
+        shop: request.query.shop,
+        nonce
+      })
+      return reply.redirect(authorizationUrl)
+    } catch (error) {
+      app.log.error({ err: error }, 'Shopify store selection continuation failed')
+      return reply.redirect(shopifyOAuth.installRedirect(request.query?.shop))
+    }
+  }
+
+  app.get('/', handleShopifyInstall)
+  app.get('/api/shopify/install', handleShopifyInstall)
 
   app.get('/api/ready', async (_request, reply) => {
     try {

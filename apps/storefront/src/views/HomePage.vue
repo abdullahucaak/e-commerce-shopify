@@ -3,22 +3,25 @@
     <div 
         class="home-container"
     >
-        <div class="content c-banner">
+        <div
+            class="content c-banner"
+            :style="{ backgroundImage: `url(${brand.content.home.heroImageUrl})` }"
+        >
             <!-- Picture -->
             <div class="banner-message">
                 <div class="bm-inner">
                     <div class="bm-title text-hero-title">
-                        Meet Assam Golden Tippy
+                        {{ brand.content.home.heroTitle }}
                     </div>
                     <div class="bm-content text-hero-copy">
-                        A new, limited quantity, golden tipped black tea for the spring.
+                        {{ brand.content.home.heroSubtitle }}
                     </div>
-                    <RouterLink :to="{name: 'shop'}"><button class="btn bm-btn button button-primary"> SHOP NOW </button></RouterLink>
+                    <RouterLink :to="{ name: 'shop' }"><button class="btn bm-btn button button-primary">SHOP NOW</button></RouterLink>
                 </div>
             </div>
         </div>
         <div class="content c-message text-body">
-            We source organic and biodynamic teas, directly from people and planet-friendly farms in India.
+            {{ brand.content.home.statement }}
         </div>
         <div class="content c-best-selling">
             <div class="bs-title text-section-title">Best Selling Products:</div>
@@ -42,6 +45,7 @@
     import Navigation from '../components/Navigation.vue'
     import Product from '../components/Product.vue'
     import { useProductStore } from '../stores/productStore'
+    import { brand } from '../config/brand'
 
     const productStore = useProductStore()
 </script>
@@ -57,7 +61,6 @@ body{
     width: 100%;
 }
 .home-container .c-banner{
-    background-image: url(../assets/banner-tea-plantation.jpg);
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;

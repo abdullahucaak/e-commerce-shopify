@@ -2,7 +2,7 @@
 
 client_id = "13596191c374b990782dcd56317f49a5"
 name = "GlowField Commerce"
-application_url = "https://localhost:3458/api/shopify/install"
+application_url = "https://localhost:3458"
 embedded = false
 
 [webhooks]

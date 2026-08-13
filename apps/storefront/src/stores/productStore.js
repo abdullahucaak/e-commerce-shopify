@@ -5,6 +5,7 @@ import {
   getLoadedStorefrontRuntimeConfig,
   getStorefrontCountryCode
 } from '../services/storefrontRuntime'
+import { getCartStorageKeyForRuntime } from '../services/cartStorage'
 
 const LEGACY_CART_ID_STORAGE_KEY = 'shopifyCartId'
 const LEGACY_STORAGE_KEYS = ['cartProducts', 'order']
@@ -138,13 +139,7 @@ const isInvalidCartMessage = message => {
 }
 
 export const getCartStorageKey = () => {
-  const runtimeConfig = getLoadedStorefrontRuntimeConfig()
-  const storefrontIdentity =
-    runtimeConfig?.storefront?.id ||
-    runtimeConfig?.shopify?.domain ||
-    'unconfigured-storefront'
-
-  return `shopifyCartId:${storefrontIdentity}`
+  return getCartStorageKeyForRuntime(getLoadedStorefrontRuntimeConfig())
 }
 
 export const useProductStore = defineStore('productStore', {

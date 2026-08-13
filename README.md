@@ -3,7 +3,8 @@
 Tek Git deposunda bulunan, ancak ayrı ayrı yayınlanabilen üç uygulama vardır:
 
 - `apps/storefront`: bütün müşterilerin ortak kullandığı Vue mağaza vitrini
-- `apps/platform`: hesap, onboarding ve müşteriye özel CMS
+- `apps/platform`: mağaza sahibinin vitrini düzenlediği mağaza CMS'i
+- `apps/customer-platform`: YourProStore ana sayfası, üyelik, Shopify bağlantısı, onboarding ve abonelikler
 - `apps/api`: Supabase, Shopify OAuth/webhook ve storefront API backend'i
 
 Shopify ürün, fiyat, stok, sepet, checkout ve siparişler için ana kaynaktır. Platform
@@ -27,10 +28,16 @@ npm install
 npm run dev
 ```
 
-### Müşteri platformu — `http://127.0.0.1:5174`
+### Mağaza CMS'i — `http://127.0.0.1:5174`
 
 ```sh
 npm run dev:platform
+
+### YourProStore müşteri platformu — `http://127.0.0.1:5175`
+
+```bash
+npm run dev:customer-platform
+```
 ```
 
 ### Backend API — `http://127.0.0.1:3000`

@@ -15,7 +15,6 @@ async function shopifyPrimaryDomain({ shop, accessToken, apiVersion }) {
         shop {
           primaryDomain { host sslEnabled }
           myshopifyDomain
-          domains { host sslEnabled }
         }
       }`
     })
@@ -59,23 +58,8 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     }
   }
 
-  async function sync({ userId, storefrontId }) {
-    const access = await database.query(
-      `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
-              store.current_myshopify_domain, membership.role::text,
-              credentials.admin_access_token_ciphertext
-       from public.storefronts storefront
-       join public.shopify_stores store on store.id = storefront.shopify_store_id
-       join public.workspace_memberships membership
-         on membership.workspace_id = store.workspace_id and membership.user_id = $1
-       join private.shopify_credentials credentials on credentials.shopify_store_id = store.id
-       where storefront.id = $2`,
-      [userId, storefrontId]
-    )
-    const row = access.rows[0]
-    if (!row) throw new Error('storefront_access_denied')
-    if (!['owner', 'admin', 'editor'].includes(row.role)) throw new Error('storefront_write_denied')
-
+  async function syncRecord(row) {
+    const storefrontId = row.storefront_id
     const adminToken = decryptAdminToken(row.admin_access_token_ciphertext, encryptionSecret)
     const shop = await shopifyPrimaryDomain({
       shop: row.current_myshopify_domain,
@@ -86,14 +70,10 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     const myshopifyHostname = normalizeStorefrontHostname(shop.myshopifyDomain)
     if (!MYSHOPIFY_DOMAIN.test(myshopifyHostname)) throw new Error('invalid_shop_domain')
 
-    const shopifyDomains = (shop.domains || []).map(domain => ({
-      hostname: normalizeStorefrontHostname(domain.host),
-      sslEnabled: Boolean(domain.sslEnabled)
-    }))
-    shopifyDomains.push(
+    const shopifyDomains = [
       { hostname: primaryHostname, sslEnabled: Boolean(shop.primaryDomain.sslEnabled) },
       { hostname: myshopifyHostname, sslEnabled: true }
-    )
+    ]
     const domainsByHostname = new Map(
       shopifyDomains.map(domain => [domain.hostname, domain])
     )
@@ -155,7 +135,8 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
         )
       }
       await client.query(
-        `update public.shopify_stores set shopify_primary_domain = $2, updated_at = now()
+        `update public.shopify_stores
+         set shopify_primary_domain = $2, last_shop_sync_at = now(), updated_at = now()
          where id = $1`,
         [row.shopify_store_id, primaryHostname]
       )
@@ -170,8 +151,42 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     } finally {
       client.release()
     }
+  }
+
+  async function sync({ userId, storefrontId }) {
+    const access = await database.query(
+      `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
+              store.current_myshopify_domain, membership.role::text,
+              credentials.admin_access_token_ciphertext
+       from public.storefronts storefront
+       join public.shopify_stores store on store.id = storefront.shopify_store_id
+       join public.workspace_memberships membership
+         on membership.workspace_id = store.workspace_id and membership.user_id = $1
+       join private.shopify_credentials credentials on credentials.shopify_store_id = store.id
+       where storefront.id = $2`,
+      [userId, storefrontId]
+    )
+    const row = access.rows[0]
+    if (!row) throw new Error('storefront_access_denied')
+    if (!['owner', 'admin', 'editor'].includes(row.role)) throw new Error('storefront_write_denied')
+
+    await syncRecord(row)
     return read({ userId, storefrontId })
   }
 
-  return { read, sync }
+  async function syncStore({ shopifyStoreId }) {
+    const result = await database.query(
+      `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
+              store.current_myshopify_domain, credentials.admin_access_token_ciphertext
+       from public.storefronts storefront
+       join public.shopify_stores store on store.id = storefront.shopify_store_id
+       join private.shopify_credentials credentials on credentials.shopify_store_id = store.id
+       where store.id = $1`,
+      [shopifyStoreId]
+    )
+    if (!result.rows[0]) throw new Error('shopify_store_not_found')
+    await syncRecord(result.rows[0])
+  }
+
+  return { read, sync, syncStore }
 }

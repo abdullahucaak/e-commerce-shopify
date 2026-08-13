@@ -8,6 +8,22 @@ import { loadStorefrontRuntimeConfig } from './services/storefrontRuntime'
 
 import './assets/base.css'
 
+function enablePlatformDraftPreview() {
+  if (!import.meta.env.DEV || window.top === window) return
+
+  window.addEventListener('message', event => {
+    const sourceUrl = new URL(event.origin)
+    if (
+      sourceUrl.hostname !== window.location.hostname ||
+      event.data?.type !== 'glowfield:storefront-preview'
+    ) return
+
+    applyStorefrontDesign(event.data.settings || {})
+  })
+
+  window.parent.postMessage({ type: 'glowfield:storefront-preview-ready' }, '*')
+}
+
 async function bootstrap() {
   try {
     const runtimeConfig = await loadStorefrontRuntimeConfig()
@@ -22,6 +38,8 @@ async function bootstrap() {
   } catch (error) {
     console.error('Failed to initialize storefront configuration:', error)
   }
+
+  enablePlatformDraftPreview()
 
   const app = createApp(App)
 

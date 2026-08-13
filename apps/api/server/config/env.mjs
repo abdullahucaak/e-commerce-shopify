@@ -30,7 +30,9 @@ export function loadServerConfig() {
     shopifyPreviousClientSecret:
       process.env.SHOPIFY_PREVIOUS_CLIENT_SECRET?.trim() || null,
     shopifyAppUrl: required('SHOPIFY_APP_URL'),
-    platformAppUrl: required('PLATFORM_APP_URL'),
+    shopifyInstallUrl: process.env.SHOPIFY_INSTALL_URL?.trim() || null,
+    platformAppUrl:
+      process.env.CUSTOMER_PLATFORM_APP_URL?.trim() || required('PLATFORM_APP_URL'),
     shopifyTokenEncryptionSecret:
       process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY?.trim() ||
       required('SHOPIFY_CLIENT_SECRET'),

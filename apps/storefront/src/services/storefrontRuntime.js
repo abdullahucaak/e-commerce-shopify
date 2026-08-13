@@ -52,7 +52,10 @@ async function requestRuntimeConfig() {
     `${platformApiUrl}/api/storefront/config`,
     window.location.origin
   )
-  const developmentHostname = import.meta.env.VITE_STOREFRONT_HOST?.trim()
+  const previewHostname = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('previewHost')?.trim()
+    : ''
+  const developmentHostname = previewHostname || import.meta.env.VITE_STOREFRONT_HOST?.trim()
 
   if (developmentHostname) {
     endpoint.searchParams.set('host', developmentHostname)
@@ -105,4 +108,3 @@ export function getStorefrontCountryCode() {
     'US'
   )
 }
-

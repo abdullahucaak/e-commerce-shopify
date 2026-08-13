@@ -5,7 +5,7 @@
          All Products
       </div>
       <div class="s-description text-body">
-         We source our teas from organic estates and farms that are building soil health and going back to regenerative practices: no tilling, no pesticides, and no synthetic inputs. All our teas come from biodynamic estates. All our herbals come from organic farms, which have transitioned to regenerative agriculture. Picked fresh and sent in small batches, our products celebrate simple and pure ingredients free of pesticides or added flavorings.
+         {{ brand.content.shop.description }}
       </div>
       <div class="sort-by-container">
          <div class="sort-by">
@@ -54,6 +54,7 @@ import Footer from '../components/Footer.vue'
 import Navigation from '../components/Navigation.vue'
 import Product from '../components/Product.vue'
 import { useProductStore } from '../stores/productStore'
+import { brand } from '../config/brand'
 
 const productStore = useProductStore()
 const sortBy = ref('featured')

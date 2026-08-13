@@ -1,58 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 const signingOut = ref(false)
-const connectingShopify = ref(false)
-const shopDomain = ref(typeof route.query.shop === 'string' ? route.query.shop : '')
-const connectError = ref('')
-const authorizationUrl = ref('')
 
 const stores = computed(() => authStore.workspace?.stores || [])
-const connectionMessage = computed(() => {
-  if (route.query.shopify === 'connected') {
-    return 'Shopify mağazan başarıyla bağlandı.'
-  }
-  return ''
-})
-
-async function connectShopify() {
-  connectError.value = ''
-  authorizationUrl.value = ''
-  connectingShopify.value = true
-
-  try {
-    const response = await fetch('/api/shopify/connect', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        Authorization: `Bearer ${authStore.session.access_token}`
-      },
-      body: JSON.stringify({
-        workspaceId: authStore.workspace.id,
-        shop: shopDomain.value
-      })
-    })
-    const payload = await response.json()
-
-    if (!response.ok || !payload.authorizationUrl) {
-      throw new Error(payload.error || 'shopify_connect_failed')
-    }
-
-    authorizationUrl.value = payload.authorizationUrl
-    window.location.assign(authorizationUrl.value)
-  } catch (error) {
-    connectError.value = error.message === 'invalid_shop_domain'
-      ? 'Geçerli bir myshopify.com adresi gir.'
-      : 'Shopify bağlantısı başlatılamadı. Lütfen tekrar dene.'
-    connectingShopify.value = false
-  }
-}
-
 async function signOut() {
   signingOut.value = true
 
@@ -76,8 +31,8 @@ async function signOut() {
       <nav aria-label="Platform menüsü">
         <RouterLink to="/dashboard" class="nav-link">Genel bakış</RouterLink>
         <RouterLink to="/design" class="nav-link">Tasarım ayarları</RouterLink>
+        <RouterLink to="/content" class="nav-link">İçerik ayarları</RouterLink>
         <RouterLink to="/domains" class="nav-link">Domain ayarları</RouterLink>
-        <span class="nav-link nav-link--disabled">Mağaza kurulumu <small>yakında</small></span>
       </nav>
 
       <button class="sign-out" type="button" :disabled="signingOut" @click="signOut">
@@ -118,33 +73,7 @@ async function signOut() {
             <p class="eyebrow">Shopify bağlantıları</p>
             <h2>Mağazalarım</h2>
           </div>
-          <form class="connect-form" @submit.prevent="connectShopify">
-            <input
-              v-model.trim="shopDomain"
-              type="text"
-              inputmode="url"
-              autocomplete="url"
-              placeholder="magazam.myshopify.com"
-              aria-label="Shopify mağaza adresi"
-              required
-            >
-            <button type="submit" :disabled="connectingShopify">
-              {{ connectingShopify ? 'Yönlendiriliyor…' : 'Shopify mağazası bağla' }}
-            </button>
-          </form>
         </div>
-
-        <p v-if="authorizationUrl" class="notice" role="status">
-          Shopify açılmadıysa
-          <a :href="authorizationUrl">izin ekranına devam et</a>.
-        </p>
-
-        <p v-if="connectionMessage" class="notice notice--success" role="status">
-          {{ connectionMessage }}
-        </p>
-        <p v-if="connectError" class="notice notice--error" role="alert">
-          {{ connectError }}
-        </p>
 
         <div v-if="stores.length" class="store-list">
           <article v-for="store in stores" :key="store.id" class="store-card">
@@ -164,7 +93,7 @@ async function signOut() {
 
         <div v-else class="empty-state">
           <h3>Henüz bağlı Shopify mağazası yok</h3>
-          <p>Shopify OAuth bağlantısını bir sonraki aşamada ekleyeceğiz.</p>
+          <p>Shopify’a giriş yaparak mevcut mağazanı seçebilir veya yeni bir mağaza oluşturabilirsin.</p>
         </div>
       </section>
     </main>
@@ -331,15 +260,6 @@ h1 {
 .connect-form {
   display: flex;
   gap: 0.5rem;
-}
-
-.connect-form input {
-  min-width: 220px;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid #d8dee4;
-  border-radius: 8px;
-  color: #202934;
-  background: white;
 }
 
 .connect-form button {

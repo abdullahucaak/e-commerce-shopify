@@ -252,6 +252,71 @@ test('starts Shopify OAuth only for an authenticated platform user', async t => 
   assert.equal(beginInput.shop, 'example.myshopify.com')
 })
 
+test('starts Shopify store selection without asking for a myshopify domain', async t => {
+  let selectionInput = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async () => ({ id: 'user-1' }),
+    shopifyOAuth: {
+      async beginStoreSelection(input) {
+        selectionInput = input
+        return {
+          redirectUrl: 'https://admin.shopify.com/store-select',
+          nonce: 'oauth-intent-1'
+        }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/shopify/connect',
+    headers: { authorization: 'Bearer verified-token' },
+    payload: { workspaceId: 'workspace-1' }
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().authorizationUrl, 'https://admin.shopify.com/store-select')
+  assert.equal(selectionInput.user.id, 'user-1')
+  assert.equal(selectionInput.workspaceId, 'workspace-1')
+  assert.match(response.headers['set-cookie'], /yourprostore_shopify_intent=oauth-intent-1/)
+  assert.match(response.headers['set-cookie'], /HttpOnly/)
+  assert.match(response.headers['set-cookie'], /SameSite=Lax/)
+})
+
+test('continues OAuth for the store Shopify selected', async t => {
+  let continuationInput = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    shopifyOAuth: {
+      async continueStoreSelection(input) {
+        continuationInput = input
+        return 'https://selected-store.myshopify.com/admin/oauth/authorize'
+      },
+      installRedirect() {
+        return 'http://127.0.0.1:5174/dashboard'
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/api/shopify/install?shop=selected-store.myshopify.com',
+    headers: { cookie: 'yourprostore_shopify_intent=oauth-intent-1' }
+  })
+
+  assert.equal(response.statusCode, 302)
+  assert.equal(response.headers.location, 'https://selected-store.myshopify.com/admin/oauth/authorize')
+  assert.deepEqual(continuationInput, {
+    shop: 'selected-store.myshopify.com',
+    nonce: 'oauth-intent-1'
+  })
+})
+
 test('rejects anonymous Shopify OAuth start requests', async t => {
   const app = buildApp({
     database: { query: async () => ({ rows: [] }) },

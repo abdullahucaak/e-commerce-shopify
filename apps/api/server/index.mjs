@@ -4,6 +4,7 @@ import { createSupabaseAccessTokenVerifier } from './auth.mjs'
 import { loadServerConfig } from './config/env.mjs'
 import { createShopifyOAuthService } from './shopify-oauth.mjs'
 import { createShopifyDomainService } from './domain-sync.mjs'
+import { createShopifyWebhookService } from './shopify-webhooks.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
@@ -21,6 +22,7 @@ const shopifyOAuth = createShopifyOAuthService({
   clientSecret: config.shopifyClientSecret,
   previousClientSecret: config.shopifyPreviousClientSecret,
   appUrl: config.shopifyAppUrl,
+  installUrl: config.shopifyInstallUrl,
   platformUrl: config.platformAppUrl,
   apiVersion: config.shopifyApiVersion,
   tokenEncryptionSecret: config.shopifyTokenEncryptionSecret
@@ -30,12 +32,19 @@ const shopifyDomains = createShopifyDomainService({
   apiVersion: config.shopifyApiVersion,
   encryptionSecret: config.shopifyTokenEncryptionSecret
 })
+const shopifyWebhooks = createShopifyWebhookService({
+  database: pool,
+  clientSecret: config.shopifyClientSecret,
+  previousClientSecret: config.shopifyPreviousClientSecret,
+  domainService: shopifyDomains
+})
 
 const app = buildApp({
   database: pool,
   verifyAccessToken,
   shopifyOAuth,
   shopifyDomains,
+  shopifyWebhooks,
   shopifyApiVersion: config.shopifyApiVersion,
   allowStorefrontHostOverride: config.allowStorefrontHostOverride,
   trustProxy: config.trustProxy

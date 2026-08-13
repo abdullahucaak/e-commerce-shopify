@@ -75,9 +75,9 @@
                     </div>
                     <div class="f-content">
                         <ul>
-                            <li>info@alayatea.co</li>
-                            <li>press@alayatea.co</li>
-                            <li>wholesale@alayatea.co</li>
+                            <li v-for="contactEmail in brand.content.footer.emails" :key="contactEmail">
+                                <a :href="`mailto:${contactEmail}`">{{ contactEmail }}</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -111,10 +111,16 @@
                         <div class="social-media-icons">
                             <ul>
                                 <li class="icons">
-                                    <i class="fa-brands fa-facebook fa-2xl"></i>
+                                    <a v-if="brand.content.footer.social.facebookUrl" class="social-media-link" :href="brand.content.footer.social.facebookUrl" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                        <i class="fa-brands fa-facebook fa-2xl"></i>
+                                    </a>
+                                    <i v-else class="fa-brands fa-facebook fa-2xl" aria-hidden="true"></i>
                                 </li>
                                 <li class="icons">
-                                    <i class="fa-brands fa-instagram fa-2xl"></i>
+                                    <a v-if="brand.content.footer.social.instagramUrl" class="social-media-link" :href="brand.content.footer.social.instagramUrl" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                        <i class="fa-brands fa-instagram fa-2xl"></i>
+                                    </a>
+                                    <i v-else class="fa-brands fa-instagram fa-2xl" aria-hidden="true"></i>
                                 </li>
                             </ul>
                         </div>
@@ -234,6 +240,19 @@ const subscribe = async () => {
         color: var(--color-footer-link);
         border-bottom: 0.5px solid var(--color-footer-link);
     }
+    .footer .f-container .f-item .f-item-inner .f-content ul li a.social-media-link{
+        display: inline-block;
+        border-bottom: 0;
+        text-decoration: none;
+        line-height: 1;
+        vertical-align: middle;
+    }
+    .social-media-icons .icons > i,
+    .social-media-icons .icons > a > i{
+        display: inline-block;
+        line-height: 1;
+        vertical-align: middle;
+    }
     /* item-2 */
     .footer .f-container .f-item .f-item-inner .f-content .f-input{
         width: 60%;
@@ -291,6 +310,27 @@ const subscribe = async () => {
 
     .site-footer__button {
         color: var(--color-brand-quinary, var(--color-brand-contrast));
+    }
+
+    @media (min-width: 805px) {
+        .footer .f-container .f-item:nth-child(5){
+            width: 100%;
+            justify-self: stretch;
+        }
+
+        .social-media-icons ul{
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .footer .f-container .f-item .f-item-inner .f-content .social-media-icons ul li.icons:last-child{
+            padding-right: 0;
+        }
+
+        .footer .f-container .f-item .f-item-inner .f-content .alaya-tea{
+            width: 100%;
+            text-align: right;
+        }
     }
 
     .f-btn:disabled {

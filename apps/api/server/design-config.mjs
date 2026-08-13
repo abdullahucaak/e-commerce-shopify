@@ -94,6 +94,16 @@ export async function publishDesignConfig({ database, userId, storefrontId, sett
       [storefrontId]
     )
     const version = Number(versionResult.rows[0].next_version)
+    const current = await client.query(
+      `select settings from public.storefront_config_versions
+       where storefront_id = $1 and status = 'published'
+       order by version desc limit 1 for update`,
+      [storefrontId]
+    )
+    const mergedSettings = {
+      ...(current.rows[0]?.settings || {}),
+      ...normalized
+    }
     await client.query(
       `update public.storefront_config_versions
        set status = 'archived' where storefront_id = $1 and status = 'published'`,
@@ -103,7 +113,7 @@ export async function publishDesignConfig({ database, userId, storefrontId, sett
       `insert into public.storefront_config_versions
        (storefront_id, version, status, settings, created_by, published_at)
        values ($1, $2, 'published', $3, $4, now())`,
-      [storefrontId, version, normalized, userId]
+      [storefrontId, version, mergedSettings, userId]
     )
     await client.query('commit')
     return { version, settings: normalized }
