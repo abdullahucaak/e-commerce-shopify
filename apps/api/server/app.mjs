@@ -15,7 +15,8 @@ import {
   completeStorePreview,
   readOnboarding,
   selectBannerPreset,
-  selectNiche
+  selectNiche,
+  selectStorePlan
 } from './onboarding.mjs'
 
 export function buildApp({
@@ -24,6 +25,7 @@ export function buildApp({
   shopifyOAuth = null,
   shopifyDomains = null,
   shopifyWebhooks = null,
+  stripeBilling = null,
   logger = true,
   shopifyApiVersion = '2026-07',
   allowStorefrontHostOverride = false,
@@ -87,6 +89,26 @@ export function buildApp({
       }
       app.log.error({ err: error }, 'Shopify webhook processing failed')
       return reply.code(500).send({ error: 'shopify_webhook_processing_failed' })
+    }
+  })
+
+  app.post('/api/stripe/webhooks', async (request, reply) => {
+    if (!stripeBilling) {
+      return reply.code(503).send({ error: 'stripe_billing_unavailable' })
+    }
+
+    try {
+      const result = await stripeBilling.handleWebhook({
+        rawBody: request.rawBody,
+        signature: request.headers['stripe-signature']
+      })
+      return reply.code(200).send({ received: true, ...result })
+    } catch (error) {
+      if (['invalid_stripe_webhook_request', 'invalid_stripe_webhook_signature'].includes(error.message)) {
+        return reply.code(400).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Stripe webhook processing failed')
+      return reply.code(500).send({ error: 'stripe_webhook_processing_failed' })
     }
   })
 
@@ -216,6 +238,84 @@ export function buildApp({
     }
   })
 
+  app.patch('/api/storefronts/:storefrontId/onboarding/plan', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      const planKey = String(request.body?.planKey || '')
+      if (!planKey) return reply.code(400).send({ error: 'invalid_store_plan' })
+      return await selectStorePlan({
+        database,
+        userId: user.id,
+        storefrontId: request.params.storefrontId,
+        planKey
+      })
+    } catch (error) {
+      if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'invalid_store_plan') {
+        return reply.code(400).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Store plan selection failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/billing/checkout', async (request, reply) => {
+    if (!stripeBilling) {
+      return reply.code(503).send({ error: 'stripe_billing_unavailable' })
+    }
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await stripeBilling.createCheckout({
+        userId: user.id,
+        userEmail: user.email || null,
+        storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if ([
+        'store_plan_not_selected',
+        'store_subscription_already_active',
+        'store_subscription_requires_management'
+      ].includes(error.message)) {
+        return reply.code(409).send({ error: error.message })
+      }
+      if (['store_plan_price_unavailable', 'store_plan_price_mismatch'].includes(error.message)) {
+        return reply.code(503).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Stripe Checkout creation failed')
+      return reply.code(503).send({ error: 'stripe_checkout_failed' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/billing/portal', async (request, reply) => {
+    if (!stripeBilling) {
+      return reply.code(503).send({ error: 'stripe_billing_unavailable' })
+    }
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await stripeBilling.createPortal({
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'stripe_customer_unavailable') {
+        return reply.code(409).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Stripe customer portal creation failed')
+      return reply.code(503).send({ error: 'stripe_portal_failed' })
+    }
+  })
+
   app.post('/api/storefronts/:storefrontId/onboarding/complete', async (request, reply) => {
     try {
       const user = await authenticatedUser(request, reply)
@@ -232,6 +332,9 @@ export function buildApp({
           error: error.message,
           missingSteps: error.missingSteps
         })
+      }
+      if (error.message === 'store_subscription_inactive') {
+        return reply.code(409).send({ error: error.message })
       }
       app.log.error({ err: error }, 'Onboarding completion failed')
       return reply.code(503).send({ error: 'onboarding_update_failed' })

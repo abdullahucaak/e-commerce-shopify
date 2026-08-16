@@ -5,6 +5,7 @@ import { loadServerConfig } from './config/env.mjs'
 import { createShopifyOAuthService } from './shopify-oauth.mjs'
 import { createShopifyDomainService } from './domain-sync.mjs'
 import { createShopifyWebhookService } from './shopify-webhooks.mjs'
+import { createStripeBillingService } from './stripe-billing.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
@@ -38,6 +39,17 @@ const shopifyWebhooks = createShopifyWebhookService({
   previousClientSecret: config.shopifyPreviousClientSecret,
   domainService: shopifyDomains
 })
+const stripeBilling = config.stripeBillingEnabled
+  ? createStripeBillingService({
+    database: pool,
+    secretKey: config.stripeSecretKey,
+    webhookSecret: config.stripeWebhookSecret,
+    customerPlatformUrl: config.platformAppUrl,
+    priceIds: {
+      starter_monthly: config.stripeStarterMonthlyPriceId
+    }
+  })
+  : null
 
 const app = buildApp({
   database: pool,
@@ -45,6 +57,7 @@ const app = buildApp({
   shopifyOAuth,
   shopifyDomains,
   shopifyWebhooks,
+  stripeBilling,
   shopifyApiVersion: config.shopifyApiVersion,
   allowStorefrontHostOverride: config.allowStorefrontHostOverride,
   trustProxy: config.trustProxy

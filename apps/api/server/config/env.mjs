@@ -11,9 +11,20 @@ function required(name) {
 export function loadServerConfig() {
   const port = Number(process.env.PORT || 3000)
   const nodeEnv = process.env.NODE_ENV?.trim() || 'development'
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim() || null
+  const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim() || null
+  const stripeStarterMonthlyPriceId =
+    process.env.STRIPE_STARTER_MONTHLY_PRICE_ID?.trim() || null
 
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error('PORT must be a valid TCP port.')
+  }
+
+  const stripeValues = [stripeSecretKey, stripeWebhookSecret, stripeStarterMonthlyPriceId]
+  if (stripeValues.some(Boolean) && !stripeValues.every(Boolean)) {
+    throw new Error(
+      'STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET and STRIPE_STARTER_MONTHLY_PRICE_ID must be configured together.'
+    )
   }
 
   return {
@@ -37,6 +48,10 @@ export function loadServerConfig() {
       process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY?.trim() ||
       required('SHOPIFY_CLIENT_SECRET'),
     shopifyApiVersion: process.env.SHOPIFY_API_VERSION?.trim() || '2026-07',
+    stripeSecretKey,
+    stripeWebhookSecret,
+    stripeStarterMonthlyPriceId,
+    stripeBillingEnabled: stripeValues.every(Boolean),
     databaseSsl: process.env.DATABASE_SSL !== 'false',
     allowStorefrontHostOverride:
       process.env.ALLOW_STOREFRONT_HOST_OVERRIDE === 'true' ||

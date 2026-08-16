@@ -5,7 +5,7 @@ import { useAccountStore } from '../stores/account.js'
 import { supabase } from '../services/supabase.js'
 import { optimizeLogo, uploadLogo } from '../services/storefrontAssets.js'
 
-const SETUP_STEP_KEYS = ['shopify_connection', 'niche_selection', 'banner_selection', 'brand_setup', 'store_preview', 'domain_setup', 'publish']
+const SETUP_STEP_KEYS = ['shopify_connection', 'niche_selection', 'banner_selection', 'brand_setup', 'store_preview', 'domain_setup', 'plan_selection', 'publish']
 const REQUIRED_SETUP_STEP_KEYS = SETUP_STEP_KEYS.filter(stepKey => stepKey !== 'publish')
 
 const route = useRoute()
@@ -21,6 +21,9 @@ const brandResult = ref(null)
 const domainInfo = ref(null)
 const checkingDomains = ref(false)
 const domainChecked = ref(false)
+const savingPlan = ref(false)
+const openingPortal = ref(false)
+const selectedPlanKey = ref('')
 const completingSetup = ref(false)
 const brand = reactive({
   name: '', logoUrl: '', logoSize: 180, primary: '#303841', secondary: '#007dcc',
@@ -35,6 +38,14 @@ const bannerPresets = computed(() => (data.value?.bannerPresets || []).filter(pr
 const brandCompleted = computed(() => data.value?.steps?.some(step => step.step_key === 'brand_setup' && step.status === 'completed'))
 const previewCompleted = computed(() => data.value?.steps?.some(step => step.step_key === 'store_preview' && step.status === 'completed'))
 const domainCompleted = computed(() => data.value?.steps?.some(step => step.step_key === 'domain_setup' && step.status === 'completed'))
+const planCompleted = computed(() => data.value?.steps?.some(step => step.step_key === 'plan_selection' && step.status === 'completed'))
+const subscriptionStatus = computed(() => data.value?.subscription?.status || 'incomplete')
+const subscriptionActive = computed(() => ['active', 'trialing'].includes(subscriptionStatus.value))
+const canManageBilling = computed(() => Boolean(data.value?.subscription?.can_manage_billing))
+const subscriptionNeedsAttention = computed(() => (
+  ['past_due', 'paused'].includes(subscriptionStatus.value) ||
+  (subscriptionStatus.value === 'incomplete' && canManageBilling.value)
+))
 const publishCompleted = computed(() => data.value?.steps?.some(step => step.step_key === 'publish' && step.status === 'completed'))
 const requiredSetupCompleted = computed(() => REQUIRED_SETUP_STEP_KEYS.every(stepKey =>
   data.value?.steps?.some(step => step.step_key === stepKey && step.status === 'completed')
@@ -66,6 +77,7 @@ async function load() {
   data.value = await response.json()
   nicheId.value = data.value.storefront.nicheId || ''
   bannerPresetId.value = data.value.storefront.bannerPresetId || ''
+  selectedPlanKey.value = data.value.subscription?.plan_key || data.value.plans?.[0]?.key || ''
   if (!brand.name) await loadBrand()
   if (previewCompleted.value && !domainChecked.value) {
     domainChecked.value = true
@@ -174,6 +186,67 @@ async function syncDomains(silent = false) {
     checkingDomains.value = false
   }
 }
+function formatPlanPrice(plan) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: plan.currencyCode || 'USD'
+  }).format((Number(plan.unitAmount) || 0) / 100)
+}
+async function savePlan() {
+  savingPlan.value = true
+  error.value = ''; message.value = ''
+  try {
+    const response = await request(`/api/storefronts/${route.params.storefrontId}/onboarding/plan`, {
+      method: 'PATCH', body: JSON.stringify({ planKey: selectedPlanKey.value })
+    })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(payload.error || 'plan_save_failed')
+    const checkoutResponse = await request(`/api/storefronts/${route.params.storefrontId}/billing/checkout`, {
+      method: 'POST', body: JSON.stringify({})
+    })
+    const checkout = await checkoutResponse.json().catch(() => ({}))
+    if (!checkoutResponse.ok || !checkout.checkoutUrl) {
+      throw new Error(checkout.error || 'stripe_checkout_failed')
+    }
+    window.location.assign(checkout.checkoutUrl)
+  } catch (cause) {
+    console.error('Store plan selection failed', cause)
+    if (cause.message === 'store_subscription_requires_management') {
+      error.value = 'Bu aboneliğin ödeme bilgilerini Stripe müşteri portalından güncellemen gerekiyor.'
+    } else {
+      error.value = 'Güvenli ödeme sayfası açılamadı. Lütfen tekrar dene.'
+    }
+  } finally { savingPlan.value = false }
+}
+async function openBillingPortal() {
+  openingPortal.value = true
+  error.value = ''; message.value = ''
+  try {
+    const response = await request(`/api/storefronts/${route.params.storefrontId}/billing/portal`, {
+      method: 'POST', body: JSON.stringify({})
+    })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok || !payload.portalUrl) throw new Error(payload.error || 'stripe_portal_failed')
+    window.location.assign(payload.portalUrl)
+  } catch (cause) {
+    console.error('Stripe billing portal failed', cause)
+    error.value = 'Abonelik yönetimi açılamadı. Lütfen tekrar dene.'
+  } finally { openingPortal.value = false }
+}
+async function waitForPaymentConfirmation() {
+  message.value = 'Ödeme tamamlandı. Stripe onayı bekleniyor…'
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await load()
+    if (subscriptionActive.value) {
+      message.value = 'Ödemen onaylandı. Artık mağaza kurulumunu tamamlayabilirsin.'
+      await nextTick()
+      document.querySelector('#setup-complete')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    await new Promise(resolve => window.setTimeout(resolve, 1250))
+  }
+  message.value = 'Ödeme alındı; abonelik onayı işleniyor. Biraz sonra sayfayı yenileyebilirsin.'
+}
 async function completeSetup() {
   completingSetup.value = true
   error.value = ''; message.value = ''
@@ -195,7 +268,12 @@ async function completeSetup() {
     error.value = cause.message || 'Kurulum tamamlanamadı. Lütfen tekrar dene.'
   } finally { completingSetup.value = false }
 }
-onMounted(load)
+onMounted(async () => {
+  await load()
+  if (route.query.billing === 'success') await waitForPaymentConfirmation()
+  if (route.query.billing === 'cancelled') message.value = 'Ödeme işlemi iptal edildi; mağazan henüz aktif değil.'
+  if (route.query.billing === 'portal_return') message.value = 'Abonelik durumun Stripe’dan güncelleniyor.'
+})
 </script>
 
 <template>
@@ -274,8 +352,37 @@ onMounted(load)
       </button>
       <p v-if="domainCompleted && !activeCustomDomain" class="success-text">Alan adı adımı daha önce tamamlandı.</p>
     </section>
-    <section v-if="domainCompleted" id="setup-complete" class="card wizard-section completion-card">
+    <section v-if="domainCompleted" class="card wizard-section">
       <p class="eyebrow">Adım 7</p>
+      <h2>Mağazan için planını seç</h2>
+      <p class="muted">Her Shopify mağazası ayrı abonelik gerektirir. Ödeme Stripe’ın güvenli ödeme sayfasında alınır ve yalnızca bu mağazayı etkinleştirir.</p>
+      <div v-if="subscriptionActive" class="subscription-summary">
+        <p class="success-text"><strong>Abonelik aktif.</strong> Bu mağaza için ödeme doğrulandı.</p>
+        <p v-if="data?.subscription?.cancel_at_period_end" class="muted">Abonelik dönem sonunda sona erecek.</p>
+        <button v-if="canManageBilling" class="secondary-button" :disabled="openingPortal" @click="openBillingPortal">
+          {{ openingPortal ? 'Stripe açılıyor…' : 'Aboneliği yönet' }}
+        </button>
+      </div>
+      <div v-else class="plan-choices">
+        <label v-for="plan in data?.plans || []" :key="plan.key" :class="['plan-choice', { selected: selectedPlanKey === plan.key }]">
+          <input v-model="selectedPlanKey" type="radio" :value="plan.key">
+          <span><strong>{{ plan.name }}</strong><small>{{ plan.description }}</small></span>
+          <b>{{ formatPlanPrice(plan) }} <small>/ ay</small></b>
+        </label>
+      </div>
+      <template v-if="!subscriptionActive">
+        <p v-if="subscriptionNeedsAttention" class="notice error">Ödeme güncellenmeli; bu mağazanın yayını ödeme düzelene kadar durduruldu.</p>
+        <button v-if="subscriptionNeedsAttention && canManageBilling" :disabled="openingPortal" @click="openBillingPortal">
+          {{ openingPortal ? 'Stripe açılıyor…' : 'Ödeme bilgilerini güncelle' }}
+        </button>
+        <button v-else :disabled="savingPlan || !selectedPlanKey" @click="savePlan">
+          {{ savingPlan ? 'Güvenli ödeme hazırlanıyor…' : 'Planı seç ve güvenli ödemeye geç' }}
+        </button>
+        <p v-if="planCompleted" id="plan-complete" class="muted">Plan seçildi; kurulumu tamamlamak için ödemenin onaylanması gerekiyor.</p>
+      </template>
+    </section>
+    <section v-if="subscriptionActive" id="setup-complete" class="card wizard-section completion-card">
+      <p class="eyebrow">Adım 8</p>
       <template v-if="publishCompleted">
         <h2>Kurulum tamamlandı</h2>
         <p class="success-text">Mağazan aktif ve kullanıma hazır.</p>

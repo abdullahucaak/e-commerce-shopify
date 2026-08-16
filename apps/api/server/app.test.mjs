@@ -454,3 +454,63 @@ test('allows an explicit storefront host only in configured development environm
   assert.equal(accepted.statusCode, 200)
   assert.deepEqual(receivedParameters, ['glowfield.co'])
 })
+
+test('creates Stripe Checkout only for the authenticated storefront user', async t => {
+  let received = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async token => ({ id: 'user-1', email: `${token}@example.com` }),
+    stripeBilling: {
+      async createCheckout(input) {
+        received = input
+        return { checkoutUrl: 'https://checkout.stripe.test/session', sessionId: 'cs_test_1' }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/storefronts/storefront-1/billing/checkout',
+    headers: { authorization: 'Bearer owner' },
+    payload: {}
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(received, {
+    userId: 'user-1',
+    userEmail: 'owner@example.com',
+    storefrontId: 'storefront-1'
+  })
+})
+
+test('passes the exact raw request body to Stripe signature verification', async t => {
+  let received = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    stripeBilling: {
+      async handleWebhook(input) {
+        received = input
+        return { processed: true }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+  const payload = '{"id":"evt_1", "type":"customer.subscription.updated"}'
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/stripe/webhooks',
+    headers: {
+      'content-type': 'application/json',
+      'stripe-signature': 't=123,v1=signature'
+    },
+    payload
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(received.rawBody.toString('utf8'), payload)
+  assert.equal(received.signature, 't=123,v1=signature')
+})

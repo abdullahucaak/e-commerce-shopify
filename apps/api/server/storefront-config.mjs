@@ -20,6 +20,9 @@ const STOREFRONT_CONFIG_QUERY = `
     on storefront.id = domain.storefront_id
   join public.shopify_stores store
     on store.id = storefront.shopify_store_id
+  join public.store_subscriptions subscription
+    on subscription.storefront_id = storefront.id
+    and subscription.status in ('active', 'trialing')
   left join private.shopify_credentials credentials
     on credentials.shopify_store_id = store.id
   left join lateral (
@@ -145,4 +148,3 @@ export async function findStorefrontRuntimeConfig({
     features: row.feature_flags || {}
   }
 }
-

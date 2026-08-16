@@ -25,6 +25,7 @@
     "db:migrate:oauth": "npm run db:migrate:oauth --workspace @glowfield/api",
     "db:migrate:storage": "npm run db:migrate:storage --workspace @glowfield/api",
     "db:migrate:store-selection": "npm run db:migrate:store-selection --workspace @glowfield/api",
+    "db:migrate:stripe-billing": "npm run db:migrate:stripe-billing --workspace @glowfield/api",
     "db:seed:glowfield": "npm run db:seed:glowfield --workspace @glowfield/api",
     "db:claim:glowfield-owner": "npm run db:claim:glowfield-owner --workspace @glowfield/api"
   },

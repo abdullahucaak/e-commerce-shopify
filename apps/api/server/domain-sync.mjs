@@ -140,10 +140,6 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
          where id = $1`,
         [row.shopify_store_id, primaryHostname]
       )
-      await client.query(
-        `update public.storefronts set status = 'active', updated_at = now() where id = $1`,
-        [storefrontId]
-      )
       await client.query('commit')
     } catch (error) {
       await client.query('rollback')

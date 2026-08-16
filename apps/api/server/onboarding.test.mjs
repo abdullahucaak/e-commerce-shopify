@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { completeOnboarding, selectBannerPreset } from './onboarding.mjs'
+import { completeOnboarding, selectBannerPreset, selectStorePlan } from './onboarding.mjs'
 
 test('selectBannerPreset publishes the selected banner without losing other settings', async () => {
   const clientCalls = []
@@ -73,16 +73,23 @@ test('selectBannerPreset publishes the selected banner without losing other sett
 })
 
 test('completeOnboarding rejects a storefront with missing setup steps', async () => {
-  const database = {
+  const client = {
     async query(sql) {
-      if (sql.includes('from public.storefronts storefront')) {
-        return { rows: [{ id: 'storefront-1' }] }
-      }
       if (sql.includes('from public.onboarding_progress')) {
         return { rows: [{ step_key: 'shopify_connection' }, { step_key: 'niche_selection' }] }
       }
+      return { rows: [] }
+    },
+    release() {}
+  }
+  const database = {
+    async query(sql) {
+      if (sql.includes('from public.storefronts storefront')) {
+        return { rows: [{ id: 'storefront-1', workspace_role: 'owner' }] }
+      }
       throw new Error(`Unexpected query: ${sql}`)
-    }
+    },
+    async connect() { return client }
   }
 
   await assert.rejects(
@@ -90,6 +97,7 @@ test('completeOnboarding rejects a storefront with missing setup steps', async (
     error => {
       assert.equal(error.message, 'onboarding_incomplete')
       assert.ok(error.missingSteps.includes('domain_setup'))
+      assert.ok(error.missingSteps.includes('plan_selection'))
       return true
     }
   )
@@ -100,15 +108,6 @@ test('completeOnboarding activates the storefront and records publish completion
   const client = {
     async query(sql) {
       clientCalls.push(sql)
-      return { rows: [] }
-    },
-    release() { clientCalls.push('release') }
-  }
-  const database = {
-    async query(sql) {
-      if (sql.includes('from public.storefronts storefront')) {
-        return { rows: [{ id: 'storefront-1' }] }
-      }
       if (sql.includes('from public.onboarding_progress')) {
         return {
           rows: [
@@ -117,9 +116,22 @@ test('completeOnboarding activates the storefront and records publish completion
             'banner_selection',
             'brand_setup',
             'store_preview',
-            'domain_setup'
+            'domain_setup',
+            'plan_selection'
           ].map(step_key => ({ step_key }))
         }
+      }
+      if (sql.includes('from public.store_subscriptions')) {
+        return { rows: [{ id: 'subscription-1' }] }
+      }
+      return { rows: [] }
+    },
+    release() { clientCalls.push('release') }
+  }
+  const database = {
+    async query(sql) {
+      if (sql.includes('from public.storefronts storefront')) {
+        return { rows: [{ id: 'storefront-1', workspace_role: 'owner' }] }
       }
       throw new Error(`Unexpected query: ${sql}`)
     },
@@ -137,4 +149,78 @@ test('completeOnboarding activates the storefront and records publish completion
   assert.ok(clientCalls.some(sql => sql.includes('insert into public.onboarding_progress')))
   assert.ok(clientCalls.includes('commit'))
   assert.ok(clientCalls.includes('release'))
+})
+
+test('completeOnboarding rejects publishing without an active store subscription', async () => {
+  const client = {
+    async query(sql) {
+      if (sql.includes('from public.onboarding_progress')) {
+        return {
+          rows: [
+            'shopify_connection', 'niche_selection', 'banner_selection', 'brand_setup',
+            'store_preview', 'domain_setup', 'plan_selection'
+          ].map(step_key => ({ step_key }))
+        }
+      }
+      return { rows: [] }
+    },
+    release() {}
+  }
+  const database = {
+    async query(sql) {
+      if (sql.includes('from public.storefronts storefront')) {
+        return { rows: [{ id: 'storefront-1' }] }
+      }
+      throw new Error(`Unexpected query: ${sql}`)
+    },
+    async connect() { return client }
+  }
+
+  await assert.rejects(
+    completeOnboarding({ database, userId: 'user-1', storefrontId: 'storefront-1' }),
+    { message: 'store_subscription_inactive' }
+  )
+})
+
+test('selectStorePlan stores one subscription per storefront and completes plan selection', async () => {
+  const calls = []
+  const client = {
+    async query(sql) {
+      calls.push(sql)
+      if (sql.includes('insert into public.store_subscriptions')) {
+        return {
+          rows: [{
+            plan_key: 'starter_monthly',
+            status: 'incomplete',
+            unit_amount: 900,
+            currency_code: 'USD'
+          }]
+        }
+      }
+      return { rows: [] }
+    },
+    release() { calls.push('release') }
+  }
+  const database = {
+    async query(sql) {
+      if (sql.includes('from public.storefronts storefront')) {
+        return { rows: [{ id: 'storefront-1', workspace_role: 'owner' }] }
+      }
+      throw new Error(`Unexpected query: ${sql}`)
+    },
+    async connect() { return client }
+  }
+
+  const result = await selectStorePlan({
+    database,
+    userId: 'user-1',
+    storefrontId: 'storefront-1',
+    planKey: 'starter_monthly'
+  })
+
+  assert.equal(result.subscription.plan_key, 'starter_monthly')
+  assert.equal(result.plan.unitAmount, 900)
+  assert.ok(calls.some(sql => sql.includes("'plan_selection'")))
+  assert.ok(calls.includes('commit'))
+  assert.ok(calls.includes('release'))
 })
