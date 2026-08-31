@@ -1,0 +1,127 @@
+Aşağıdaki projede önce mevcut durumu doğrula, sonra kaldığımız yerden uygulamaya devam et:
+
+PROJE YOLU
+/Users/abdullah.ucak/Desktop/e-commerce-shopify
+
+İLETİŞİM
+- Benimle Türkçe konuş.
+- Yalnızca rapor verme; güvenli ve kapsam içindeki sıradaki işi gerçekten uygula.
+- Önemli mimari kararlarda açık fikrini söyle.
+- Projede net olmayan ve sonucu önemli ölçüde değiştirecek bir konu varsa kodlamadan
+  önce sor; koddan/veritabanından bulunabilecek şeyleri bana sorma.
+
+ÇOK ÖNEMLİ WORKING TREE UYARISI
+- Working tree bilinçli olarak kirli ve henüz commit edilmemiş çok sayıda doğru değişiklik içeriyor.
+- apps/customer-platform -> apps/yourprostore-ai ve apps/platform ->
+  apps/storefront-admin yeniden adlandırmaları Git status'ta silinmiş + yeni klasörler
+  şeklinde görünüyor. Bunları kayıp dosya veya yanlış silme sanma.
+- Kullanıcının mevcut değişikliklerini geri alma, resetleme, checkout etme veya üzerine yazma.
+- Git commit/push işlemini ancak ben açıkça istersem yap.
+- Önce `git status --short`, ilgili diff'ler ve mimari belgeleri oku.
+
+KESİN MİMARİ
+1. apps/storefront
+   Müşterinin ziyaretçilere açık canlı Shopify mağazası.
+2. apps/storefront-admin
+   Müşterinin bir veya birden fazla canlı mağazasını yönettiği CMS.
+   Planlanan domain: manage.yourprostore.ai
+3. apps/yourprostore-ai
+   Müşteri kayıt/giriş, Shopify bağlantısı, mağazalar, sihirbaz ve abonelik alanı.
+   Planlanan domain: yourprostore.ai
+4. apps/yourprostore-ai-admin
+   Yalnızca platform sahibinin müşterileri, mağazaları, üyelikleri, abonelikleri ve
+   operasyonu yöneteceği ayrı uygulama. HENÜZ OLUŞTURULMADI.
+5. apps/api
+   Bütün uygulamaların ortak Node/Fastify backend'i.
+
+Supabase ayrı frontend uygulaması değildir; Auth, PostgreSQL ve Storage altyapısıdır.
+Müşteri workspace rolleri platform yöneticisi yetkisi vermez. Gelecekte dahili panel
+`private.platform_admins`, ayrı admin girişi ve zorunlu MFA/AAL2 kullanacak.
+
+ANA BELGELER
+- docs/yourprostore-temiz-yol-haritasi.txt
+- docs/implementation-roadmap-tr.md
+- docs/system-architecture-tr.md
+- README.md
+
+TAMAMLANAN ÖNEMLİ İŞLER
+- Çoklu tenant Supabase şeması, RLS temeli ve workspace üyelikleri.
+- Shopify OAuth, mağaza seçimi, şifreli Admin tokenı ve Storefront API bağlantısı.
+- Ortak Vue storefront ve domain üzerinden runtime config.
+- Kurulum sihirbazı: niche, banner, marka, ürün kontrolü, önizleme, opsiyonel domain,
+  plan, mock ödeme ve yayınlama.
+- Shopify ürünleri platform PostgreSQL veritabanına kopyalanmıyor.
+- Mağaza başına abonelik modeli ve development için BILLING_PROVIDER=mock.
+- Mock ödeme enum hatası düzeltildi; aktif/başarısız/duraklatılmış/iptal/reactivate akışları var.
+- Eski publish kaydının abonelik aktif değilken yanlış %100 göstermesi engellendi.
+- Mağazalarım kartları duruma göre Mağazayı yönet / Ödemeyi tamamla /
+  Ödemeyi düzelt / Kuruluma devam et gösteriyor.
+- yourprostore-ai içinde gerçek Abonelikler ve temel Hesabım sayfaları var.
+- storefront-admin doğru storefront kimliğini seçiyor; bilinmeyen ID ilk geçerli mağazaya düşüyor.
+- yourprostore-ai -> storefront-admin güvenli SSO kodlandı:
+  - 60 saniyelik tek kullanımlık kod
+  - kod yalnızca SHA-256 hash olarak saklanıyor
+  - Supabase access/refresh oturumu AES-256-GCM ile şifreli
+  - return path allowlist/normalizasyonu
+  - replay ve harici yönlendirme testleri
+  - private.customer_auth_handoffs tablosuna browser rolleri erişemiyor
+
+CANLI SUPABASE'E UYGULANAN SON MIGRATION'LAR
+- 0012_complete_banner_catalog.sql
+- 0013_customer_auth_handoffs.sql
+0013 migration'ını tekrar çalıştırma. Migration ledger sistemi henüz yok.
+
+CANLI VERİDE SON GÖRÜLEN DURUM
+- 1 Auth kullanıcısı, 1 workspace, 1 owner üyeliği.
+- 2 Shopify mağazası ve 2 storefront.
+- GlowField: storefront active, subscription active, publish tamamlanmış.
+- GlowField OAuth Dev: storefront onboarding, subscription incomplete, publish tamamlanmamış.
+- Mağazaların durumları birbirine karışmıyor.
+
+SON DOĞRULAMA
+1 Eylül 2026 tarihinde:
+- 59 API testi geçti.
+- 2 storefront testi geçti.
+- 4 storefront-admin testi geçti.
+- 6 yourprostore-ai testi geçti.
+- 33 Shopify tema dosyası doğrulandı.
+- storefront, storefront-admin ve yourprostore-ai production build'leri geçti.
+Doğrulamak için proje kökünde `npm test && npm run build` çalıştır.
+
+MEVCUT SINIRLAR / MANUEL KONTROL
+- SSO kodlandı ve migration uygulandı fakat kayıtlı müşteri oturumu bulunmadığı için
+  tarayıcıda son gerçek tıklamalı kontrol yapılmadı.
+- Çalışan API eski süreçse yeniden başlatılmalı. Ardından yourprostore.ai içindeki
+  “Mağazayı yönet” butonuyla CMS'e parolasız geçiş doğrulanmalı.
+- Gerçek Stripe live mode'u açma. Stripe en son aşamada yapılacak.
+- Mock billing production'da zaten reddediliyor.
+
+ŞU ANKİ AŞAMA
+AŞAMA 5 — STOREFRONT-ADMIN CMS'İNİ TAMAMLA
+
+SIRADAKİ UYGULAMA SIRASI
+1. Önce mevcut storefront-admin CMS kodunu ve backend design/content endpoint'lerini
+   denetle. Ne kadarı gerçekten taslak, ne kadarı doğrudan publish ediyor belirle.
+2. Müşteri rol yetki matrisini uygula:
+   - owner/admin: CMS yönetimi ve yayınlama
+   - editor: içerik/tasarlak düzenleme; yayınlama yetkisi ürün kararı olarak ayrıca değerlendir
+   - viewer: yalnızca görüntüleme
+   Bu kontrolleri yalnız UI'da değil API/backend'de zorunlu tut.
+3. Logo/banner/içerik dosyaları için MIME tipi, byte boyutu, gerçek görsel ölçüsü ve
+   mağaza kotası doğrulamasını backend/Storage sınırlarıyla tamamla.
+4. Taslak kaydetme ile canlı yayınlamayı kesin olarak ayır. Storefront yalnız published
+   config okumaya devam etsin.
+5. Gerçek storefront ile aynı taslak önizleme akışını tamamla.
+6. Yayınlamayı transaction + monoton sürüm numarasıyla yap.
+7. Ayar geçmişi ve önceki sürüme güvenli geri dönüş ekle.
+8. Bütün CMS yazma/yayınlama/geri dönüş işlemlerini private.audit_logs'a yaz.
+9. Başka storefront ID'si ve farklı rollerle yetki atlama testlerini ekle.
+10. Her anlamlı değişiklikten sonra ilgili testleri, sonunda `npm test && npm run build` çalıştır.
+
+İLK YAPMAN GEREKEN
+- Yukarıdaki bilgileri körü körüne kabul etme; dosyalardan doğrula.
+- Sıradaki aşamayı yeniden planlamakla vakit kaybetme.
+- Önce design-config.mjs, content-config.mjs, storefront_config_versions tablosu,
+  storefront-admin DesignPage/ContentPage ve Storage politikalarını incele.
+- Sonra Aşama 5'in ilk güvenli ve tamamlanabilir parçasını uygula.
+- Bitmiş onboarding, mock billing ve SSO işlerini yeniden yazma.

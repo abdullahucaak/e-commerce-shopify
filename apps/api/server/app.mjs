@@ -16,7 +16,8 @@ import {
   readOnboarding,
   selectBannerPreset,
   selectNiche,
-  selectStorePlan
+  selectStorePlan,
+  skipDomainSetup
 } from './onboarding.mjs'
 
 export function buildApp({
@@ -26,6 +27,10 @@ export function buildApp({
   shopifyDomains = null,
   shopifyWebhooks = null,
   stripeBilling = null,
+  mockBilling = null,
+  productReadiness = null,
+  authHandoff = null,
+  billingProvider = 'disabled',
   logger = true,
   shopifyApiVersion = '2026-07',
   allowStorefrontHostOverride = false,
@@ -146,6 +151,41 @@ export function buildApp({
     return user
   }
 
+  app.post('/api/auth/handoff', async (request, reply) => {
+    if (!authHandoff) return reply.code(503).send({ error: 'auth_handoff_unavailable' })
+    try {
+      const accessToken = readBearerToken(request.headers.authorization)
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      const result = await authHandoff.issue({
+        userId: user.id,
+        accessToken,
+        refreshToken: request.body?.refreshToken,
+        returnPath: request.body?.returnPath
+      })
+      return reply.code(201).send(result)
+    } catch (error) {
+      if (['invalid_auth_handoff_session', 'invalid_auth_handoff_return_path'].includes(error.message)) {
+        return reply.code(400).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Customer auth handoff creation failed')
+      return reply.code(503).send({ error: 'auth_handoff_unavailable' })
+    }
+  })
+
+  app.post('/api/auth/handoff/exchange', async (request, reply) => {
+    if (!authHandoff) return reply.code(503).send({ error: 'auth_handoff_unavailable' })
+    try {
+      return await authHandoff.exchange({ code: request.body?.code })
+    } catch (error) {
+      if (['invalid_auth_handoff_code', 'invalid_or_expired_auth_handoff'].includes(error.message)) {
+        return reply.code(400).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Customer auth handoff exchange failed')
+      return reply.code(503).send({ error: 'auth_handoff_unavailable' })
+    }
+  })
+
   app.get('/api/storefronts/:storefrontId/onboarding', async (request, reply) => {
     try {
       const user = await authenticatedUser(request, reply)
@@ -154,7 +194,13 @@ export function buildApp({
         database, userId: user.id, storefrontId: request.params.storefrontId
       })
       if (!result) return reply.code(404).send({ error: 'storefront_not_found' })
-      return result
+      return {
+        ...result,
+        billing: {
+          provider: billingProvider,
+          mock: billingProvider === 'mock'
+        }
+      }
     } catch (error) {
       app.log.error({ err: error }, 'Onboarding lookup failed')
       return reply.code(503).send({ error: 'onboarding_unavailable' })
@@ -238,6 +284,45 @@ export function buildApp({
     }
   })
 
+  app.post('/api/storefronts/:storefrontId/onboarding/products/check', async (request, reply) => {
+    if (!productReadiness) {
+      return reply.code(503).send({ error: 'product_readiness_unavailable' })
+    }
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await productReadiness.check({
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'shopify_product_check_failed') {
+        return reply.code(503).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Product readiness check failed')
+      return reply.code(503).send({ error: 'product_readiness_unavailable' })
+    }
+  })
+
+  app.patch('/api/storefronts/:storefrontId/onboarding/domain/skip', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await skipDomainSetup({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Domain setup skip failed')
+      return reply.code(503).send({ error: 'onboarding_update_failed' })
+    }
+  })
+
   app.patch('/api/storefronts/:storefrontId/onboarding/plan', async (request, reply) => {
     try {
       const user = await authenticatedUser(request, reply)
@@ -292,6 +377,32 @@ export function buildApp({
       return reply.code(503).send({ error: 'stripe_checkout_failed' })
     }
   })
+
+  if (mockBilling) {
+    app.post('/api/storefronts/:storefrontId/billing/mock', async (request, reply) => {
+      try {
+        const user = await authenticatedUser(request, reply)
+        if (!user?.id) return
+        return await mockBilling.simulate({
+          userId: user.id,
+          storefrontId: request.params.storefrontId,
+          action: String(request.body?.action || '')
+        })
+      } catch (error) {
+        if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
+          return reply.code(403).send({ error: error.message })
+        }
+        if (error.message === 'invalid_mock_billing_action') {
+          return reply.code(400).send({ error: error.message })
+        }
+        if (error.message === 'store_plan_not_selected') {
+          return reply.code(409).send({ error: error.message })
+        }
+        app.log.error({ err: error }, 'Mock billing simulation failed')
+        return reply.code(503).send({ error: 'mock_billing_failed' })
+      }
+    })
+  }
 
   app.post('/api/storefronts/:storefrontId/billing/portal', async (request, reply) => {
     if (!stripeBilling) {

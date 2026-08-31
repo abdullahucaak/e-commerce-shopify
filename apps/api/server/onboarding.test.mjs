@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { completeOnboarding, selectBannerPreset, selectStorePlan } from './onboarding.mjs'
+import {
+  completeOnboarding,
+  selectBannerPreset,
+  selectStorePlan,
+  skipDomainSetup
+} from './onboarding.mjs'
 
 test('selectBannerPreset publishes the selected banner without losing other settings', async () => {
   const clientCalls = []
@@ -97,6 +102,7 @@ test('completeOnboarding rejects a storefront with missing setup steps', async (
     error => {
       assert.equal(error.message, 'onboarding_incomplete')
       assert.ok(error.missingSteps.includes('domain_setup'))
+      assert.ok(error.missingSteps.includes('product_readiness'))
       assert.ok(error.missingSteps.includes('plan_selection'))
       return true
     }
@@ -115,6 +121,7 @@ test('completeOnboarding activates the storefront and records publish completion
             'niche_selection',
             'banner_selection',
             'brand_setup',
+            'product_readiness',
             'store_preview',
             'domain_setup',
             'plan_selection'
@@ -158,7 +165,7 @@ test('completeOnboarding rejects publishing without an active store subscription
         return {
           rows: [
             'shopify_connection', 'niche_selection', 'banner_selection', 'brand_setup',
-            'store_preview', 'domain_setup', 'plan_selection'
+            'product_readiness', 'store_preview', 'domain_setup', 'plan_selection'
           ].map(step_key => ({ step_key }))
         }
       }
@@ -223,4 +230,28 @@ test('selectStorePlan stores one subscription per storefront and completes plan 
   assert.ok(calls.some(sql => sql.includes("'plan_selection'")))
   assert.ok(calls.includes('commit'))
   assert.ok(calls.includes('release'))
+})
+
+test('skipDomainSetup completes the optional domain step without a domain', async () => {
+  let update = null
+  const database = {
+    async query(sql, parameters = []) {
+      if (sql.includes('from public.storefronts storefront')) {
+        return { rows: [{ id: 'storefront-1', workspace_role: 'owner' }] }
+      }
+      if (sql.includes("'domain_setup'")) {
+        update = { sql, parameters }
+        return { rows: [] }
+      }
+      throw new Error(`Unexpected query: ${sql}`)
+    }
+  }
+
+  const result = await skipDomainSetup({
+    database, userId: 'user-1', storefrontId: 'storefront-1'
+  })
+
+  assert.deepEqual(result, { completed: true, skipped: true })
+  assert.deepEqual(update.parameters, ['storefront-1'])
+  assert.ok(update.sql.includes("jsonb_build_object('skipped', true)"))
 })

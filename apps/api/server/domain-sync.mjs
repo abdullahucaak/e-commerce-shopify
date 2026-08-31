@@ -1,5 +1,6 @@
 import { decryptAdminToken } from './shopify-oauth.mjs'
 import { normalizeStorefrontHostname } from './storefront-config.mjs'
+import { assertStorefrontAdminPermission } from './cms-roles.mjs'
 
 const MYSHOPIFY_DOMAIN = /^[a-z0-9][a-z0-9-]*[.]myshopify[.]com$/
 
@@ -164,7 +165,7 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     )
     const row = access.rows[0]
     if (!row) throw new Error('storefront_access_denied')
-    if (!['owner', 'admin', 'editor'].includes(row.role)) throw new Error('storefront_write_denied')
+    assertStorefrontAdminPermission(row.role, 'domainsWrite')
 
     await syncRecord(row)
     return read({ userId, storefrontId })

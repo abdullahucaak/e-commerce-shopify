@@ -1,17 +1,29 @@
-# GlowField Commerce Platform
+# YourProStore.ai
 
-Tek Git deposunda bulunan, ancak ayrı ayrı yayınlanabilen üç uygulama vardır:
+YourProStore.ai, Shopify mağazaları için çoklu müşterili bir headless storefront
+platformudur. Tek Git deposunda bulunan uygulamalar ayrı ayrı çalıştırılıp
+yayınlanabilir.
 
-- `apps/storefront`: bütün müşterilerin ortak kullandığı Vue mağaza vitrini
-- `apps/platform`: mağaza sahibinin vitrini düzenlediği mağaza CMS'i
-- `apps/customer-platform`: YourProStore ana sayfası, üyelik, Shopify bağlantısı, onboarding ve abonelikler
-- `apps/api`: Supabase, Shopify OAuth/webhook ve storefront API backend'i
+## Uygulamalar
 
-Shopify ürün, fiyat, stok, sepet, checkout ve siparişler için ana kaynaktır. Platform
-veritabanı ürün kopyası tutmaz. İstek domaini tenant'ı belirler; ortak Vue storefront o
-mağazanın yayınlanmış tasarım ayarını ve Shopify ürünlerini kullanır.
+| Uygulama | Kullanıcı | Sorumluluk | Durum |
+| --- | --- | --- | --- |
+| `apps/yourprostore-ai` | Mağaza sahibi | YourProStore.ai sitesi, hesap, Shopify bağlantısı, mağazalar, kurulum sihirbazı ve abonelikler | Aktif |
+| `apps/yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteri, mağaza, abonelik, kurulum ve sistem operasyonları | Planlandı; henüz kodlanmadı |
+| `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Aktif |
+| `apps/storefront-admin` | Mağaza sahibi | Kendi storefront'unun tasarım, içerik ve domain yönetimi | Aktif |
+| `apps/api` | Uygulamaların tamamı | Supabase, Shopify, Stripe, OAuth, webhook ve public runtime API | Aktif |
 
-- Türkçe sistem tasarımı: [`docs/system-architecture-tr.md`](docs/system-architecture-tr.md)
+`yourprostore-ai-admin` ile `storefront-admin` farklı yetki alanlarıdır. İlki yalnızca
+bizim ekibimize, ikincisi mağaza sahibine açıktır. Dahili yönetici paneli mevcut
+müşteri uygulamasına eklenmeyecek; ileride ayrı uygulama olarak oluşturulacaktır.
+
+Supabase ayrı bir uygulama klasörü değildir. Auth, PostgreSQL ve Storage sağlayan ortak
+altyapıdır. Shopify ürün, fiyat, stok, sepet, checkout ve siparişler için ana kaynaktır;
+platform veritabanı ürün kopyası tutmaz. Stripe mağaza başına platform aboneliğini
+yönetir.
+
+- Sistem mimarisi: [`docs/system-architecture-tr.md`](docs/system-architecture-tr.md)
 - Uygulama yol haritası: [`docs/implementation-roadmap-tr.md`](docs/implementation-roadmap-tr.md)
 - PostgreSQL şeması: [`apps/api/server/db/migrations/0001_multi_tenant_foundation.sql`](apps/api/server/db/migrations/0001_multi_tenant_foundation.sql)
 - Aktif olmayan Liquid prototipi: [`shopify-theme/`](shopify-theme/)
@@ -22,22 +34,22 @@ mağazanın yayınlanmış tasarım ayarını ve Shopify ürünlerini kullanır.
 npm install
 ```
 
-### Mağaza vitrini — `http://127.0.0.1:5173`
+### Storefront — `http://127.0.0.1:5173`
 
 ```sh
-npm run dev
+npm run dev:storefront
 ```
 
-### Mağaza CMS'i — `http://127.0.0.1:5174`
+### Storefront yönetimi — `http://127.0.0.1:5174`
 
 ```sh
-npm run dev:platform
+npm run dev:storefront-admin
 ```
 
-### YourProStore müşteri platformu — `http://127.0.0.1:5175`
+### YourProStore.ai — `http://127.0.0.1:5175`
 
 ```sh
-npm run dev:customer-platform
+npm run dev:yourprostore-ai
 ```
 
 ### Backend API — `http://127.0.0.1:3000`
@@ -46,7 +58,43 @@ npm run dev:customer-platform
 npm run dev:api
 ```
 
-### Stripe mağaza abonelikleri
+`apps/yourprostore-ai-admin` henüz oluşturulmadığı için bir geliştirme komutu yoktur.
+
+## Ortam değişkenleri
+
+Yeni adlandırmada kullanılan public uygulama adresleri:
+
+```text
+VITE_API_URL
+VITE_STOREFRONT_ADMIN_URL
+YOURPROSTORE_AI_APP_URL
+```
+
+Kod, mevcut yerel `.env` dosyalarını bozmamak için eski `VITE_PLATFORM_API_URL`,
+`VITE_STORE_CMS_URL`, `CUSTOMER_PLATFORM_APP_URL` ve `PLATFORM_APP_URL` adlarını
+geçici olarak geriye dönük uyumluluk amacıyla kabul eder. Yeni kurulumlarda
+`.env.example` içindeki yeni adlar kullanılmalıdır.
+
+Supabase tablo, RLS policy ve migration adları bu uygulama yeniden adlandırmasından
+etkilenmez. `DATABASE_URL` ve Supabase anahtarları yalnızca `.env` veya production
+secret manager içinde tutulmalıdır.
+
+## Stripe mağaza abonelikleri
+
+Günlük geliştirme ve sihirbaz testlerinde gerçek ödeme yerine aşağıdaki güvenli mock
+modu kullanılır:
+
+```text
+NODE_ENV=development
+BILLING_PROVIDER=mock
+```
+
+Mock mod yalnızca seçilen storefront aboneliğini değiştirir; aktivasyon, başarısız
+ödeme, duraklatma, iptal ve yeniden etkinleştirme senaryolarını audit log ile kaydeder.
+`NODE_ENV=production` ortamında `BILLING_PROVIDER=mock` seçilirse API güvenlik amacıyla
+başlamaz.
+
+Gerçek Stripe testlerine geçildiğinde `BILLING_PROVIDER=stripe` kullanılır:
 
 1. Stripe'ta aylık `9 USD` tutarında yinelenen bir Price oluştur.
 2. `.env.example` içindeki `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` ve
@@ -65,15 +113,15 @@ npm run db:migrate:stripe-billing
 5. Ödeme yöntemi güncelleme ve abonelik iptali için Stripe Customer Portal'ı
    Dashboard'dan etkinleştir.
 
-### Testler
+## Test ve build
 
 ```sh
 npm run test:api
+npm run test:storefront
+npm run test:storefront-admin
 npm run test:theme
-```
-
-### İki Vue uygulamasını production için derle
-
-```sh
 npm run build
 ```
+
+`npm run build`, aktif üç Vue uygulamasını production için derler. Backend Node.js
+tarafından doğrudan çalıştırılır.

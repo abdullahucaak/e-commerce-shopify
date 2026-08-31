@@ -6,6 +6,9 @@ import { createShopifyOAuthService } from './shopify-oauth.mjs'
 import { createShopifyDomainService } from './domain-sync.mjs'
 import { createShopifyWebhookService } from './shopify-webhooks.mjs'
 import { createStripeBillingService } from './stripe-billing.mjs'
+import { createMockBillingService } from './mock-billing.mjs'
+import { createProductReadinessService } from './product-readiness.mjs'
+import { createAuthHandoffService } from './auth-handoff.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
@@ -24,7 +27,7 @@ const shopifyOAuth = createShopifyOAuthService({
   previousClientSecret: config.shopifyPreviousClientSecret,
   appUrl: config.shopifyAppUrl,
   installUrl: config.shopifyInstallUrl,
-  platformUrl: config.platformAppUrl,
+  yourProStoreUrl: config.yourProStoreAppUrl,
   apiVersion: config.shopifyApiVersion,
   tokenEncryptionSecret: config.shopifyTokenEncryptionSecret
 })
@@ -44,12 +47,24 @@ const stripeBilling = config.stripeBillingEnabled
     database: pool,
     secretKey: config.stripeSecretKey,
     webhookSecret: config.stripeWebhookSecret,
-    customerPlatformUrl: config.platformAppUrl,
+    yourProStoreUrl: config.yourProStoreAppUrl,
     priceIds: {
       starter_monthly: config.stripeStarterMonthlyPriceId
     }
   })
   : null
+const mockBilling = config.mockBillingEnabled
+  ? createMockBillingService({ database: pool })
+  : null
+const productReadiness = createProductReadinessService({
+  database: pool,
+  apiVersion: config.shopifyApiVersion
+})
+const authHandoff = createAuthHandoffService({
+  database: pool,
+  encryptionSecret: config.authHandoffEncryptionSecret,
+  storefrontAdminUrl: config.storefrontAdminAppUrl
+})
 
 const app = buildApp({
   database: pool,
@@ -58,6 +73,10 @@ const app = buildApp({
   shopifyDomains,
   shopifyWebhooks,
   stripeBilling,
+  mockBilling,
+  productReadiness,
+  authHandoff,
+  billingProvider: config.billingProvider,
   shopifyApiVersion: config.shopifyApiVersion,
   allowStorefrontHostOverride: config.allowStorefrontHostOverride,
   trustProxy: config.trustProxy

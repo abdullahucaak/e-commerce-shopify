@@ -8,6 +8,22 @@ function required(name) {
   return value
 }
 
+export function resolveBillingProvider({ nodeEnv, requestedProvider, stripeConfigured }) {
+  const provider = requestedProvider?.trim().toLowerCase() ||
+    (stripeConfigured ? 'stripe' : 'disabled')
+
+  if (!['disabled', 'mock', 'stripe'].includes(provider)) {
+    throw new Error('BILLING_PROVIDER must be disabled, mock or stripe.')
+  }
+  if (provider === 'mock' && nodeEnv === 'production') {
+    throw new Error('BILLING_PROVIDER=mock is forbidden in production.')
+  }
+  if (provider === 'stripe' && !stripeConfigured) {
+    throw new Error('Stripe billing requires all Stripe environment variables.')
+  }
+  return provider
+}
+
 export function loadServerConfig() {
   const port = Number(process.env.PORT || 3000)
   const nodeEnv = process.env.NODE_ENV?.trim() || 'development'
@@ -26,6 +42,16 @@ export function loadServerConfig() {
       'STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET and STRIPE_STARTER_MONTHLY_PRICE_ID must be configured together.'
     )
   }
+  const stripeConfigured = stripeValues.every(Boolean)
+  const billingProvider = resolveBillingProvider({
+    nodeEnv,
+    requestedProvider: process.env.BILLING_PROVIDER,
+    stripeConfigured
+  })
+  const storefrontAdminAppUrl =
+    process.env.STOREFRONT_ADMIN_APP_URL?.trim() ||
+    process.env.VITE_STOREFRONT_ADMIN_URL?.trim() ||
+    'http://127.0.0.1:5174/'
 
   return {
     port,
@@ -42,16 +68,25 @@ export function loadServerConfig() {
       process.env.SHOPIFY_PREVIOUS_CLIENT_SECRET?.trim() || null,
     shopifyAppUrl: required('SHOPIFY_APP_URL'),
     shopifyInstallUrl: process.env.SHOPIFY_INSTALL_URL?.trim() || null,
-    platformAppUrl:
-      process.env.CUSTOMER_PLATFORM_APP_URL?.trim() || required('PLATFORM_APP_URL'),
+    yourProStoreAppUrl:
+      process.env.YOURPROSTORE_AI_APP_URL?.trim() ||
+      process.env.CUSTOMER_PLATFORM_APP_URL?.trim() ||
+      required('PLATFORM_APP_URL'),
     shopifyTokenEncryptionSecret:
       process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY?.trim() ||
       required('SHOPIFY_CLIENT_SECRET'),
+    authHandoffEncryptionSecret:
+      process.env.AUTH_HANDOFF_ENCRYPTION_KEY?.trim() ||
+      process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY?.trim() ||
+      required('SHOPIFY_CLIENT_SECRET'),
+    storefrontAdminAppUrl,
     shopifyApiVersion: process.env.SHOPIFY_API_VERSION?.trim() || '2026-07',
     stripeSecretKey,
     stripeWebhookSecret,
     stripeStarterMonthlyPriceId,
-    stripeBillingEnabled: stripeValues.every(Boolean),
+    billingProvider,
+    stripeBillingEnabled: billingProvider === 'stripe',
+    mockBillingEnabled: billingProvider === 'mock',
     databaseSsl: process.env.DATABASE_SSL !== 'false',
     allowStorefrontHostOverride:
       process.env.ALLOW_STOREFRONT_HOST_OVERRIDE === 'true' ||

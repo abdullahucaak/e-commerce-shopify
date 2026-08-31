@@ -1,0 +1,360 @@
+YOURPROSTORE.AI — TEMİZ MİMARİ VE UYGULAMA YOL HARİTASI
+Tarih: 31 Ağustos 2026
+
+GÜNCEL İLERLEME — 1 EYLÜL 2026
+
+- Aşama 1 büyük ölçüde tamamlandı; isim değişiklikleri ve diğer geliştirmeler henüz
+  Git commit'i yapılmamış aynı working tree içinde bulunuyor.
+- Aşama 2 kod/veritabanı tarafında tamamlandı. Gerçek müşteri oturumuyla son görsel
+  uçtan uca kontrol yapılmalı.
+- Aşama 3 temel müşteri alanı tamamlandı: Mağazalarım durumları, Abonelikler özeti,
+  aylık toplam, Hesabım özeti ve çıkış mevcut. Gelişmiş hesap işlemleri daha sonra.
+- Aşama 4 güvenli tek kullanımlık SSO olarak kodlandı ve 0013 migration'ı canlı
+  Supabase'e uygulandı. Çalışan API yeniden başlatıldıktan sonra gerçek oturumla
+  buton üzerinden son kontrol yapılmalı.
+- Aşama 5 başladı: owner/admin, editor ve viewer CMS rol matrisi API, UI ve Storage
+  RLS katmanında kodlandı. 0014 migration'ı canlı Supabase'e uygulandı.
+- Aktif geliştirme noktası: AŞAMA 5 — CMS DOSYA DOĞRULAMASI VE TASLAK/YAYIN AYRIMI.
+
+AMAÇ
+
+Sistemde müşteri tarafı ile YourProStore.ai platform yönetimini kesin olarak ayırmak;
+müşterinin tek hesabıyla kendi mağazalarını kurup yönetebilmesini, platform sahibinin
+ise yalnızca dahili yönetici panelinden bütün müşterileri ve sistemi görebilmesini
+sağlamak.
+
+
+1. KESİN UYGULAMA SINIRLARI
+
+1) storefront
+   Kullanıcı: Mağaza ziyaretçisi.
+   Görev: Müşterinin kendi domaininde çalışan canlı mağazası.
+   Mevcut kod: apps/storefront
+   Durum: Var.
+
+2) storefront-admin
+   Kullanıcı: YourProStore.ai müşterisi / mağaza sahibi ve yetkili ekip üyeleri.
+   Görev: Müşterinin bir veya birden fazla storefront'unu yönetmesi.
+   İçerik: Logo, renk, banner, metinler, footer, domain ve önizleme.
+   Mevcut kod: apps/storefront-admin
+   Planlanan adres: manage.yourprostore.ai
+   Durum: Var; temel CMS çalışıyor, tamamlanması gerekiyor.
+
+3) yourprostore-ai
+   Kullanıcı: Yeni veya mevcut YourProStore.ai müşterisi.
+   Görev: Tanıtım, müşteri kaydı/girişi, Shopify bağlantısı, mağazalar, kurulum
+   sihirbazı, mağaza başına abonelik ve müşteri hesap işlemleri.
+   Mevcut kod: apps/yourprostore-ai
+   Planlanan adres: yourprostore.ai
+   Durum: Var; sihirbazın ve müşteri hesap alanının tamamlanması gerekiyor.
+
+4) yourprostore-ai-admin
+   Kullanıcı: Yalnızca YourProStore.ai sahibi ve izin verilen dahili ekip üyeleri.
+   Görev: Müşteriler, workspaceler, ekip üyelikleri, Shopify mağazaları,
+   storefront'lar, abonelikler, kurulumlar, webhooklar, audit kayıtları ve sistem
+   durumunu görmek/yönetmek.
+   Planlanan kod: apps/yourprostore-ai-admin
+   Planlanan adres: admin.yourprostore.ai
+   Durum: Henüz yapılmadı.
+
+5) api
+   Kullanıcı: Bütün uygulamalar.
+   Görev: Auth doğrulama, yetkilendirme, tenant izolasyonu, Shopify, Supabase,
+   abonelik, domain, CMS, webhook ve public storefront servisleri.
+   Mevcut kod: apps/api
+   Planlanan adres: api.yourprostore.ai
+   Durum: Var.
+
+
+2. KİMLİK VE GİRİŞ KARARI
+
+- Müşteri girişi ile platform yöneticisi girişi aynı ekran ve aynı yetki alanı
+  olmayacak.
+- Müşteri yourprostore.ai üzerinden kayıt olacak ve giriş yapacak.
+- Müşteri “Mağazayı yönet” dediğinde ayrı storefront-admin uygulaması açılacak.
+- storefront-admin ayrı uygulama olarak kalacak; yourprostore-ai içine gömülmeyecek.
+- Müşteri ikinci kez parola girmeyecek. İki uygulama arasında kısa ömürlü, tek
+  kullanımlık ve güvenli bir SSO/auth handoff uygulanacak.
+- Platform yöneticisi admin.yourprostore.ai üzerindeki ayrı ekrandan giriş yapacak.
+- Platform yöneticisi kendi e-posta adresini normal müşteri kayıt ekranından
+  yöneticiye dönüştüremeyecek.
+- Dahili yönetici erişimi platform_admins kaydı, aktif durum ve zorunlu MFA ile
+  doğrulanacak.
+- Müşteri workspace rolleri (owner/admin/editor/viewer) hiçbir koşulda platform
+  yöneticisi yetkisi vermeyecek.
+
+
+3. VERİTABANI KARARI
+
+Mevcut müşteri tabloları doğru anlamlara sahip. Aşağıdaki tablolar yeniden
+adlandırılmayacak:
+
+- workspaces
+- workspace_memberships
+- shopify_stores
+- storefronts
+- store_subscriptions
+- store_domains
+- storefront_config_versions
+- design_assets
+- onboarding_progress
+
+Bu adlar uygulama klasörü adı değil, iş alanı adlarıdır. Yeniden adlandırılmaları
+gereksiz migration, foreign key, RLS ve uygulama riski oluşturur.
+
+Eklenecek yönetici modeli:
+
+- private.platform_admins
+  - user_id
+  - role (owner/admin/support/read_only)
+  - status (active/suspended)
+  - mfa_required
+  - created_by
+  - created_at
+  - updated_at
+
+- Gerekirse private.platform_admin_audit_logs yerine mevcut private.audit_logs,
+  platform yöneticisi işlemlerini açık actor/action/target bilgileriyle tutacak
+  şekilde genişletilecek.
+
+Auth kullanıcı oluşturma tetikleyicisi düzeltilecek:
+
+- Müşteri kaydı yeni workspace ve owner üyeliği oluşturacak.
+- Platform yöneticileri halka açık kayıt ekranından oluşturulmayacak.
+- Platform yöneticisi kontrollü davet/provision işlemiyle oluşturulacak.
+- Platform yöneticisine gereksiz müşteri workspace'i açılmayacak.
+- Mevcut müşteri ve mağaza kayıtları silinmeyecek veya yeniden oluşturulmayacak.
+
+Canlı Supabase kontrol özeti:
+
+- 1 Auth kullanıcısı
+- 1 workspace
+- 1 owner üyeliği
+- 2 Shopify mağazası
+- 2 storefront
+- 2 mağaza aboneliği
+- Müşteri tablolarında RLS etkin ve üyelik bazlı SELECT politikaları mevcut.
+- Platform yöneticisi tablosu ve platform-admin RLS/yetki modeli henüz yok.
+
+
+4. SIRALI UYGULAMA PLANI
+
+AŞAMA 1 — MİMARİYİ VE İSİMLERİ SABİTLE
+
+1. README ve mimari belgelerde yalnızca şu beş uygulamayı kullan:
+   storefront, storefront-admin, yourprostore-ai, yourprostore-ai-admin, api.
+2. Müşteri paneli ile dahili yönetici panelinin farklı olduğunu açıkça yaz.
+3. Domain eşlemesini kesinleştir:
+   yourprostore.ai, manage.yourprostore.ai, admin.yourprostore.ai,
+   api.yourprostore.ai ve müşterinin-domaini.com.
+4. Eski customer-platform, platform, store-cms ve genel “admin” adlarını aktif
+   mimari anlatımından kaldır; yalnızca migration/geçmiş uyumluluk gerekiyorsa sakla.
+5. Mevcut working tree isim değişikliklerini tek, anlaşılır bir Git commit'inde
+   tamamla.
+
+Bitti sayılma koşulu:
+Kod, npm komutları, ortam değişkenleri ve belgeler aynı beş ismi kullanıyor.
+
+
+AŞAMA 2 — KURULUM SİHİRBAZINI BİTİR
+
+1. Adım durumlarını tek kaynaktan hesapla; eski publish kayıtlarının hatalı yüzde
+   göstermesini engelle.
+2. Mock ödeme aktivasyonundan sonra abonelik, storefront durumu ve 9. adımı uçtan
+   uca doğrula.
+3. Başarısız ödeme, duraklatma, iptal ve yeniden etkinleştirme senaryolarını test et.
+4. Ürünsüz Shopify mağazası yönlendirmesini doğrula.
+5. Domain adımının aktif domain ve “şimdilik atla” yollarını doğrula.
+6. Sihirbaz tamamlandığında müşteriye iki net işlem göster:
+   “Canlı mağazayı görüntüle” ve “Mağazayı yönet”.
+7. Mağazalarım ekranında tamamlanmış mağazaya “Kuruluma devam et” yazma; gerçek
+   duruma göre “Mağazayı yönet”, “Ödemeyi düzelt” veya “Kuruluma devam et” göster.
+8. İki Shopify mağazasının adım, abonelik ve ayarlarının birbirine karışmadığını test et.
+
+Bitti sayılma koşulu:
+Yeni müşteri kayıt → Shopify bağlantısı → sihirbaz → mock abonelik → yayınlama →
+mağazayı yönet akışını kesintisiz tamamlayabiliyor.
+
+
+AŞAMA 3 — YOURPROSTORE.AI MÜŞTERİ HESABINI TAMAMLA
+
+1. “Mağazalarım” ekranını durum ve eylem odaklı tamamla.
+2. Gerçek “Abonelikler” sayfasını ekle:
+   mağaza başına plan, durum, aylık ücret ve toplam aylık tutar.
+3. Gerçek “Hesabım” sayfasını ekle:
+   profil, parola, e-posta doğrulaması, oturumlardan çıkış ve hesap işlemleri.
+4. Birden fazla workspace desteğinin ürün kararı verilene kadar UI davranışını
+   açıklaştır; sessizce ilk workspace'i seçme.
+5. Müşterinin mağaza kartına storefront-admin bağlantısını ekle.
+6. Hata, boş durum, yükleme ve tekrar deneme ekranlarını tamamla.
+
+Bitti sayılma koşulu:
+Müşteri bütün storefront'larını, aboneliklerini ve hesap bilgilerini
+yourprostore.ai içinde doğru şekilde görebiliyor.
+
+
+AŞAMA 4 — YOURPROSTORE.AI → STOREFRONT-ADMIN SSO
+
+1. API üzerinde kısa ömürlü ve tek kullanımlık auth handoff/code akışı tasarla.
+2. Kodu kullanıcı, hedef uygulama, redirect adresi ve süreyle sınırla.
+3. Kodu veritabanında düz metin değil hash olarak ve kullanıldı bilgisiyle sakla.
+4. Yalnızca izin verilen manage.yourprostore.ai redirect adreslerini kabul et.
+5. storefront-admin kodu değiştirip Supabase oturumunu güvenli biçimde kursun.
+6. Replay, süresi dolmuş kod, farklı kullanıcı ve açık yönlendirme saldırı testlerini ekle.
+7. Doğrudan manage.yourprostore.ai açılırsa güvenli biçimde yourprostore.ai girişine
+   yönlendir; mevcut ayrı parola formunu ana giriş yöntemi olmaktan çıkar.
+8. Çıkış ve oturum iptalinin iki müşteri uygulamasındaki davranışını tanımla/test et.
+
+Bitti sayılma koşulu:
+Müşteri yourprostore.ai'da bir kez giriş yaptıktan sonra “Mağazayı yönet” ile parola
+girmeden yalnızca kendi storefront-admin alanına geçebiliyor.
+
+
+AŞAMA 5 — STOREFRONT-ADMIN CMS'İNİ TAMAMLA
+
+1. Müşteri birden fazla mağazası varsa aktif mağazayı açıkça seçebilsin.
+2. Role göre yetki matrisi uygula:
+   owner/admin yönetebilir, editor içerik düzenleyebilir, viewer yalnızca görebilir.
+3. Logo, banner ve içerik dosyalarında tip, boyut, ölçü ve kota doğrulaması ekle.
+4. Taslak kaydetme ile canlı yayınlamayı kesin olarak ayır.
+5. Taslak için gerçek storefront ile aynı önizleme üret.
+6. Yayınlama işlemini transaction ve sürüm numarasıyla güvenli yap.
+7. Ayar geçmişi ve önceki sürüme dönüş ekle.
+8. Bütün CMS değişikliklerini audit log'a yaz.
+9. Domain yönetimini DNS/TLS altyapısına hazır hale getir.
+10. Başka storefront ID'si verilerek yetki atlanamadığını test et.
+
+Bitti sayılma koşulu:
+Müşteri yalnızca yetkili olduğu mağazaları yönetiyor; taslak, önizleme, yayınlama ve
+geri dönüş güvenilir şekilde çalışıyor.
+
+
+AŞAMA 6 — MÜŞTERİ İZOLASYONU VE GÜVENLİK
+
+1. İkinci gerçek Supabase test kullanıcısı ve ikinci workspace oluştur.
+2. İki kullanıcı ve en az iki mağazayla uçtan uca tenant izolasyon testi yap.
+3. API endpoint'lerinin tamamında kullanıcı + workspace + storefront kontrolünü doğrula.
+4. RLS politikalarını tablo bazında SELECT/INSERT/UPDATE/DELETE yönünden denetle.
+5. Storage yükleme, güncelleme ve silme politikalarını iki müşteriyle test et.
+6. Shopify Admin tokenının hiçbir browser yanıtına/loguna girmediğini doğrula.
+7. Rate limit, dosya kotası, güvenli header, CORS ve request boyutu limitlerini ekle.
+8. Audit log, uygulama hata logu ve hassas veri maskelemesini tamamla.
+
+Bitti sayılma koşulu:
+İki ayrı müşteri hiçbir API, RLS, Storage veya UI yolu üzerinden birbirinin verisini
+göremiyor veya değiştiremiyor.
+
+
+AŞAMA 7 — SHOPIFY WEBHOOK VE OPERASYON DAYANIKLILIĞI
+
+1. app/uninstalled webhook'unu tamamla.
+2. shop/update ve domain değişikliği senkronizasyonunu tamamla.
+3. Shopify zorunlu gizlilik webhook'larını ekle.
+4. Webhook idempotency, retry ve başarısız olay kaydını tamamla.
+5. Kaldırılan Shopify uygulamasında ilgili storefront'u güvenli duruma geçir.
+6. Ürünleri platform veritabanına kopyalamadan ürün hazır olma kontrolünü koru.
+
+Bitti sayılma koşulu:
+Shopify bağlantısı kaldırıldığında veya mağaza bilgisi değiştiğinde sistem doğru ve
+tekrarlanabilir biçimde güncelleniyor.
+
+
+AŞAMA 8 — YOURPROSTORE.AI-ADMIN YETKİ TEMELİ
+
+1. platform_admins migration'ını oluştur.
+2. Müşteri kayıt tetikleyicisini müşteri/admin ayrımına göre güvenli hale getir.
+3. Platform yöneticisi self-signup özelliğini kapalı tut.
+4. İlk platform owner hesabı için tekrar çalıştırılabilir güvenli provision komutu oluştur.
+5. Admin oturumunda platform_admins aktiflik ve rol kontrolünü her API isteğinde yap.
+6. Zorunlu Supabase MFA/AAL2 kontrolü ekle.
+7. Admin API endpoint'lerini müşteri endpoint'lerinden ayrı namespace altında tut:
+   /api/admin/...
+8. Admin işlemlerini audit log'a yaz; destek rolüne gereksiz yazma yetkisi verme.
+9. Platform admin yetkisinin müşteri JWT metadata'sına güvenerek verilmesini engelle.
+
+Bitti sayılma koşulu:
+Normal müşteri admin.yourprostore.ai ve /api/admin endpoint'lerine erişemiyor; yalnızca
+aktif, MFA doğrulanmış platform yöneticileri rol sınırları içinde erişebiliyor.
+
+
+AŞAMA 9 — YOURPROSTORE.AI-ADMIN UYGULAMASI
+
+1. apps/yourprostore-ai-admin uygulamasını ayrı Vue build olarak oluştur.
+2. Ayrı admin giriş/MFA ekranını ekle.
+3. Genel durum panelini ekle.
+4. Müşteri, workspace ve üyelik listelerini ekle.
+5. Shopify mağazası ve storefront detaylarını ekle.
+6. Kurulum adımları ve son hata durumunu göster.
+7. Mağaza bazlı abonelik, ödeme sorunu ve dönem bilgilerini göster.
+8. Webhook olayları, audit kayıtları ve sistem hatalarını göster.
+9. Niche/banner kataloğu yönetimini ekle.
+10. Askıya alma gibi etkili işlemlerde gerekçe, onay ve audit zorunluluğu getir.
+11. Müşteri parolası veya Shopify tokenı gibi sırları hiçbir admin ekranında gösterme.
+
+Bitti sayılma koşulu:
+Platform sahibi bütün müşterileri ve mağaza operasyonlarını güvenli biçimde görebiliyor;
+müşteri paneli ile dahili panel arasında yetki karışıklığı bulunmuyor.
+
+
+AŞAMA 10 — DOMAIN, HOSTING VE PRODUCTION
+
+1. Development, staging ve production ortamlarını ayır.
+2. storefront, storefront-admin, yourprostore-ai, yourprostore-ai-admin ve api için
+   ayrı deployment oluştur.
+3. Secret manager, HTTPS, CORS ve güvenli cookie/session ayarlarını tamamla.
+4. Müşteri domaini için DNS doğrulama, custom hostname ve TLS otomasyonu ekle.
+5. Kök domain ve www yönlendirmesini tamamla.
+6. Database migration pipeline, yedek ve geri yükleme testi ekle.
+7. Hata izleme, uptime alarmı ve webhook alarmı ekle.
+8. Staging üzerinde tam müşteri ve admin uçtan uca testi yap.
+
+Bitti sayılma koşulu:
+Beş uygulama doğru domainlerde, doğru yetkilerle ve gözlemlenebilir şekilde çalışıyor.
+
+
+AŞAMA 11 — GERÇEK STRIPE'I EN SON AÇ
+
+1. Mock ödeme ile bütün uygulama ve çoklu mağaza senaryolarını bitir.
+2. Stripe test mode ürün, aylık fiyat, Checkout, Customer Portal ve webhooklarını bağla.
+3. Başarılı ödeme, başarısız ödeme, iptal, yeniden etkinleştirme ve eski webhook
+   sırası testlerini yap.
+4. Bir mağazanın ödeme sorununun aynı müşterinin diğer mağazasını etkilemediğini test et.
+5. Üç mağaza = 27 USD aylık toplam senaryosunu doğrula.
+6. Stripe ile veritabanı arasındaki reconciliation/uzlaştırma görevini ekle.
+7. Pilot müşteri ve geri ödeme/iptal prosedürü hazır olmadan live mode açma.
+8. Son güvenlik ve operasyon kontrolünden sonra production secretlarıyla live mode'a geç.
+
+Bitti sayılma koşulu:
+Gerçek para akışı yalnızca test mode ve pilot kontrolleri tamamlandıktan sonra açılmıştır.
+
+
+5. HEMEN SIRADAKİ İŞLER
+
+1. Çalışan API'yi yeniden başlatıp gerçek müşteri oturumuyla “Mağazayı yönet” SSO
+   geçişini bir kez doğrulamak.
+2. storefront-admin rol yetki matrisini kesinleştirmek ve backend'de uygulamak.
+3. CMS dosya tipi, boyut, görsel ölçüsü ve mağaza kotası doğrulamasını tamamlamak.
+4. CMS taslak kaydetme ile canlı yayınlamayı ayırmak.
+5. Gerçek storefront ile aynı taslak önizlemeyi tamamlamak.
+6. Transaction'lı yayınlama, sürüm geçmişi ve geri dönüş eklemek.
+7. CMS değişikliklerini audit log'a yazmak.
+8. Başka storefront ID'siyle yetki atlanamadığını otomatik test etmek.
+9. İkinci müşteriyle tenant/RLS/Storage izolasyon testlerini yapmak.
+10. Shopify webhooklarını tamamlamak.
+11. platform_admins + MFA altyapısı ve ardından yourprostore-ai-admin uygulamasını yapmak.
+12. Production/domain altyapısını tamamlamak.
+13. Stripe test mode ve en son live mode'a geçmek.
+
+
+6. DEĞİŞTİRİLMEYECEK TEMEL KARARLAR
+
+- Her Shopify mağazası için ayrı storefront ve ayrı abonelik bulunur.
+- Bir müşterinin birden fazla mağazası olabilir.
+- Bir mağazanın ödeme sorunu diğer mağazayı etkilemez.
+- Shopify ürün, fiyat, stok, sepet, checkout ve sipariş için ana kaynaktır.
+- Shopify ürünleri YourProStore.ai PostgreSQL veritabanına kopyalanmaz.
+- Shopify Admin tokenı yalnızca backend/private şemada tutulur.
+- Müşteri workspace rolleri platform yöneticisi yetkisi vermez.
+- storefront-admin müşteriye, yourprostore-ai-admin platform sahibine aittir.
+- Mock ödeme production ortamında çalışmaz.
+- Gerçek Stripe bağlantısı sistem ve güvenlik testlerinden sonra açılır.

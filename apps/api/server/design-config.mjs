@@ -1,3 +1,5 @@
+import { assertStorefrontAdminPermission } from './cms-roles.mjs'
+
 const HEX_COLOR = /^#[0-9a-f]{6}$/i
 
 function cleanText(value, maxLength) {
@@ -84,9 +86,7 @@ export async function publishDesignConfig({ database, userId, storefrontId, sett
       [storefrontId, userId]
     )
     if (!access.rows[0]) throw new Error('storefront_access_denied')
-    if (!['owner', 'admin', 'editor'].includes(access.rows[0].role)) {
-      throw new Error('storefront_write_denied')
-    }
+    assertStorefrontAdminPermission(access.rows[0].role, 'designWrite')
 
     const versionResult = await client.query(
       `select coalesce(max(version), 0) + 1 as next_version

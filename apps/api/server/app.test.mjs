@@ -109,7 +109,11 @@ test('returns only the verified user account context', async t => {
             current_myshopify_domain: 'glowfield-2.myshopify.com',
             shopify_store_status: 'active',
             storefront_id: 'storefront-1',
-            storefront_status: 'active'
+            storefront_status: 'active',
+            plan_key: 'starter_monthly',
+            subscription_status: 'active',
+            unit_amount: 900,
+            currency_code: 'USD'
           }]
         }
       }
@@ -137,12 +141,27 @@ test('returns only the verified user account context', async t => {
       id: 'workspace-1',
       name: 'GlowField',
       role: 'owner',
+      storefrontAdminPermissions: {
+        designWrite: true,
+        contentWrite: true,
+        domainsWrite: true,
+        assetFolders: ['logos', 'hero', 'about']
+      },
       stores: [{
         id: 'store-1',
         name: 'GlowField',
         myshopifyDomain: 'glowfield-2.myshopify.com',
         status: 'active',
-        storefront: { id: 'storefront-1', status: 'active' }
+        storefront: {
+          id: 'storefront-1',
+          status: 'active',
+          subscription: {
+            planKey: 'starter_monthly',
+            status: 'active',
+            unitAmount: 900,
+            currencyCode: 'USD'
+          }
+        }
       }]
     }]
   })
@@ -165,6 +184,58 @@ test('returns 503 when the database is unavailable', async t => {
   assert.deepEqual(response.json(), {
     status: 'unavailable',
     database: 'unreachable'
+  })
+})
+
+test('creates a customer auth handoff only for a verified session', async t => {
+  let issued = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async token => token === 'valid-access' ? { id: 'user-1' } : null,
+    authHandoff: {
+      async issue(input) {
+        issued = input
+        return { authorizationUrl: 'https://manage.example/auth/handoff?code=one-time' }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST', url: '/api/auth/handoff',
+    headers: { authorization: 'Bearer valid-access' },
+    payload: { refreshToken: 'refresh-token', returnPath: '/design?storefrontId=storefront-1' }
+  })
+
+  assert.equal(response.statusCode, 201)
+  assert.deepEqual(issued, {
+    userId: 'user-1', accessToken: 'valid-access', refreshToken: 'refresh-token',
+    returnPath: '/design?storefrontId=storefront-1'
+  })
+})
+
+test('exchanges a customer auth handoff without exposing the exchange through account auth', async t => {
+  let exchangedCode = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    authHandoff: {
+      async exchange({ code }) {
+        exchangedCode = code
+        return { accessToken: 'a', refreshToken: 'r', returnPath: '/dashboard' }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST', url: '/api/auth/handoff/exchange', payload: { code: 'one-time-code' }
+  })
+  assert.equal(response.statusCode, 200)
+  assert.equal(exchangedCode, 'one-time-code')
+  assert.deepEqual(response.json(), {
+    accessToken: 'a', refreshToken: 'r', returnPath: '/dashboard'
   })
 })
 
@@ -482,6 +553,38 @@ test('creates Stripe Checkout only for the authenticated storefront user', async
     userId: 'user-1',
     userEmail: 'owner@example.com',
     storefrontId: 'storefront-1'
+  })
+})
+
+test('runs mock billing only through the configured mock service', async t => {
+  let received = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async () => ({ id: 'user-1' }),
+    billingProvider: 'mock',
+    mockBilling: {
+      async simulate(input) {
+        received = input
+        return { provider: 'mock', action: input.action, status: 'active' }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/storefronts/storefront-1/billing/mock',
+    headers: { authorization: 'Bearer test-token' },
+    payload: { action: 'activate' }
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(received, {
+    userId: 'user-1', storefrontId: 'storefront-1', action: 'activate'
+  })
+  assert.deepEqual(response.json(), {
+    provider: 'mock', action: 'activate', status: 'active'
   })
 })
 

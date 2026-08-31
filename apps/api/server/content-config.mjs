@@ -1,4 +1,5 @@
 import { readDesignConfig } from './design-config.mjs'
+import { assertStorefrontAdminPermission } from './cms-roles.mjs'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -126,9 +127,7 @@ export async function publishContentConfig({ database, userId, storefrontId, set
       [storefrontId, userId]
     )
     if (!access.rows[0]) throw new Error('storefront_access_denied')
-    if (!['owner', 'admin', 'editor'].includes(access.rows[0].role)) {
-      throw new Error('storefront_write_denied')
-    }
+    assertStorefrontAdminPermission(access.rows[0].role, 'contentWrite')
 
     const current = await client.query(
       `select settings from public.storefront_config_versions

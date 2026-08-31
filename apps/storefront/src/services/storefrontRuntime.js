@@ -1,4 +1,8 @@
-const platformApiUrl = (import.meta.env.VITE_PLATFORM_API_URL || '')
+const apiUrl = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_PLATFORM_API_URL ||
+  ''
+)
   .trim()
   .replace(/\/$/, '')
 
@@ -49,7 +53,7 @@ function validateRuntimeConfig(config) {
 
 async function requestRuntimeConfig() {
   const endpoint = new URL(
-    `${platformApiUrl}/api/storefront/config`,
+    `${apiUrl}/api/storefront/config`,
     window.location.origin
   )
   const previewHostname = import.meta.env.DEV

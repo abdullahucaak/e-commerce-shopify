@@ -1,104 +1,110 @@
-# Çok mağazalı Shopify storefront platformu
+# YourProStore.ai sistem mimarisi
 
-## Kesin mimari kararı
+## Kesin uygulama sınırları
 
-Müşterilerin vitrini mevcut **Vue 3 + Vite uygulamasıdır**. Vue tasarımı Liquid'e
-çevrilmeyecek. Shopify ürün, koleksiyon, fiyat, stok, sepet, checkout ve sipariş
-altyapısı olarak kullanılacaktır.
+Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
 
-- **Ortak mağaza vitrini:** Vue 3 + Vite
-- **Platform CMS'i:** Vue 3 + Vite
-- **Backend API:** Node.js + Fastify
-- **Veritabanı ve kullanıcı girişi:** Supabase PostgreSQL + Supabase Auth
-- **Ürün ve ticaret verileri:** Shopify
-- **Logo ve banner dosyaları:** Platform object storage
-- **Mağazaya özel görünüm:** Yayınlanmış CMS ayarları
-- **Bütün mağazalara giden geliştirmeler:** Tek ortak Vue sürümü
+| Küme | Kod adı | Kullanıcı | Sorumluluk | Durum |
+| --- | --- | --- | --- | --- |
+| 1 | `yourprostore-ai` | Mağaza sahibi | Tanıtım, hesap, Shopify bağlantısı, mağazalar, sihirbaz ve abonelikler | Aktif |
+| 2 | `yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteriler, mağazalar, üyelikler, abonelikler, kurulumlar, hata ve işlem kayıtları | Planlandı |
+| 3 | `storefront` | Mağaza ziyaretçisi | Müşterinin kendi domaininde çalışan canlı mağazası | Aktif |
+| 4 | `storefront-admin` | Mağaza sahibi | Kendi canlı mağazasının tasarım, içerik ve domain yönetimi | Aktif |
+| 5 | `api` | Bütün uygulamalar | Kimlik doğrulama, tenant izolasyonu ve dış servis entegrasyonları | Aktif |
+
+`yourprostore-ai-admin` ve `storefront-admin` aynı panel değildir:
+
+- `yourprostore-ai-admin`, platformun sahibi olan bizim ekibimizin bütün müşterileri ve
+  sistem durumunu yönettiği dahili uygulamadır.
+- `storefront-admin`, müşterinin yalnızca yetkili olduğu kendi mağazalarını düzenlediği
+  uygulamadır.
+
+Dahili yönetici paneli ayrı build, ayrı yetkilendirme alanı ve mümkünse ayrı subdomain
+ile çalışacaktır. Müşteri çalışma alanındaki `owner`, `admin`, `editor` ve `viewer`
+rolleri platform yöneticisi yetkisi vermeyecektir.
 
 ## Kod deposu yapısı
 
 ```text
 apps/
-  storefront/   Ortak müşteri vitrini; her domain aynı build'i kullanır
-  platform/     Kullanıcı hesabı, onboarding ve mağazaya özel CMS
-  api/          Supabase, Shopify OAuth/webhook ve public runtime API
-legacy/cms/     Aktif olmayan eski tek-mağaza admin ekranları
-shopify-theme/  Aktif olmayan Liquid prototipi
+  yourprostore-ai/        YourProStore.ai sitesi ve mağaza sahibi hesap/kurulum alanı
+  yourprostore-ai-admin/  Dahili operasyon paneli; henüz oluşturulmadı
+  storefront/             Bütün mağazaların kullandığı ortak canlı Vue vitrini
+  storefront-admin/       Mağaza sahibinin storefront yönetim uygulaması
+  api/                    Ortak Node.js + Fastify backend
+legacy/cms/               Aktif olmayan eski tek-mağaza ekranları
+shopify-theme/            Aktif olmayan Liquid prototipi
 ```
 
-Bu üç uygulama aynı Git deposunda durur fakat production'da ayrı servisler olarak
-yayınlanır. Böylece storefront güncellemesi bütün mağazalara giderken CMS ve backend
-bağımsız olarak ölçeklenebilir.
+Planlanan production adresleri:
 
-## Bir mağaza isteğinin çalışma şekli
+```text
+yourprostore.ai             -> apps/yourprostore-ai
+admin.yourprostore.ai       -> apps/yourprostore-ai-admin
+manage.yourprostore.ai      -> apps/storefront-admin
+api.yourprostore.ai         -> apps/api
+müşterinin-domaini.com      -> apps/storefront
+```
+
+Uygulama adı ile domain adının aynı olması zorunlu değildir. `manage.yourprostore.ai`,
+mağaza sahibinin yönetim alanını dahili `admin.yourprostore.ai` panelinden ayırır.
+
+## Sistem akışı
 
 ```mermaid
-flowchart LR
-    DOMAIN["brand-a.com"] --> API["Domain çözümleme API'si"]
-    API --> MAP["store_domains"]
-    MAP --> CONFIG["Yayınlanmış mağaza ayarları"]
-    CONFIG --> VUE["Ortak Vue storefront"]
-    SHOPIFY["Müşterinin Shopify mağazası"] -->|"Storefront API"| VUE
-    VUE -->|"checkoutUrl"| CHECKOUT["Shopify Checkout"]
+flowchart TB
+    OWNER["Mağaza sahibi"] --> YPS["yourprostore-ai"]
+    OWNER --> SFA["storefront-admin"]
+    TEAM["YourProStore.ai ekibi"] --> YPSA["yourprostore-ai-admin — planlandı"]
+    VISITOR["Mağaza ziyaretçisi"] --> SF["storefront"]
+
+    YPS --> API["api"]
+    SFA --> API
+    YPSA --> API
+    SF -->|"Public runtime config"| API
+
+    API --> SUPABASE["Supabase Auth + PostgreSQL + Storage"]
+    API --> SHOPIFY_ADMIN["Shopify Admin API + Webhooks"]
+    API --> STRIPE["Stripe abonelikleri"]
+    SF --> SHOPIFY_STOREFRONT["Shopify Storefront API"]
+    SHOPIFY_STOREFRONT --> CHECKOUT["Shopify Checkout"]
 ```
 
-Backend domaini kullanarak yalnızca hangi storefront kaydının okunacağını bulur.
-Shopify mağazasının kalıcı sistem kimliği yine `Shop.id` değeridir. Özel domain,
-Shopify mağaza kimliğinin yerine geçmez.
+Storefront önce bizim API'mizden istek domainine ait public çalışma ayarını alır.
+Ardından ürün, fiyat, stok, sepet ve checkout işlemleri için Shopify Storefront API'ye
+bağlanır. Ürün ve sipariş verileri bizim PostgreSQL veritabanımıza kopyalanmaz.
 
-## Domain sorumluluğu
+## Teknoloji ve veri sahipliği
 
-Headless kararı nedeniyle alıcıların gördüğü domain bizim barındırdığımız Vue
-uygulamasına yönlenir. Bu nedenle platform ileride şu işlemleri otomatikleştirecektir:
+- **Frontend uygulamaları:** Vue 3 + Vite
+- **Backend API:** Node.js + Fastify
+- **Kullanıcı girişi:** Supabase Auth
+- **Tenant ve uygulama verileri:** Supabase PostgreSQL
+- **Logo ve banner dosyaları:** Supabase Storage
+- **Ürün ve ticaret verileri:** Shopify
+- **Platform abonelikleri:** Stripe
 
-- domain kaydını mağazaya bağlama,
-- DNS doğrulama yönergeleri,
-- TLS/SSL sertifikası,
-- domain durum kontrolü,
-- `www` ve kök domain yönlendirmesi.
-
-`*.myshopify.com` adresi Shopify API bağlantısı için tutulur. Eski ve güncel
-`myshopify.com` adresleri tedbir amacıyla alias geçmişinde saklanır.
-
-## Veri sahipliği
+Development ve test ortamında gerçek ücret almadan onboarding'i doğrulamak için
+`BILLING_PROVIDER=mock` kullanılabilir. Bu mod mağaza bazında aktif, başarısız ödeme,
+duraklatma, iptal ve yeniden etkinleştirme durumlarını simüle eder; production ortamında
+API tarafından kesin olarak reddedilir.
 
 | Veri | Ana kaynak |
 | --- | --- |
-| Ürün, varyant, fiyat, stok, koleksiyon | Shopify |
+| Ürün, varyant, fiyat, stok ve koleksiyon | Shopify |
 | Sepet ve checkout | Shopify Storefront API |
 | Sipariş ve Shopify müşterisi | Shopify |
-| Platform kullanıcısı ve ekip üyeliği | Supabase |
-| Shopify bağlantısı ve şifreli Admin tokenı | PostgreSQL private schema |
-| Domain → mağaza eşleştirmesi | PostgreSQL |
-| CMS taslağı, yayınlanmış ayar ve geçmiş | PostgreSQL |
-| Logo, banner ve marka dosyaları | Object storage |
-
-Platform veritabanında ürün veya sipariş kopyası tutulmaz. Ürün webhook'ları yalnızca
-ileride önbellek temizlemek veya bağlantı durumunu takip etmek için kullanılabilir.
-
-## Mağaza ayarları ile ortak kodun ayrılması
-
-Her mağazanın CMS ayarları ayrıdır:
-
-- marka adı,
-- logo,
-- izin verilen renkler,
-- hero/banner içeriği,
-- duyuru metni,
-- footer ve sosyal bağlantılar.
-
-CMS değişiklikleri önce `draft`, müşteri Yayınla dediğinde `published` olur. Vue
-storefront yalnızca `published` kaydı okur.
-
-Yeni ürün galerisi, performans iyileştirmesi veya yeni bir CMS alanı gibi geliştirmeler
-tek Vue kod tabanına eklenir. Ortak sürüm yayınlandığında bütün mağazalar yeni kodu
-kullanır; mağazaların kendi yayınlanmış ayarları korunur. Beta testleri için feature flag
-ve mağaza bazlı override tabloları vardır.
+| YourProStore.ai kullanıcısı ve ekip üyeliği | Supabase Auth + PostgreSQL |
+| Shopify bağlantısı ve şifreli Admin tokenı | PostgreSQL `private` şeması |
+| Domain → storefront eşleştirmesi | PostgreSQL |
+| Kurulum ilerlemesi ve mağaza aboneliği | PostgreSQL |
+| Tasarım ayarı, yayınlanmış sürüm ve geçmiş | PostgreSQL |
+| Logo, banner ve marka dosyaları | Supabase Storage |
 
 ## Veritabanı modeli
 
-Kaynak dosya:
-`apps/api/server/db/migrations/0001_multi_tenant_foundation.sql`
+Uygulama klasörlerinin yeniden adlandırılması veritabanı şemasını değiştirmez. Tablo,
+foreign key, RLS policy ve migration adları teknik alan adları olarak korunur.
 
 ```mermaid
 erDiagram
@@ -111,41 +117,114 @@ erDiagram
     STOREFRONTS ||--o{ STORE_DOMAINS : resolves
     STOREFRONTS ||--o{ STOREFRONT_CONFIG_VERSIONS : versions
     STOREFRONTS ||--o{ DESIGN_ASSETS : owns
+    STOREFRONTS ||--o{ ONBOARDING_PROGRESS : tracks
+    STOREFRONTS ||--|| STORE_SUBSCRIPTIONS : bills
     STOREFRONTS ||--o{ STORE_FEATURE_OVERRIDES : tests
     PLATFORM_RELEASES ||--o{ STOREFRONTS : pins
     PLATFORM_FEATURE_FLAGS ||--o{ STORE_FEATURE_OVERRIDES : overrides
 ```
 
+Temel sahiplik zinciri:
+
+```text
+Supabase Auth kullanıcısı
+└── workspace_memberships
+    └── workspaces
+        └── shopify_stores
+            ├── private.shopify_credentials
+            └── storefronts
+                ├── store_subscriptions
+                ├── store_domains
+                ├── storefront_config_versions
+                ├── design_assets
+                └── onboarding_progress
+```
+
+Bir workspace birden fazla Shopify mağazasına sahip olabilir. Her Shopify mağazasının
+bir storefront'u, her storefront'un da kendine ait aboneliği ve yapılandırması vardır.
+Bir mağazanın ödeme veya kurulum durumu başka mağazayı etkilemez.
+
+## Domain ve storefront çalışma şekli
+
+```mermaid
+flowchart LR
+    DOMAIN["brand-a.com"] --> API["Domain çözümleme API'si"]
+    API --> MAP["store_domains"]
+    MAP --> CONFIG["Yayınlanmış storefront ayarı"]
+    CONFIG --> VUE["Ortak Vue storefront"]
+    SHOPIFY["Müşterinin Shopify mağazası"] -->|"Storefront API"| VUE
+    VUE -->|"checkoutUrl"| CHECKOUT["Shopify Checkout"]
+```
+
+Backend domaini kullanarak doğru storefront kaydını bulur. Shopify mağazasının kalıcı
+sistem kimliği `Shop.id`, API bağlantı adresi ise `*.myshopify.com` alanıdır. Özel
+domain bu kimliklerin yerine geçmez.
+
+Headless storefront production'da bizim hosting altyapımıza yönlenir. Domain bağlantı,
+DNS doğrulama, TLS/SSL durum takibi ve `www` yönlendirmesi deployment/domain otomasyonu
+tarafından yönetilecektir.
+
+## Storefront ayarları ve ortak kod
+
+Her mağazanın ayarları ayrıdır:
+
+- marka adı ve logo,
+- izin verilen renkler,
+- hero/banner içeriği,
+- duyuru metni,
+- footer ve sosyal bağlantılar,
+- domainler ve yayın durumu.
+
+Storefront yalnızca yayınlanmış ayarı okur. Ürün galerisi, performans geliştirmesi veya
+yeni bir CMS alanı gibi ortak kod değişiklikleri tek `apps/storefront` build'iyle bütün
+mağazalara ulaşır; mağazaya ait ayarlar korunur.
+
 ## Public runtime endpoint'i
 
-`GET /api/storefront/config`
+`GET /api/storefront/config`, hostname üzerinden yalnızca aşağıdaki public veriyi döner:
 
-Endpoint, isteğin hostname değerinden mağazayı bulur ve Vue'ya yalnızca şunları döner:
-
-- public storefront kimliği ve yerelleştirme bilgileri,
-- güncel Shopify `myshopify.com` API domaini,
+- storefront kimliği ve yerelleştirme bilgileri,
+- Shopify `myshopify.com` API domaini,
 - public Storefront API tokenı,
 - yayınlanmış tasarım ayarları,
-- aktif sürüm ve feature flag değerleri.
+- release ve feature flag bilgileri.
 
-Admin API tokenı, workspace bilgisi, taslak ayarlar ve başka mağazaların verileri hiçbir
-zaman bu public yanıta eklenmez.
+Shopify Admin API tokenı, workspace içeriği, taslak ayarlar ve başka mağazaların verisi
+public yanıta eklenmez. Production ortamında query-string ile host değiştirme kapalıdır.
 
-Yerel geliştirmede `VITE_STOREFRONT_HOST=glowfield.co` ile domain taklit edilebilir.
-Production ortamında query-string ile host değiştirme kapalıdır.
+## Güvenlik sınırları
 
-## Güvenlik kuralları
+- Shopify Admin API tokenı yalnızca backend'in eriştiği `private` şemada şifreli tutulur.
+- `yourprostore-ai` ve `storefront-admin` erişimi Supabase oturumu ve workspace üyeliğiyle doğrulanır.
+- `storefront-admin` yazma matrisi API ve Storage RLS katmanında uygulanır: owner/admin
+  tasarım, içerik ve domaini; editor yalnız içeriği düzenler; viewer salt okunurdur.
+- Müşteri `yourprostore-ai` üzerinden `storefront-admin`e geçerken 60 saniyelik,
+  tek kullanımlık ve hash olarak saklanan SSO kodu kullanılır; Supabase oturumu
+  `private` şemada AES-GCM ile şifreli tutulur ve kod kullanıldıktan sonra tekrar kullanılamaz.
+- `yourprostore-ai-admin` için müşteri workspace rollerinden ayrı platform yetkisi kullanılacaktır.
+- PostgreSQL tenant tablolarında Row Level Security uygulanır.
+- Public endpoint yalnızca aktif domain, aktif abonelik, aktif storefront ve yayınlanmış ayar döndürür.
+- Domain girdileri normalize edilir ve SQL sorguları parametreli çalışır.
+- Ürün ve siparişler gereksiz yere platform veritabanına alınmaz.
 
-- Admin API tokenı yalnızca backend tarafından erişilen `private` şemada şifreli tutulur.
-- Kullanıcı CMS erişimi oturum + workspace üyeliğiyle doğrulanır.
-- PostgreSQL tablolarında Row Level Security açıktır.
-- Public endpoint yalnızca aktif domain, aktif storefront ve yayınlanmış ayar döndürür.
-- Domain girdisi normalize edilir ve SQL sorgusu parametreli çalışır.
-- CMS renkleri yalnızca önceden izin verilen CSS değişkenlerine uygulanır.
-- Shopify ürün ve siparişleri gereksiz yere platform veritabanına alınmaz.
+## Uygulama geliştirme sırası
 
-## Eski Liquid tema klasörü
+`yourprostore-ai-admin`, kurulum sihirbazının veri modeli ve abonelik durumları
+kararlı hale geldikten sonra geliştirilir. Böylece dahili panel geçici alanlara göre
+iki kez yazılmaz. Ancak webhook/audit log ve güvenlik verilerinin backend'de üretilmesi
+admin panelini beklemez; panel daha sonra bu mevcut operasyon verilerini görünür kılar.
 
-`shopify-theme/` önceki mimari karar sırasında hazırlanmış prototiptir. Aktif ürün
-mimarisinin parçası değildir ve yalnızca geçmiş çalışma/fallback referansı olarak
-tutulmaktadır.
+Önerilen sıra:
+
+1. `yourprostore-ai` kurulum sihirbazı ve geliştirme/test abonelik akışı
+2. `storefront-admin` temel CMS özellikleri ve yayınlama akışı
+3. Çoklu mağaza, iki hesap, RLS ve uçtan uca testler
+4. `yourprostore-ai-admin` dahili operasyon paneli
+5. Production güvenliği, deployment ve pilot yayın
+6. Stripe test-mode doğrulaması ve en son live-mode ödeme açılışı
+
+## Aktif olmayan klasörler
+
+`legacy/cms`, önceki tek mağazalı ürün/sipariş ekranlarını; `shopify-theme` ise önceki
+Liquid yaklaşımını referans amacıyla saklar. İkisi de aktif ürün mimarisinin parçası
+değildir.

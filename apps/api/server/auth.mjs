@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { storefrontAdminPermissions } from './cms-roles.mjs'
 
 const ACCOUNT_CONTEXT_QUERY = `
   select
@@ -10,7 +11,11 @@ const ACCOUNT_CONTEXT_QUERY = `
     store.current_myshopify_domain,
     store.status::text as shopify_store_status,
     storefront.id::text as storefront_id,
-    storefront.status::text as storefront_status
+    storefront.status::text as storefront_status,
+    subscription.plan_key,
+    subscription.status::text as subscription_status,
+    subscription.unit_amount,
+    subscription.currency_code
   from public.workspace_memberships membership
   join public.workspaces workspace
     on workspace.id = membership.workspace_id
@@ -18,6 +23,8 @@ const ACCOUNT_CONTEXT_QUERY = `
     on store.workspace_id = workspace.id
   left join public.storefronts storefront
     on storefront.shopify_store_id = store.id
+  left join public.store_subscriptions subscription
+    on subscription.storefront_id = storefront.id
   where membership.user_id = $1
   order by membership.created_at, store.created_at
 `
@@ -53,6 +60,7 @@ export async function findAccountContext({ database, user }) {
         id: row.workspace_id,
         name: row.workspace_name,
         role: row.role,
+        storefrontAdminPermissions: storefrontAdminPermissions(row.role),
         stores: []
       })
     }
@@ -66,7 +74,15 @@ export async function findAccountContext({ database, user }) {
         storefront: row.storefront_id
           ? {
               id: row.storefront_id,
-              status: row.storefront_status
+              status: row.storefront_status,
+              subscription: row.subscription_status
+                ? {
+                    planKey: row.plan_key,
+                    status: row.subscription_status,
+                    unitAmount: row.unit_amount,
+                    currencyCode: row.currency_code
+                  }
+                : null
             }
           : null
       })

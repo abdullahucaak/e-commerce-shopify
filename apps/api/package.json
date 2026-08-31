@@ -1,15 +1,18 @@
 {
-  "name": "@glowfield/api",
+  "name": "@yourprostore/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch --env-file=../../.env server/index.mjs",
+    "dev": "node --watch-path=server --env-file=../../.env server/index.mjs",
     "test": "node --test server/*.test.mjs",
     "db:migrate:oauth": "node --env-file=../../.env server/db/apply-migration.mjs 0004_shopify_oauth_states.sql",
     "db:migrate:storage": "node --env-file=../../.env server/db/apply-migration.mjs 0005_storefront_asset_storage.sql",
     "db:migrate:store-selection": "node --env-file=../../.env server/db/apply-migration.mjs 0008_shopify_store_selection.sql",
     "db:migrate:stripe-billing": "node --env-file=../../.env server/db/apply-migration.mjs 0011_stripe_store_billing.sql",
+    "db:migrate:banner-catalog": "node --env-file=../../.env server/db/apply-migration.mjs 0012_complete_banner_catalog.sql",
+    "db:migrate:auth-handoff": "node --env-file=../../.env server/db/apply-migration.mjs 0013_customer_auth_handoffs.sql",
+    "db:migrate:cms-roles": "node --env-file=../../.env server/db/apply-migration.mjs 0014_storefront_admin_roles.sql",
     "db:seed:glowfield": "node --env-file=../../.env server/db/seed-glowfield.mjs",
     "db:claim:glowfield-owner": "node --env-file=../../.env server/db/claim-glowfield-owner.mjs"
   },

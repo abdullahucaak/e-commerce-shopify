@@ -75,7 +75,7 @@ test('creates one store-scoped Stripe Checkout session with subscription metadat
   const billing = createStripeBillingService({
     database,
     webhookSecret: 'whsec_test',
-    customerPlatformUrl: 'https://app.example.com',
+    yourProStoreUrl: 'https://app.example.com',
     priceIds: { starter_monthly: 'price_starter' },
     stripeClient
   })
@@ -113,7 +113,7 @@ test('reuses an unexpired Checkout session for the same store', async () => {
   const billing = createStripeBillingService({
     database,
     webhookSecret: 'whsec_test',
-    customerPlatformUrl: 'https://app.example.com',
+    yourProStoreUrl: 'https://app.example.com',
     priceIds: { starter_monthly: 'price_starter' },
     stripeClient: {
       checkout: { sessions: { create: async () => { stripeCalled = true } } },
@@ -138,7 +138,7 @@ test('denies billing changes to a non-owner workspace member', async () => {
   const billing = createStripeBillingService({
     database,
     webhookSecret: 'whsec_test',
-    customerPlatformUrl: 'https://app.example.com',
+    yourProStoreUrl: 'https://app.example.com',
     priceIds: { starter_monthly: 'price_starter' },
     stripeClient: {
       checkout: { sessions: { create: async () => assert.fail('Stripe must not be called') } },
@@ -198,7 +198,7 @@ test('applies a signed subscription webhook once and scopes it to one storefront
   const billing = createStripeBillingService({
     database,
     webhookSecret: 'whsec_test',
-    customerPlatformUrl: 'https://app.example.com',
+    yourProStoreUrl: 'https://app.example.com',
     priceIds: { starter_monthly: 'price_starter' },
     stripeClient: {
       checkout: { sessions: { create: async () => ({}) } },
@@ -248,7 +248,7 @@ test('acknowledges a duplicate Stripe event without applying it twice', async ()
       async connect() { return client }
     },
     webhookSecret: 'whsec_test',
-    customerPlatformUrl: 'https://app.example.com',
+    yourProStoreUrl: 'https://app.example.com',
     priceIds: { starter_monthly: 'price_starter' },
     stripeClient: {
       checkout: { sessions: { create: async () => ({}) } },

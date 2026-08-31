@@ -219,7 +219,7 @@ export function createStripeBillingService({
   database,
   secretKey,
   webhookSecret,
-  customerPlatformUrl,
+  yourProStoreUrl,
   priceIds,
   stripeClient = null
 }) {
@@ -227,7 +227,7 @@ export function createStripeBillingService({
     throw new Error('database.query and database.connect are required.')
   }
   if (!webhookSecret) throw new Error('Stripe webhook secret is required.')
-  if (!customerPlatformUrl) throw new Error('Customer platform URL is required.')
+  if (!yourProStoreUrl) throw new Error('YourProStore.ai URL is required.')
 
   const stripe = stripeClient || new Stripe(secretKey)
   const validatedPrices = new Map()
@@ -317,12 +317,12 @@ export function createStripeBillingService({
       await validatePrice(subscription.plan_key, priceId)
 
       const attempt = Number(subscription.checkout_attempt || 0) + 1
-      const successUrl = `${checkoutReturnUrl(customerPlatformUrl, storefrontId, 'success')}&session_id={CHECKOUT_SESSION_ID}`
+      const successUrl = `${checkoutReturnUrl(yourProStoreUrl, storefrontId, 'success')}&session_id={CHECKOUT_SESSION_ID}`
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: successUrl,
-        cancel_url: checkoutReturnUrl(customerPlatformUrl, storefrontId, 'cancelled'),
+        cancel_url: checkoutReturnUrl(yourProStoreUrl, storefrontId, 'cancelled'),
         client_reference_id: storefrontId,
         ...(subscription.provider_customer_id
           ? { customer: subscription.provider_customer_id }
@@ -385,7 +385,7 @@ export function createStripeBillingService({
 
     const session = await stripe.billingPortal.sessions.create({
       customer: row.provider_customer_id,
-      return_url: checkoutReturnUrl(customerPlatformUrl, storefrontId, 'portal_return')
+      return_url: checkoutReturnUrl(yourProStoreUrl, storefrontId, 'portal_return')
     })
     if (!session?.url) throw new Error('stripe_portal_session_invalid')
     return { portalUrl: session.url }

@@ -3,6 +3,7 @@ const STEP_ORDER = [
   'niche_selection',
   'banner_selection',
   'brand_setup',
+  'product_readiness',
   'store_preview',
   'domain_setup',
   'plan_selection',
@@ -25,6 +26,7 @@ const REQUIRED_SETUP_STEPS = [
   'niche_selection',
   'banner_selection',
   'brand_setup',
+  'product_readiness',
   'store_preview',
   'domain_setup',
   'plan_selection'
@@ -67,6 +69,22 @@ export async function completeDomainSetup({ database, userId, storefrontId }) {
     [storefrontId, activeCustomDomain.rows[0].hostname]
   )
   return { completed: true, hostname: activeCustomDomain.rows[0].hostname }
+}
+
+export async function skipDomainSetup({ database, userId, storefrontId }) {
+  const storefront = await assertStorefrontAccess({ database, userId, storefrontId })
+  if (!storefront) throw new Error('storefront_access_denied')
+  await database.query(
+    `insert into public.onboarding_progress (
+       storefront_id, step_key, status, completed_at, data
+     ) values (
+       $1, 'domain_setup', 'completed', now(), jsonb_build_object('skipped', true)
+     )
+     on conflict (storefront_id, step_key) do update set
+       status = 'completed', completed_at = now(), data = excluded.data, updated_at = now()`,
+    [storefrontId]
+  )
+  return { completed: true, skipped: true }
 }
 
 export async function selectStorePlan({ database, userId, storefrontId, planKey }) {

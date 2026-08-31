@@ -390,12 +390,15 @@ export function createShopifyOAuthService({
   previousClientSecret = null,
   appUrl,
   installUrl = null,
-  platformUrl,
+  yourProStoreUrl,
   apiVersion = '2026-07',
   tokenEncryptionSecret = clientSecret
 }) {
   const normalizedAppUrl = normalizeOrigin(appUrl, 'SHOPIFY_APP_URL')
-  const normalizedPlatformUrl = normalizeOrigin(platformUrl, 'PLATFORM_APP_URL')
+  const normalizedYourProStoreUrl = normalizeOrigin(
+    yourProStoreUrl,
+    'YOURPROSTORE_AI_APP_URL'
+  )
   const callbackUrl = `${normalizedAppUrl}/api/shopify/callback`
 
   return {
@@ -547,11 +550,11 @@ export function createShopifyOAuthService({
         encryptionSecret: tokenEncryptionSecret
       })
 
-      return `${normalizedPlatformUrl}/stores?shopify=connected`
+      return `${normalizedYourProStoreUrl}/stores?shopify=connected`
     },
 
     installRedirect(shop) {
-      const url = new URL('/stores', normalizedPlatformUrl)
+      const url = new URL('/stores', normalizedYourProStoreUrl)
       if (shop) url.searchParams.set('shop', shop)
       return url.toString()
     }
