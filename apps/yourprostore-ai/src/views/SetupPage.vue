@@ -2,8 +2,12 @@
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccountStore } from '../stores/account.js'
-import { supabase } from '../services/supabase.js'
-import { optimizeLogo, uploadLogo } from '../services/storefrontAssets.js'
+import {
+  logoUploadErrorMessage,
+  optimizeLogo,
+  removeLogo,
+  uploadLogo
+} from '../services/storefrontAssets.js'
 import { calculateSetupProgress, SETUP_STEP_KEYS } from '../services/onboardingPresentation.js'
 import { openStorefrontAdmin } from '../services/adminHandoff.js'
 
@@ -18,6 +22,7 @@ const error = ref('')
 const message = ref('')
 const savingBrand = ref(false)
 const uploadingLogo = ref(false)
+const savedLogoUrl = ref('')
 const brandResult = ref(null)
 const domainInfo = ref(null)
 const checkingDomains = ref(false)
@@ -118,6 +123,7 @@ async function loadBrand() {
   const stored = payload.settings || {}
   brand.name = stored.brand?.name || data.value?.storefront.name || ''
   brand.logoUrl = stored.brand?.logo?.url || ''
+  savedLogoUrl.value = brand.logoUrl
   brand.logoSize = stored.brand?.logo?.size || 180
   brand.primary = stored.brand?.colors?.primary || '#303841'
   brand.secondary = stored.brand?.colors?.secondary || '#007dcc'
@@ -142,15 +148,27 @@ async function chooseLogo(event) {
   const file = event.target.files?.[0]
   if (!file) return
   error.value = ''; message.value = ''
-  if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.type)) {
-    error.value = 'PNG, JPG, WEBP veya SVG biçiminde, en fazla 2 MB logo seç.'
+  if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+    error.value = 'PNG, JPG veya WEBP biçiminde, en fazla 2 MB logo seç.'
     return
   }
   uploadingLogo.value = true
   try {
-    brand.logoUrl = await uploadLogo(supabase, route.params.storefrontId, await optimizeLogo(file))
+    const previousDraftUrl = brand.logoUrl
+    brand.logoUrl = await uploadLogo({
+      accessToken: account.session.access_token,
+      storefrontId: route.params.storefrontId,
+      file: await optimizeLogo(file)
+    })
+    if (previousDraftUrl && previousDraftUrl !== savedLogoUrl.value) {
+      await removeLogo({
+        accessToken: account.session.access_token,
+        storefrontId: route.params.storefrontId,
+        publicUrl: previousDraftUrl
+      }).catch(() => {})
+    }
     message.value = 'Logo yüklendi. Marka bilgilerini kaydettiğinde mağazana uygulanacak.'
-  } catch { error.value = 'Logo yüklenemedi. Lütfen tekrar dene.' }
+  } catch (uploadError) { error.value = logoUploadErrorMessage(uploadError) }
   finally { uploadingLogo.value = false; event.target.value = '' }
 }
 async function saveBrand() {
@@ -168,6 +186,7 @@ async function saveBrand() {
       throw new Error(payload.error || 'brand_save_failed')
     }
     await load()
+    savedLogoUrl.value = brand.logoUrl
     brandResult.value = { completed: true }
     message.value = 'Marka bilgilerin mağazana uygulandı.'
     await nextTick()
@@ -404,7 +423,7 @@ onMounted(async () => {
       <div class="brand-editor">
         <div class="brand-fields">
           <label>Mağaza adı<input v-model.trim="brand.name" maxlength="120" required></label>
-          <label>Logo<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" :disabled="uploadingLogo" @change="chooseLogo"><small>PNG, JPG, WEBP veya SVG · en fazla 2 MB</small></label>
+          <label>Logo<input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingLogo" @change="chooseLogo"><small>PNG, JPG veya WEBP · 64×32–2400×1200 px · en fazla 2 MB</small></label>
           <button v-if="brand.logoUrl" class="secondary-button" type="button" @click="brand.logoUrl = ''">Logoyu kaldır</button>
           <label>Logo boyutu: {{ brand.logoSize }} px<input v-model="brand.logoSize" class="range" type="range" min="80" max="320" step="10"></label>
           <div class="color-fields"><label>Ana renk<input v-model="brand.primary" type="color"></label><label>İkincil renk<input v-model="brand.secondary" type="color"></label></div>

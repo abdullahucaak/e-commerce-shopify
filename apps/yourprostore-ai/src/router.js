@@ -5,6 +5,8 @@ import StoresPage from './views/StoresPage.vue'
 import SetupPage from './views/SetupPage.vue'
 import SubscriptionsPage from './views/SubscriptionsPage.vue'
 import AccountPage from './views/AccountPage.vue'
+import ForgotPasswordPage from './views/ForgotPasswordPage.vue'
+import UpdatePasswordPage from './views/UpdatePasswordPage.vue'
 import { useAccountStore } from './stores/account.js'
 
 const router = createRouter({
@@ -12,6 +14,8 @@ const router = createRouter({
   routes: [
     { path: '/', component: HomePage, name: 'home' },
     { path: '/login', component: LoginPage, name: 'login' },
+    { path: '/forgot-password', component: ForgotPasswordPage, name: 'forgot-password' },
+    { path: '/update-password', component: UpdatePasswordPage, name: 'update-password' },
     { path: '/stores', component: StoresPage, meta: { auth: true } },
     { path: '/setup/:storefrontId', component: SetupPage, meta: { auth: true } },
     { path: '/subscriptions', component: SubscriptionsPage, meta: { auth: true } },

@@ -1,8 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useAuthStore } from '../stores/authStore'
-import { getSupabaseClient } from '../services/supabase'
-import { optimizeRasterImage, removeStorefrontAsset, uploadStorefrontAsset } from '../services/storefrontAssets'
+import {
+  optimizeRasterImage,
+  removeStorefrontAsset,
+  storefrontAssetErrorMessage,
+  uploadStorefrontAsset
+} from '../services/storefrontAssets'
 
 const authStore = useAuthStore()
 const canEditContent = computed(() => authStore.canEditContent)
@@ -32,12 +36,17 @@ const previewUrl = computed(() => {
 const liveStorefrontUrl = ref('')
 const loading = ref(false)
 const saving = ref(false)
+const publishing = ref(false)
 const uploading = ref(false)
 const uploadingHero = ref(false)
 const message = ref('')
 const error = ref('')
 const savedHeroImageUrl = ref('')
 const savedAboutImageUrl = ref('')
+const publishedVersion = ref(null)
+const draftVersion = ref(null)
+const hasUnpublishedChanges = ref(false)
+const savedSnapshot = ref('')
 const form = reactive({
   home: { heroTitle: '', heroSubtitle: '', statement: '', heroImageUrl: '' },
   shop: { description: '' },
@@ -58,6 +67,35 @@ function draftContentSettings() {
     }
   }
 }
+
+function contentRequestBody() {
+  return {
+    home: { ...form.home },
+    shop: { ...form.shop },
+    about: { ...form.about },
+    footer: {
+      emails: form.footer.emails.map(value => value.trim()).filter(Boolean),
+      social: { ...form.footer.social }
+    }
+  }
+}
+
+function contentSnapshot() {
+  return JSON.stringify(contentRequestBody())
+}
+
+const hasLocalChanges = computed(() => (
+  Boolean(savedSnapshot.value) && contentSnapshot() !== savedSnapshot.value
+))
+const versionStatus = computed(() => {
+  if (hasLocalChanges.value) return 'Kaydedilmemiş değişiklikler var.'
+  if (hasUnpublishedChanges.value) {
+    return `Taslak sürüm ${draftVersion.value} hazır · canlı sürüm ${publishedVersion.value || 'yok'}.`
+  }
+  return publishedVersion.value
+    ? `Canlı sürüm ${publishedVersion.value} ile eşit.`
+    : 'Henüz canlı bir sürüm yok.'
+})
 
 function sendPreview() {
   previewFrame.value?.contentWindow?.postMessage({
@@ -97,6 +135,10 @@ async function loadContent() {
   loading.value = true
   message.value = ''
   error.value = ''
+  savedSnapshot.value = ''
+  publishedVersion.value = null
+  draftVersion.value = null
+  hasUnpublishedChanges.value = false
   try {
     const response = await request(`/api/storefronts/${storefrontId}/content`)
     const payload = await response.json()
@@ -104,6 +146,10 @@ async function loadContent() {
     fillForm(payload.settings)
     savedHeroImageUrl.value = form.home.heroImageUrl
     savedAboutImageUrl.value = form.about.imageUrl
+    publishedVersion.value = payload.publishedVersion
+    draftVersion.value = payload.draftVersion
+    hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
+    savedSnapshot.value = contentSnapshot()
   } catch {
     error.value = 'İçerik ayarları yüklenemedi.'
   } finally {
@@ -155,18 +201,24 @@ async function uploadAboutImage(event) {
   }
   uploading.value = true
   try {
-    const client = getSupabaseClient()
     const optimizedFile = await optimizeRasterImage(file, { maxWidth: 1800, maxHeight: 1800 })
     const previousDraftUrl = form.about.imageUrl
-    form.about.imageUrl = await uploadStorefrontAsset(client, {
-      storefrontId: selectedStore.value.storefront.id, folder: 'about', file: optimizedFile
+    form.about.imageUrl = await uploadStorefrontAsset({
+      accessToken: authStore.session.access_token,
+      storefrontId: selectedStore.value.storefront.id,
+      purpose: 'about',
+      file: optimizedFile
     })
     if (previousDraftUrl && previousDraftUrl !== savedAboutImageUrl.value) {
-      await removeStorefrontAsset(client, previousDraftUrl).catch(() => {})
+      await removeStorefrontAsset({
+        accessToken: authStore.session.access_token,
+        storefrontId: selectedStore.value.storefront.id,
+        publicUrl: previousDraftUrl
+      }).catch(() => {})
     }
-    message.value = 'Görsel seçildi. Vitrine uygulamak için içerikleri kaydet.'
-  } catch {
-    error.value = 'Görsel yüklenemedi.'
+    message.value = 'Görsel seçildi. Önce içerik taslağını kaydet, ardından yayınla.'
+  } catch (uploadError) {
+    error.value = storefrontAssetErrorMessage(uploadError, 'About Us görseli')
   } finally {
     uploading.value = false
   }
@@ -188,18 +240,24 @@ async function uploadHeroImage(event) {
   }
   uploadingHero.value = true
   try {
-    const client = getSupabaseClient()
     const optimizedFile = await optimizeRasterImage(file, { maxWidth: 2560, maxHeight: 1440 })
     const previousDraftUrl = form.home.heroImageUrl
-    form.home.heroImageUrl = await uploadStorefrontAsset(client, {
-      storefrontId: selectedStore.value.storefront.id, folder: 'hero', file: optimizedFile
+    form.home.heroImageUrl = await uploadStorefrontAsset({
+      accessToken: authStore.session.access_token,
+      storefrontId: selectedStore.value.storefront.id,
+      purpose: 'hero',
+      file: optimizedFile
     })
     if (previousDraftUrl && previousDraftUrl !== savedHeroImageUrl.value) {
-      await removeStorefrontAsset(client, previousDraftUrl).catch(() => {})
+      await removeStorefrontAsset({
+        accessToken: authStore.session.access_token,
+        storefrontId: selectedStore.value.storefront.id,
+        publicUrl: previousDraftUrl
+      }).catch(() => {})
     }
-    message.value = 'Banner görseli seçildi. Vitrine uygulamak için içerikleri kaydet.'
-  } catch {
-    error.value = 'Banner görseli yüklenemedi.'
+    message.value = 'Banner görseli seçildi. Önce içerik taslağını kaydet, ardından yayınla.'
+  } catch (uploadError) {
+    error.value = storefrontAssetErrorMessage(uploadError, 'Banner')
   } finally {
     uploadingHero.value = false
   }
@@ -213,34 +271,49 @@ async function saveContent() {
   try {
     const response = await request(`/api/storefronts/${selectedStore.value.storefront.id}/content`, {
       method: 'PUT',
-      body: JSON.stringify({
-        home: form.home,
-        shop: form.shop,
-        about: form.about,
-        footer: {
-          emails: form.footer.emails.map(value => value.trim()).filter(Boolean),
-          social: form.footer.social
-        }
-      })
+      body: JSON.stringify(contentRequestBody())
     })
     const payload = await response.json()
     if (!response.ok) throw new Error(payload.error)
-    const previousHeroUrl = savedHeroImageUrl.value
-    const previousAboutUrl = savedAboutImageUrl.value
     savedHeroImageUrl.value = form.home.heroImageUrl
     savedAboutImageUrl.value = form.about.imageUrl
-    const client = getSupabaseClient()
-    await Promise.all([
-      previousHeroUrl && previousHeroUrl !== form.home.heroImageUrl
-        ? removeStorefrontAsset(client, previousHeroUrl).catch(() => {}) : null,
-      previousAboutUrl && previousAboutUrl !== form.about.imageUrl
-        ? removeStorefrontAsset(client, previousAboutUrl).catch(() => {}) : null
-    ])
-    message.value = `İçerikler kaydedildi (sürüm ${payload.version}).`
+    publishedVersion.value = payload.publishedVersion
+    draftVersion.value = payload.draftVersion
+    hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
+    savedSnapshot.value = contentSnapshot()
+    message.value = hasUnpublishedChanges.value
+      ? `İçerik taslağı kaydedildi (taslak sürüm ${draftVersion.value}). Canlı mağaza değişmedi.`
+      : 'İçerik canlı sürümle eşitlendi; bekleyen taslak kalmadı.'
   } catch {
     error.value = 'İçerikler kaydedilemedi. Alanları ve bağlantıları kontrol et.'
   } finally {
     saving.value = false
+  }
+}
+
+async function publishContent() {
+  if (!canEditContent.value || hasLocalChanges.value || !hasUnpublishedChanges.value) return
+  publishing.value = true
+  message.value = ''
+  error.value = ''
+  try {
+    const response = await request(
+      `/api/storefronts/${selectedStore.value.storefront.id}/content/publish`,
+      { method: 'POST' }
+    )
+    const payload = await response.json()
+    if (!response.ok) throw new Error(payload.error)
+    publishedVersion.value = payload.publishedVersion
+    draftVersion.value = payload.draftVersion
+    hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
+    savedSnapshot.value = contentSnapshot()
+    message.value = `İçerik canlıda yayınlandı (sürüm ${publishedVersion.value}).`
+  } catch (publishError) {
+    error.value = publishError.message === 'storefront_no_draft_changes'
+      ? 'Yayınlanacak kayıtlı bir içerik taslağı yok.'
+      : 'İçerik yayınlanamadı. Lütfen tekrar dene.'
+  } finally {
+    publishing.value = false
   }
 }
 
@@ -291,7 +364,7 @@ onMounted(loadSelectedStore)
           <h2>Ana sayfa</h2>
           <label>Banner başlığı <small>{{ form.home.heroTitle.length }}/32</small><input v-model.trim="form.home.heroTitle" maxlength="32" required :disabled="!canEditContent"></label>
           <label>Banner alt başlığı <small>{{ form.home.heroSubtitle.length }}/80</small><textarea v-model.trim="form.home.heroSubtitle" maxlength="80" rows="2" required :disabled="!canEditContent"></textarea></label>
-          <label>Banner görseli <small>JPG, PNG veya WEBP · en fazla 8 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingHero || !canEditContent" @change="uploadHeroImage"></label>
+          <label>Banner görseli <small>JPG, PNG veya WEBP · 1200×400–4096×4096 px · en fazla 8 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingHero || !canEditContent" @change="uploadHeroImage"></label>
           <img v-if="form.home.heroImageUrl" class="hero-preview" :src="form.home.heroImageUrl" alt="Banner önizlemesi">
           <button v-if="form.home.heroImageUrl" class="remove-image" type="button" :disabled="!canEditContent" @click="form.home.heroImageUrl = ''">Banner görselini kaldır</button>
           <label>Tanıtım cümlesi <small>{{ form.home.statement.length }}/120</small><textarea v-model.trim="form.home.statement" maxlength="120" rows="3" required :disabled="!canEditContent"></textarea></label>
@@ -305,7 +378,7 @@ onMounted(loadSelectedStore)
         <section>
           <h2>About Us</h2>
           <label>Başlık <small>{{ form.about.title.length }}/40</small><input v-model.trim="form.about.title" maxlength="40" required :disabled="!canEditContent"></label>
-          <label>Görsel <small>JPG, PNG veya WEBP · en fazla 5 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploading || !canEditContent" @change="uploadAboutImage"></label>
+          <label>Görsel <small>JPG, PNG veya WEBP · 400×400–3000×3000 px · en fazla 5 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploading || !canEditContent" @change="uploadAboutImage"></label>
           <img v-if="form.about.imageUrl" class="image-preview" :src="form.about.imageUrl" :alt="form.about.imageAlt">
           <label>Görsel açıklaması<input v-model.trim="form.about.imageAlt" maxlength="120" required :disabled="!canEditContent"></label>
           <label>Metin <small>{{ form.about.body.length }}/4000</small><textarea v-model.trim="form.about.body" maxlength="4000" rows="16" required :disabled="!canEditContent"></textarea></label>
@@ -320,11 +393,25 @@ onMounted(loadSelectedStore)
         </section>
 
         <div class="save-bar">
-          <p v-if="message" class="success">{{ message }}</p>
-          <p v-if="error" class="error">{{ error }}</p>
-          <button :disabled="saving || loading || uploading || uploadingHero || !canEditContent">
-            {{ canEditContent ? (saving ? 'Kaydediliyor…' : 'İçerikleri kaydet') : 'Salt okunur' }}
-          </button>
+          <div class="workflow-copy">
+            <strong>{{ versionStatus }}</strong>
+            <small>Taslak kaydetmek canlı mağazayı değiştirmez.</small>
+            <p v-if="message" class="success">{{ message }}</p>
+            <p v-if="error" class="error">{{ error }}</p>
+          </div>
+          <div class="workflow-actions">
+            <button :disabled="saving || publishing || loading || uploading || uploadingHero || !canEditContent">
+              {{ canEditContent ? (saving ? 'Kaydediliyor…' : 'Taslağı kaydet') : 'Salt okunur' }}
+            </button>
+            <button
+              class="publish-button"
+              type="button"
+              :disabled="publishing || saving || loading || uploading || uploadingHero || hasLocalChanges || !hasUnpublishedChanges || !canEditContent"
+              @click="publishContent"
+            >
+              {{ publishing ? 'Yayınlanıyor…' : 'Taslağı canlıda yayınla' }}
+            </button>
+          </div>
         </div>
       </form>
       <p v-else>Önce bir Shopify mağazası bağlamalısın.</p>
@@ -340,4 +427,6 @@ onMounted(loadSelectedStore)
 .preview-unavailable{margin:0;padding:3rem 1.5rem;border-top:1px solid #e2e7eb;color:#6a7683;text-align:center}
 .preview-page-select{display:flex;align-items:center;gap:.6rem;margin:0;font-size:.78rem}.preview-page-select select{padding:.55rem .7rem}
 .permission-notice{grid-column:1/-1;margin:0;padding:.75rem 1rem;border-radius:8px;color:#7a2e0e;background:#fff4e5}.remove-image:disabled,input:disabled,textarea:disabled,button:disabled{cursor:not-allowed;opacity:.65}
+.workflow-copy{display:grid;gap:.2rem;margin-right:auto}.workflow-copy>strong{color:#7a5710}.workflow-copy>small{color:#6a7683}.workflow-copy p{margin:.2rem 0 0}.workflow-actions{display:flex;gap:.75rem}.publish-button{background:#18794e!important}
+@media(max-width:800px){.workflow-actions{display:grid;width:100%}}
 </style>

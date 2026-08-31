@@ -82,6 +82,9 @@
             required
           >
           <small v-if="mode === 'register'">En az 8 karakter kullan.</small>
+          <RouterLink v-if="mode === 'login'" class="forgot-link" to="/forgot-password">
+            Şifremi unuttum
+          </RouterLink>
         </div>
 
         <button
@@ -276,6 +279,12 @@ onMounted(async () => {
   color: var(--color-text-primary);
   background: var(--color-surface);
   box-shadow: 0 1px 4px rgba(27, 36, 48, 0.12);
+}
+
+.forgot-link {
+  justify-self: end;
+  color: var(--color-brand-secondary);
+  font-size: 0.86rem;
 }
 
 h1 {

@@ -179,6 +179,13 @@ Storefront yalnızca yayınlanmış ayarı okur. Ürün galerisi, performans gel
 yeni bir CMS alanı gibi ortak kod değişiklikleri tek `apps/storefront` build'iyle bütün
 mağazalara ulaşır; mağazaya ait ayarlar korunur.
 
+CMS'teki `PUT /design` ve `PUT /content` çağrıları yalnız `draft` sürümünü kaydeder;
+canlı mağazayı değiştirmez. Ayrı `/design/publish` ve `/content/publish` eylemleri
+storefront satırını kilitleyen transaction içinde yalnız ilgili kapsamı `published`
+sürüme taşır. Böylece içerik yayınlama yetkisi olan editor, owner/admin tarafından
+hazırlanmış bekleyen tasarım değişikliklerini dolaylı olarak yayınlayamaz. Diğer
+kapsamda bekleyen değişiklik varsa taslak yeni sürüm numarasıyla korunur.
+
 ## Public runtime endpoint'i
 
 `GET /api/storefront/config`, hostname üzerinden yalnızca aşağıdaki public veriyi döner:
@@ -198,9 +205,15 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
 - `yourprostore-ai` ve `storefront-admin` erişimi Supabase oturumu ve workspace üyeliğiyle doğrulanır.
 - `storefront-admin` yazma matrisi API ve Storage RLS katmanında uygulanır: owner/admin
   tasarım, içerik ve domaini; editor yalnız içeriği düzenler; viewer salt okunurdur.
+- CMS ve onboarding görselleri tarayıcıdan doğrudan Storage'a yazılmaz. API gerçek
+  JPEG/PNG/WEBP formatını, dosya boyutunu, kullanım amacına özel ölçüleri ve mağaza
+  başına 25 MB kotayı doğruladıktan sonra 60 saniyelik tek kullanımlık Storage izni üretir.
 - Müşteri `yourprostore-ai` üzerinden `storefront-admin`e geçerken 60 saniyelik,
   tek kullanımlık ve hash olarak saklanan SSO kodu kullanılır; Supabase oturumu
   `private` şemada AES-GCM ile şifreli tutulur ve kod kullanıldıktan sonra tekrar kullanılamaz.
+- Parola kurtarma Supabase Auth recovery bağlantısıyla yapılır. Mevcut parola hiçbir
+  uygulama tarafından okunmaz; sabit ve allowlist'teki `/update-password` adresine
+  dönen kullanıcı yalnız kendi recovery oturumuyla yeni parola belirleyebilir.
 - `yourprostore-ai-admin` için müşteri workspace rollerinden ayrı platform yetkisi kullanılacaktır.
 - PostgreSQL tenant tablolarında Row Level Security uygulanır.
 - Public endpoint yalnızca aktif domain, aktif abonelik, aktif storefront ve yayınlanmış ayar döndürür.

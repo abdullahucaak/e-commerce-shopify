@@ -1,13 +1,14 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
+import multipart from '@fastify/multipart'
 import {
   findStorefrontRuntimeConfig,
   normalizeStorefrontHostname
 } from './storefront-config.mjs'
 import { findAccountContext, readBearerToken } from './auth.mjs'
-import { publishDesignConfig, readDesignConfig } from './design-config.mjs'
-import { publishContentConfig, readContentConfig } from './content-config.mjs'
+import { publishDesignConfig, readDesignConfig, saveDesignDraft } from './design-config.mjs'
+import { publishContentConfig, readContentConfig, saveContentDraft } from './content-config.mjs'
 import {
   completeBrandSetup,
   completeDomainSetup,
@@ -30,6 +31,7 @@ export function buildApp({
   mockBilling = null,
   productReadiness = null,
   authHandoff = null,
+  storefrontAssets = null,
   billingProvider = 'disabled',
   logger = true,
   shopifyApiVersion = '2026-07',
@@ -40,6 +42,7 @@ export function buildApp({
 
   const app = Fastify({ logger, trustProxy })
   const installIntentCookie = 'yourprostore_shopify_intent'
+  const maxStorefrontAssetRequestBytes = (8 * 1024 * 1024) + (64 * 1024)
 
   function readCookie(header, name) {
     return String(header || '').split(';').map(value => value.trim()).reduce((found, value) => {
@@ -69,7 +72,15 @@ export function buildApp({
   })
   app.register(cors, {
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH']
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+  })
+  app.register(multipart, {
+    limits: {
+      files: 1,
+      fields: 0,
+      parts: 1,
+      fileSize: 8 * 1024 * 1024
+    }
   })
 
   app.get('/api/health', async () => ({ status: 'ok' }))
@@ -151,6 +162,29 @@ export function buildApp({
     return user
   }
 
+  function sendStorefrontAssetError(error, reply) {
+    if (error.statusCode === 413 || error.message === 'asset_too_large') {
+      return reply.code(413).send({ error: 'asset_too_large', details: error.details || null })
+    }
+    if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+      return reply.code(403).send({ error: error.message })
+    }
+    if ([
+      'invalid_asset_file',
+      'invalid_asset_path',
+      'invalid_asset_purpose',
+      'invalid_asset_type',
+      'invalid_asset_dimensions'
+    ].includes(error.message)) {
+      return reply.code(400).send({ error: error.message, details: error.details || null })
+    }
+    if (error.message === 'storefront_asset_quota_exceeded') {
+      return reply.code(409).send({ error: error.message, details: error.details })
+    }
+    app.log.error({ err: error }, 'Storefront asset operation failed')
+    return reply.code(503).send({ error: 'storefront_asset_storage_failed' })
+  }
+
   app.post('/api/auth/handoff', async (request, reply) => {
     if (!authHandoff) return reply.code(503).send({ error: 'auth_handoff_unavailable' })
     try {
@@ -183,6 +217,57 @@ export function buildApp({
       }
       app.log.error({ err: error }, 'Customer auth handoff exchange failed')
       return reply.code(503).send({ error: 'auth_handoff_unavailable' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/assets/:purpose', {
+    bodyLimit: maxStorefrontAssetRequestBytes
+  }, async (request, reply) => {
+    if (!storefrontAssets) {
+      return reply.code(503).send({ error: 'storefront_assets_unavailable' })
+    }
+    try {
+      const accessToken = readBearerToken(request.headers.authorization)
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      if (!request.isMultipart()) {
+        return reply.code(415).send({ error: 'multipart_required' })
+      }
+      const file = await request.file()
+      if (!file || file.fieldname !== 'file') {
+        return reply.code(400).send({ error: 'invalid_asset_file' })
+      }
+      const buffer = await file.toBuffer()
+      const result = await storefrontAssets.upload({
+        userId: user.id,
+        accessToken,
+        storefrontId: request.params.storefrontId,
+        purpose: request.params.purpose,
+        claimedMimeType: file.mimetype,
+        buffer
+      })
+      return reply.code(201).send(result)
+    } catch (error) {
+      return sendStorefrontAssetError(error, reply)
+    }
+  })
+
+  app.delete('/api/storefronts/:storefrontId/assets', async (request, reply) => {
+    if (!storefrontAssets) {
+      return reply.code(503).send({ error: 'storefront_assets_unavailable' })
+    }
+    try {
+      const accessToken = readBearerToken(request.headers.authorization)
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await storefrontAssets.remove({
+        userId: user.id,
+        accessToken,
+        storefrontId: request.params.storefrontId,
+        path: request.body?.path
+      })
+    } catch (error) {
+      return sendStorefrontAssetError(error, reply)
     }
   })
 
@@ -247,11 +332,16 @@ export function buildApp({
     try {
       const user = await authenticatedUser(request, reply)
       if (!user?.id) return
-      await publishDesignConfig({
+      await saveDesignDraft({
         database,
         userId: user.id,
         storefrontId: request.params.storefrontId,
         settings: request.body
+      })
+      await publishDesignConfig({
+        database,
+        userId: user.id,
+        storefrontId: request.params.storefrontId
       })
       return await completeBrandSetup({
         database, userId: user.id, storefrontId: request.params.storefrontId
@@ -471,7 +561,7 @@ export function buildApp({
     try {
       const user = await authenticatedUser(request, reply)
       if (!user?.id) return
-      return await publishDesignConfig({
+      return await saveDesignDraft({
         database, userId: user.id, storefrontId: request.params.storefrontId,
         settings: request.body
       })
@@ -482,7 +572,29 @@ export function buildApp({
       if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
         return reply.code(403).send({ error: error.message })
       }
-      app.log.error({ err: error }, 'Design configuration publish failed')
+      app.log.error({ err: error }, 'Design draft save failed')
+      return reply.code(503).send({ error: 'design_config_unavailable' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/design/publish', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await publishDesignConfig({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'invalid_design_settings') {
+        return reply.code(400).send({ error: 'invalid_design_settings' })
+      }
+      if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'storefront_no_draft_changes') {
+        return reply.code(409).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Design draft publish failed')
       return reply.code(503).send({ error: 'design_config_unavailable' })
     }
   })
@@ -506,7 +618,7 @@ export function buildApp({
     try {
       const user = await authenticatedUser(request, reply)
       if (!user?.id) return
-      return await publishContentConfig({
+      return await saveContentDraft({
         database, userId: user.id, storefrontId: request.params.storefrontId,
         settings: request.body
       })
@@ -517,7 +629,29 @@ export function buildApp({
       if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
         return reply.code(403).send({ error: error.message })
       }
-      app.log.error({ err: error }, 'Content configuration publish failed')
+      app.log.error({ err: error }, 'Content draft save failed')
+      return reply.code(503).send({ error: 'content_config_unavailable' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/content/publish', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await publishContentConfig({
+        database, userId: user.id, storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'invalid_content_settings') {
+        return reply.code(400).send({ error: 'invalid_content_settings' })
+      }
+      if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'storefront_no_draft_changes') {
+        return reply.code(409).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Content draft publish failed')
       return reply.code(503).send({ error: 'content_config_unavailable' })
     }
   })

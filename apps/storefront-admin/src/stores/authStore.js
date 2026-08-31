@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { getSupabaseClient, isSupabaseConfigured } from '../services/supabase'
 import { resolveSelectedStoreId } from '../services/storeSelection'
 import { resolveStorefrontAdminPermissions } from '../services/cmsPermissions'
+import { requestPasswordRecovery } from '../services/passwordRecovery'
 
 let authSubscription = null
 let initializationPromise = null
@@ -194,6 +195,39 @@ export const useAuthStore = defineStore('auth', {
           }
         })
         if (error) throw error
+      } catch (error) {
+        this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async requestPasswordReset(email) {
+      this.loading = true
+      this.error = ''
+
+      try {
+        const client = getSupabaseClient()
+        await requestPasswordRecovery(client, email)
+      } catch (error) {
+        this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async updatePassword(password) {
+      this.loading = true
+      this.error = ''
+
+      try {
+        const client = getSupabaseClient()
+        const { data, error } = await client.auth.updateUser({ password })
+        if (error) throw error
+        this.user = data.user
+        return data
       } catch (error) {
         this.error = error.message
         throw error

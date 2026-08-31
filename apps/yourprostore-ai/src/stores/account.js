@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase.js'
+import { requestPasswordRecovery } from '../services/passwordRecovery.js'
 
 export const useAccountStore = defineStore('account', {
   state: () => ({ session: null, user: null, workspace: null, ready: false }),
@@ -43,6 +44,17 @@ export const useAccountStore = defineStore('account', {
       this.session = data.session
       this.user = data.user
       if (data.session) await this.loadAccount()
+      return data
+    },
+    async requestPasswordReset(email) {
+      if (!supabase) throw new Error('supabase_not_configured')
+      await requestPasswordRecovery(supabase, email)
+    },
+    async updatePassword(password) {
+      if (!supabase) throw new Error('supabase_not_configured')
+      const { data, error } = await supabase.auth.updateUser({ password })
+      if (error) throw error
+      this.user = data.user
       return data
     },
     async signOut() {

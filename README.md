@@ -79,6 +79,35 @@ Supabase tablo, RLS policy ve migration adları bu uygulama yeniden adlandırmas
 etkilenmez. `DATABASE_URL` ve Supabase anahtarları yalnızca `.env` veya production
 secret manager içinde tutulmalıdır.
 
+Storefront görselleri API üzerinden yüklenir. Backend gerçek JPEG/PNG/WEBP formatını,
+dosya boyutunu, kullanım alanına göre piksel ölçülerini ve storefront başına 25 MB
+kotayı doğrular. Browser rolleri Supabase Storage'a API tarafından üretilen kısa ömürlü
+tek kullanımlık izin olmadan yazamaz.
+
+Storefront-admin tasarım ve içerik değişikliklerini önce mağazaya ait `draft` sürümüne
+kaydeder. Canlı mağaza yalnız ayrı yayınlama eylemiyle ve transaction içinde güncellenir.
+Tasarım ile içerik ayrı yetki kapsamlarıdır; bir kapsam yayınlanırken diğer kapsamdaki
+bekleyen taslak değişiklikler korunur.
+
+## Parola kurtarma
+
+`yourprostore-ai` ve `storefront-admin` giriş ekranları Supabase Auth parola kurtarma
+akışını kullanır. Kullanıcıya hesap bulunup bulunmadığını açıklamayan bir yanıt verilir;
+e-postadaki tek kullanımlık bağlantı `/update-password` sayfasında recovery oturumu
+oluşturduktan sonra yeni parola iki kez doğrulanarak kaydedilir. Service-role anahtarı
+browser'a verilmez.
+
+Supabase Dashboard → Authentication → URL Configuration → Redirect URLs listesinde
+geliştirme için aşağıdaki adresler bulunmalıdır:
+
+```text
+http://127.0.0.1:5174/update-password
+http://127.0.0.1:5175/update-password
+```
+
+Production ortamında aynı listenin `https://manage.yourprostore.ai/update-password`
+ve `https://yourprostore.ai/update-password` adreslerini de içermesi gerekir.
+
 ## Stripe mağaza abonelikleri
 
 Günlük geliştirme ve sihirbaz testlerinde gerçek ödeme yerine aşağıdaki güvenli mock

@@ -5,6 +5,8 @@ import DesignPage from './views/DesignPage.vue'
 import DomainsPage from './views/DomainsPage.vue'
 import AuthHandoffPage from './views/AuthHandoffPage.vue'
 import ContentPage from './views/ContentPage.vue'
+import ForgotPasswordPage from './views/ForgotPasswordPage.vue'
+import UpdatePasswordPage from './views/UpdatePasswordPage.vue'
 import { useAuthStore } from './stores/authStore'
 import { pinia } from './stores/pinia'
 
@@ -25,6 +27,17 @@ const router = createRouter({
       name: 'login',
       component: LoginPage,
       meta: { guestOnly: true }
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: ForgotPasswordPage,
+      meta: { guestOnly: true }
+    },
+    {
+      path: '/update-password',
+      name: 'update-password',
+      component: UpdatePasswordPage
     },
     {
       path: '/dashboard',

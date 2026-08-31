@@ -30,6 +30,7 @@
     "db:migrate:banner-catalog": "npm run db:migrate:banner-catalog --workspace @yourprostore/api",
     "db:migrate:auth-handoff": "npm run db:migrate:auth-handoff --workspace @yourprostore/api",
     "db:migrate:cms-roles": "npm run db:migrate:cms-roles --workspace @yourprostore/api",
+    "db:migrate:asset-validation": "npm run db:migrate:asset-validation --workspace @yourprostore/api",
     "db:seed:glowfield": "npm run db:seed:glowfield --workspace @yourprostore/api",
     "db:claim:glowfield-owner": "npm run db:claim:glowfield-owner --workspace @yourprostore/api"
   },

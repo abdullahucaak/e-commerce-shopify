@@ -4,8 +4,8 @@ import {
   assertStorefrontAdminPermission,
   storefrontAdminPermissions
 } from './cms-roles.mjs'
-import { publishContentConfig, DEFAULT_STOREFRONT_CONTENT } from './content-config.mjs'
-import { publishDesignConfig } from './design-config.mjs'
+import { saveContentDraft, DEFAULT_STOREFRONT_CONTENT } from './content-config.mjs'
+import { saveDesignDraft } from './design-config.mjs'
 
 function transactionDatabase(role) {
   const queries = []
@@ -13,8 +13,8 @@ function transactionDatabase(role) {
     async query(sql, parameters = []) {
       queries.push({ sql, parameters })
       if (sql.includes('select membership.role::text')) return { rows: [{ role }] }
-      if (sql.includes('select settings from public.storefront_config_versions')) {
-        return { rows: [{ settings: {} }] }
+      if (sql.includes("status in ('draft', 'published')")) {
+        return { rows: [{ version: 1, status: 'published', settings: {} }] }
       }
       if (sql.includes('select coalesce(max(version)')) return { rows: [{ next_version: 2 }] }
       return { rows: [] }
@@ -68,10 +68,10 @@ test('fails closed for unknown roles and denied capabilities', () => {
   assert.doesNotThrow(() => assertStorefrontAdminPermission('admin', 'domainsWrite'))
 })
 
-test('prevents an editor from publishing design changes', async () => {
+test('prevents an editor from saving design changes', async () => {
   const { database, queries } = transactionDatabase('editor')
   await assert.rejects(
-    publishDesignConfig({
+    saveDesignDraft({
       database,
       userId: 'user-1',
       storefrontId: 'storefront-1',
@@ -83,27 +83,27 @@ test('prevents an editor from publishing design changes', async () => {
     }),
     /storefront_write_denied/
   )
-  assert.equal(queries.some(query => query.sql.includes("values ($1, $2, 'published'")), false)
+  assert.equal(queries.some(query => query.sql.includes("values ($1, $2, 'draft'")), false)
   assert.equal(queries.at(-1).sql, 'rollback')
 })
 
-test('allows an editor to publish content but denies a viewer', async () => {
+test('allows an editor to save content drafts but denies a viewer', async () => {
   const editor = transactionDatabase('editor')
-  const result = await publishContentConfig({
+  const result = await saveContentDraft({
     database: editor.database,
     userId: 'user-1',
     storefrontId: 'storefront-1',
     settings: DEFAULT_STOREFRONT_CONTENT
   })
-  assert.equal(result.version, 2)
+  assert.equal(result.draftVersion, 2)
   assert.equal(
-    editor.queries.some(query => query.sql.includes("values ($1, $2, 'published'")),
+    editor.queries.some(query => query.sql.includes("values ($1, $2, 'draft'")),
     true
   )
 
   const viewer = transactionDatabase('viewer')
   await assert.rejects(
-    publishContentConfig({
+    saveContentDraft({
       database: viewer.database,
       userId: 'user-2',
       storefrontId: 'storefront-1',

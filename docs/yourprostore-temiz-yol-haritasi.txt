@@ -3,18 +3,32 @@ Tarih: 31 Ağustos 2026
 
 GÜNCEL İLERLEME — 1 EYLÜL 2026
 
-- Aşama 1 büyük ölçüde tamamlandı; isim değişiklikleri ve diğer geliştirmeler henüz
-  Git commit'i yapılmamış aynı working tree içinde bulunuyor.
+- Aşama 1 tamamlandı. Uygulama ayrımı ve klasör isim değişiklikleri
+  cb3dfa2 commit'iyle kaydedildi; bu belgeden sonraki CMS güvenliği, taslak/yayın ve
+  parola kurtarma geliştirmeleri henüz commit edilmemiş working tree içindedir.
 - Aşama 2 kod/veritabanı tarafında tamamlandı. Gerçek müşteri oturumuyla son görsel
   uçtan uca kontrol yapılmalı.
 - Aşama 3 temel müşteri alanı tamamlandı: Mağazalarım durumları, Abonelikler özeti,
-  aylık toplam, Hesabım özeti ve çıkış mevcut. Gelişmiş hesap işlemleri daha sonra.
+  aylık toplam, Hesabım özeti, çıkış ve Supabase recovery tabanlı parola sıfırlama
+  mevcut. Gelişmiş hesap işlemleri daha sonra.
 - Aşama 4 güvenli tek kullanımlık SSO olarak kodlandı ve 0013 migration'ı canlı
-  Supabase'e uygulandı. Çalışan API yeniden başlatıldıktan sonra gerçek oturumla
-  buton üzerinden son kontrol yapılmalı.
-- Aşama 5 başladı: owner/admin, editor ve viewer CMS rol matrisi API, UI ve Storage
-  RLS katmanında kodlandı. 0014 migration'ı canlı Supabase'e uygulandı.
-- Aktif geliştirme noktası: AŞAMA 5 — CMS DOSYA DOĞRULAMASI VE TASLAK/YAYIN AYRIMI.
+  Supabase'e uygulandı. Güncel API kodu çalışıyor; gerçek müşteri oturumuyla
+  “Mağazayı yönet” butonundan son tıklamalı kontrol yapılmalı.
+- Aşama 5 devam ediyor: owner/admin, editor ve viewer CMS rol matrisi API, UI ve
+  Storage RLS katmanında kodlandı. 0014 migration'ı canlı Supabase'e uygulandı.
+- CMS/onboarding görsellerinde sunucu taraflı gerçek dosya tipi, boyut, görsel ölçüsü
+  ve mağaza başına 25 MB kota doğrulaması kodlandı. 0015 migration'ı canlı Supabase'e
+  uygulandı.
+- CMS tasarım ve içerik değişikliklerinde taslak kaydetme ile canlı yayın kesin olarak
+  ayrıldı. Kapsam bazlı yayın transaction içinde çalışıyor; editor içerik yayınlarken
+  bekleyen tasarım taslağını canlıya alamıyor. Mevcut veritabanı modeli yeterli olduğu
+  için bu işte yeni migration gerekmedi.
+- `yourprostore-ai` ve `storefront-admin` içinde Supabase recovery tabanlı “Şifremi
+  unuttum” ve yeni parola ekranları eklendi. Gerçek e-posta kontrolünden önce Supabase
+  redirect allowlist'ine yerel `/update-password` adresleri eklenmeli.
+- Son tam doğrulamada 80 API, 2 storefront, 11 storefront-admin ve 11 yourprostore-ai
+  testi geçti; 33 Shopify tema dosyası ile üç production build doğrulandı.
+- Aktif geliştirme noktası: AŞAMA 5 — GERÇEK STOREFRONT TASLAK ÖNİZLEME AKIŞI.
 
 AMAÇ
 
@@ -38,7 +52,8 @@ sağlamak.
    İçerik: Logo, renk, banner, metinler, footer, domain ve önizleme.
    Mevcut kod: apps/storefront-admin
    Planlanan adres: manage.yourprostore.ai
-   Durum: Var; temel CMS çalışıyor, tamamlanması gerekiyor.
+   Durum: Var; rol matrisi, güvenli dosya yükleme ve taslak/yayın ayrımı tamamlandı.
+   Güvenli taslak URL'si, sürüm geçmişi, geri dönüş ve audit log bekliyor.
 
 3) yourprostore-ai
    Kullanıcı: Yeni veya mevcut YourProStore.ai müşterisi.
@@ -46,7 +61,8 @@ sağlamak.
    sihirbazı, mağaza başına abonelik ve müşteri hesap işlemleri.
    Mevcut kod: apps/yourprostore-ai
    Planlanan adres: yourprostore.ai
-   Durum: Var; sihirbazın ve müşteri hesap alanının tamamlanması gerekiyor.
+   Durum: Var; sihirbaz, mağazalar, abonelik özeti, temel hesap ve parola kurtarma
+   tamamlandı. Gelişmiş hesap işlemleri ve gerçek ödeme entegrasyonu bekliyor.
 
 4) yourprostore-ai-admin
    Kullanıcı: Yalnızca YourProStore.ai sahibi ve izin verilen dahili ekip üyeleri.
@@ -150,7 +166,7 @@ AŞAMA 1 — MİMARİYİ VE İSİMLERİ SABİTLE
 4. Eski customer-platform, platform, store-cms ve genel “admin” adlarını aktif
    mimari anlatımından kaldır; yalnızca migration/geçmiş uyumluluk gerekiyorsa sakla.
 5. Mevcut working tree isim değişikliklerini tek, anlaşılır bir Git commit'inde
-   tamamla.
+   tamamla. (cb3dfa2 ile tamamlandı.)
 
 Bitti sayılma koşulu:
 Kod, npm komutları, ortam değişkenleri ve belgeler aynı beş ismi kullanıyor.
@@ -182,7 +198,8 @@ AŞAMA 3 — YOURPROSTORE.AI MÜŞTERİ HESABINI TAMAMLA
 2. Gerçek “Abonelikler” sayfasını ekle:
    mağaza başına plan, durum, aylık ücret ve toplam aylık tutar.
 3. Gerçek “Hesabım” sayfasını ekle:
-   profil, parola, e-posta doğrulaması, oturumlardan çıkış ve hesap işlemleri.
+   temel hesap özeti ve çıkış tamamlandı; parola kurtarma tamamlandı. Profil düzenleme,
+   e-posta değişikliği, bütün oturumlardan çıkış ve hesap silme daha sonra yapılacak.
 4. Birden fazla workspace desteğinin ürün kararı verilene kadar UI davranışını
    açıklaştır; sessizce ilk workspace'i seçme.
 5. Müşterinin mağaza kartına storefront-admin bağlantısını ekle.
@@ -212,17 +229,20 @@ girmeden yalnızca kendi storefront-admin alanına geçebiliyor.
 
 AŞAMA 5 — STOREFRONT-ADMIN CMS'İNİ TAMAMLA
 
-1. Müşteri birden fazla mağazası varsa aktif mağazayı açıkça seçebilsin.
+1. Müşteri birden fazla mağazası varsa aktif mağazayı açıkça seçebilsin. (Tamamlandı.)
 2. Role göre yetki matrisi uygula:
    owner/admin yönetebilir, editor içerik düzenleyebilir, viewer yalnızca görebilir.
+   (Tamamlandı.)
 3. Logo, banner ve içerik dosyalarında tip, boyut, ölçü ve kota doğrulaması ekle.
-4. Taslak kaydetme ile canlı yayınlamayı kesin olarak ayır.
+   (Tamamlandı; JPEG/PNG/WEBP, kullanım alanı limitleri ve mağaza başına 25 MB.)
+4. Taslak kaydetme ile canlı yayınlamayı kesin olarak ayır. (Tamamlandı.)
 5. Taslak için gerçek storefront ile aynı önizleme üret.
-6. Yayınlama işlemini transaction ve sürüm numarasıyla güvenli yap.
+6. Yayınlama işlemini transaction ve sürüm numarasıyla güvenli yap. (Tamamlandı.)
 7. Ayar geçmişi ve önceki sürüme dönüş ekle.
 8. Bütün CMS değişikliklerini audit log'a yaz.
 9. Domain yönetimini DNS/TLS altyapısına hazır hale getir.
 10. Başka storefront ID'si verilerek yetki atlanamadığını test et.
+    (CMS taslak ve dosya işlemlerinde otomatik test var; bütün endpoint taraması Aşama 6'da.)
 
 Bitti sayılma koşulu:
 Müşteri yalnızca yetkili olduğu mağazaları yönetiyor; taslak, önizleme, yayınlama ve
@@ -330,20 +350,20 @@ Gerçek para akışı yalnızca test mode ve pilot kontrolleri tamamlandıktan s
 
 5. HEMEN SIRADAKİ İŞLER
 
-1. Çalışan API'yi yeniden başlatıp gerçek müşteri oturumuyla “Mağazayı yönet” SSO
-   geçişini bir kez doğrulamak.
-2. storefront-admin rol yetki matrisini kesinleştirmek ve backend'de uygulamak.
-3. CMS dosya tipi, boyut, görsel ölçüsü ve mağaza kotası doğrulamasını tamamlamak.
-4. CMS taslak kaydetme ile canlı yayınlamayı ayırmak.
-5. Gerçek storefront ile aynı taslak önizlemeyi tamamlamak.
-6. Transaction'lı yayınlama, sürüm geçmişi ve geri dönüş eklemek.
-7. CMS değişikliklerini audit log'a yazmak.
-8. Başka storefront ID'siyle yetki atlanamadığını otomatik test etmek.
-9. İkinci müşteriyle tenant/RLS/Storage izolasyon testlerini yapmak.
-10. Shopify webhooklarını tamamlamak.
-11. platform_admins + MFA altyapısı ve ardından yourprostore-ai-admin uygulamasını yapmak.
-12. Production/domain altyapısını tamamlamak.
-13. Stripe test mode ve en son live mode'a geçmek.
+1. Supabase redirect allowlist'ine aşağıdaki adresleri ekleyip
+   `abdullahucaak@gmail.com` hesabıyla gerçek parola kurtarma e-postasını doğrulamak:
+   http://127.0.0.1:5174/update-password
+   http://127.0.0.1:5175/update-password
+2. Gerçek müşteri oturumuyla “Mağazayı yönet” SSO geçişini bir kez doğrulamak.
+3. Gerçek storefront ile aynı güvenli taslak önizleme URL'sini tamamlamak.
+4. Ayar sürüm geçmişi ve geri dönüş eklemek.
+5. CMS değişikliklerini audit log'a yazmak.
+6. Bütün API endpoint'lerinde başka storefront ID'siyle yetki atlama taraması yapmak.
+7. İkinci müşteriyle tenant/RLS/Storage izolasyon testlerini yapmak.
+8. Shopify webhooklarını tamamlamak.
+9. platform_admins + MFA altyapısı ve ardından yourprostore-ai-admin uygulamasını yapmak.
+10. Production/domain altyapısını tamamlamak.
+11. Stripe test mode ve en son live mode'a geçmek.
 
 
 6. DEĞİŞTİRİLMEYECEK TEMEL KARARLAR

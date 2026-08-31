@@ -1,7 +1,4 @@
-const BUCKET = 'storefront-assets'
-
 export async function optimizeLogo(file) {
-  if (file.type === 'image/svg+xml') return file
   const bitmap = await createImageBitmap(file)
   const scale = Math.min(1, 1200 / bitmap.width, 600 / bitmap.height)
   const canvas = document.createElement('canvas')
@@ -16,13 +13,55 @@ export async function optimizeLogo(file) {
   return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' })
 }
 
-export async function uploadLogo(client, storefrontId, file) {
-  const extension = file.name.split('.').pop()?.toLowerCase() || 'image'
-  const path = `${storefrontId}/logos/${crypto.randomUUID()}.${extension}`
-  const { error } = await client.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type, cacheControl: '31536000'
+export async function uploadLogo({ accessToken, storefrontId, file }) {
+  const form = new FormData()
+  form.append('file', file)
+  const response = await fetch(`/api/storefronts/${storefrontId}/assets/logo`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form
   })
-  if (error) throw error
-  const { data } = client.storage.from(BUCKET).getPublicUrl(path)
-  return `${data.publicUrl}?v=${Date.now()}`
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const error = new Error(payload.error || 'storefront_asset_request_failed')
+    error.details = payload.details || null
+    throw error
+  }
+  return `${payload.asset.publicUrl}?v=${Date.now()}`
+}
+
+export function getStorefrontAssetPath(publicUrl) {
+  if (!publicUrl) return null
+  try {
+    const url = new URL(publicUrl)
+    const marker = '/storage/v1/object/public/storefront-assets/'
+    const index = url.pathname.indexOf(marker)
+    return index === -1 ? null : decodeURIComponent(url.pathname.slice(index + marker.length))
+  } catch {
+    return null
+  }
+}
+
+export async function removeLogo({ accessToken, storefrontId, publicUrl }) {
+  const path = getStorefrontAssetPath(publicUrl)
+  if (!path) return
+  const response = await fetch(`/api/storefronts/${storefrontId}/assets`, {
+    method: 'DELETE',
+    headers: {
+      'content-type': 'application/json',
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({ path })
+  })
+  if (!response.ok) throw new Error('storefront_asset_remove_failed')
+}
+
+export function logoUploadErrorMessage(error) {
+  if (error?.message === 'asset_too_large') return 'Logo en fazla 2 MB olabilir.'
+  if (error?.message === 'invalid_asset_type') return 'Yalnızca gerçek JPEG, PNG veya WEBP dosyaları yüklenebilir.'
+  if (error?.message === 'invalid_asset_dimensions') {
+    return 'Logo ölçüsü 64×32 ile 2400×1200 piksel arasında olmalı.'
+  }
+  if (error?.message === 'storefront_asset_quota_exceeded') return 'Bu mağazanın 25 MB görsel kotası doldu.'
+  return 'Logo yüklenemedi. Lütfen tekrar dene.'
 }

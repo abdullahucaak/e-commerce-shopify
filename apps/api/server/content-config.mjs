@@ -1,5 +1,8 @@
-import { readDesignConfig } from './design-config.mjs'
-import { assertStorefrontAdminPermission } from './cms-roles.mjs'
+import {
+  publishScopedCmsDraft,
+  readScopedCmsConfig,
+  saveScopedCmsDraft
+} from './cms-config-versions.mjs'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -90,76 +93,61 @@ export function normalizeContentSettings(input) {
   }
 }
 
-export async function readContentConfig({ database, userId, storefrontId }) {
-  const config = await readDesignConfig({ database, userId, storefrontId })
-  if (!config) return null
-  const stored = config.settings?.content || {}
+function contentWithDefaults(stored = {}) {
   return {
-    version: config.version || null,
-    settings: {
-      home: { ...DEFAULT_STOREFRONT_CONTENT.home, ...(stored.home || {}) },
-      shop: { ...DEFAULT_STOREFRONT_CONTENT.shop, ...(stored.shop || {}) },
-      about: { ...DEFAULT_STOREFRONT_CONTENT.about, ...(stored.about || {}) },
-      footer: {
-        ...DEFAULT_STOREFRONT_CONTENT.footer,
-        ...(stored.footer || {}),
-        social: {
-          ...DEFAULT_STOREFRONT_CONTENT.footer.social,
-          ...(stored.footer?.social || {})
-        }
+    home: { ...DEFAULT_STOREFRONT_CONTENT.home, ...(stored.home || {}) },
+    shop: { ...DEFAULT_STOREFRONT_CONTENT.shop, ...(stored.shop || {}) },
+    about: { ...DEFAULT_STOREFRONT_CONTENT.about, ...(stored.about || {}) },
+    footer: {
+      ...DEFAULT_STOREFRONT_CONTENT.footer,
+      ...(stored.footer || {}),
+      social: {
+        ...DEFAULT_STOREFRONT_CONTENT.footer.social,
+        ...(stored.footer?.social || {})
       }
     }
   }
 }
 
-export async function publishContentConfig({ database, userId, storefrontId, settings }) {
+function normalizeStoredContentScope(settings) {
+  return { content: normalizeContentSettings(contentWithDefaults(settings?.content)) }
+}
+
+export async function readContentConfig({ database, userId, storefrontId }) {
+  const config = await readScopedCmsConfig({
+    database, userId, storefrontId, scope: 'content'
+  })
+  if (!config) return null
+  return {
+    ...config,
+    settings: contentWithDefaults(config.settings?.content)
+  }
+}
+
+export async function saveContentDraft({ database, userId, storefrontId, settings }) {
   const normalized = normalizeContentSettings(settings)
-  const client = await database.connect()
-  try {
-    await client.query('begin')
-    const access = await client.query(
-      `select membership.role::text
-       from public.storefronts storefront
-       join public.shopify_stores store on store.id = storefront.shopify_store_id
-       join public.workspace_memberships membership on membership.workspace_id = store.workspace_id
-       where storefront.id = $1 and membership.user_id = $2
-       for update of storefront`,
-      [storefrontId, userId]
-    )
-    if (!access.rows[0]) throw new Error('storefront_access_denied')
-    assertStorefrontAdminPermission(access.rows[0].role, 'contentWrite')
+  const result = await saveScopedCmsDraft({
+    database,
+    userId,
+    storefrontId,
+    scope: 'content',
+    permission: 'contentWrite',
+    normalizedScope: { content: normalized }
+  })
+  return { ...result, settings: normalized }
+}
 
-    const current = await client.query(
-      `select settings from public.storefront_config_versions
-       where storefront_id = $1 and status = 'published'
-       order by version desc limit 1 for update`,
-      [storefrontId]
-    )
-    const versionResult = await client.query(
-      `select coalesce(max(version), 0) + 1 as next_version
-       from public.storefront_config_versions where storefront_id = $1`,
-      [storefrontId]
-    )
-    const version = Number(versionResult.rows[0].next_version)
-    const mergedSettings = { ...(current.rows[0]?.settings || {}), content: normalized }
-
-    await client.query(
-      `update public.storefront_config_versions set status = 'archived'
-       where storefront_id = $1 and status = 'published'`,
-      [storefrontId]
-    )
-    await client.query(
-      `insert into public.storefront_config_versions
-       (storefront_id, version, status, settings, created_by, published_at)
-       values ($1, $2, 'published', $3, $4, now())`,
-      [storefrontId, version, mergedSettings, userId]
-    )
-    await client.query('commit')
-    return { version, settings: normalized }
-  } catch (error) {
-    await client.query('rollback')
-    throw error
-  } finally {
-    client.release()
+export async function publishContentConfig({ database, userId, storefrontId }) {
+  const result = await publishScopedCmsDraft({
+    database,
+    userId,
+    storefrontId,
+    scope: 'content',
+    permission: 'contentWrite',
+    normalizeStoredScope: normalizeStoredContentScope
+  })
+  return {
+    ...result,
+    settings: contentWithDefaults(result.settings?.content)
   }
 }

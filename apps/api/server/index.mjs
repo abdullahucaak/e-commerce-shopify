@@ -9,6 +9,8 @@ import { createStripeBillingService } from './stripe-billing.mjs'
 import { createMockBillingService } from './mock-billing.mjs'
 import { createProductReadinessService } from './product-readiness.mjs'
 import { createAuthHandoffService } from './auth-handoff.mjs'
+import { createSupabaseStorageGateway } from './supabase-storage.mjs'
+import { createStorefrontAssetService } from './storefront-assets.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
@@ -65,6 +67,13 @@ const authHandoff = createAuthHandoffService({
   encryptionSecret: config.authHandoffEncryptionSecret,
   storefrontAdminUrl: config.storefrontAdminAppUrl
 })
+const storefrontAssets = createStorefrontAssetService({
+  database: pool,
+  storageGateway: createSupabaseStorageGateway({
+    supabaseUrl: config.supabaseUrl,
+    publishableKey: config.supabasePublishableKey
+  })
+})
 
 const app = buildApp({
   database: pool,
@@ -76,6 +85,7 @@ const app = buildApp({
   mockBilling,
   productReadiness,
   authHandoff,
+  storefrontAssets,
   billingProvider: config.billingProvider,
   shopifyApiVersion: config.shopifyApiVersion,
   allowStorefrontHostOverride: config.allowStorefrontHostOverride,

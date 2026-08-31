@@ -59,8 +59,13 @@ async function submit() {
       <label v-if="mode === 'register'">İşletme veya marka adı<input v-model="businessName" type="text" maxlength="120" required></label>
       <label>E-posta adresi<input v-model="email" type="email" required></label>
       <label>Şifre<input v-model="password" type="password" minlength="8" required></label>
+      <RouterLink v-if="mode === 'login'" class="text-link forgot-link" to="/forgot-password">Şifremi unuttum</RouterLink>
       <small v-if="mode === 'register'" class="muted">En az 8 karakter kullan.</small>
       <button>{{ mode === 'register' ? 'Hesabımı oluştur ve devam et' : 'Giriş yap' }}</button>
     </form>
   </main>
 </template>
+
+<style scoped>
+.forgot-link{justify-self:end;margin-top:-.5rem;font-size:.88rem}
+</style>
