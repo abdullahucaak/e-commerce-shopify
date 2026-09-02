@@ -15,10 +15,6 @@ import { createStorefrontAssetService } from './server/storefront-assets.mjs'
 import { createStorefrontPreviewService } from './server/storefront-preview.mjs'
 import { createShopDataRedactor } from './server/shop-data-redaction.mjs'
 
-// Vercel statically detects Fastify from this root entrypoint. buildApp owns the
-// actual instance so local and hosted runs share exactly the same application.
-void Fastify
-
 const { Pool } = pg
 const config = loadServerConfig()
 const pool = new Pool({
@@ -94,6 +90,9 @@ const storefrontPreview = createStorefrontPreviewService({
 
 const app = buildApp({
   database: pool,
+  // Keep construction in Vercel's detected entrypoint while buildApp remains
+  // responsible for registering the shared middleware and routes.
+  fastifyFactory: options => Fastify(options),
   verifyAccessToken,
   shopifyOAuth,
   shopifyDomains,

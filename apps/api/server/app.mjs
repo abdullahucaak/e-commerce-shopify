@@ -27,6 +27,7 @@ import {
 
 export function buildApp({
   database,
+  fastifyFactory = Fastify,
   verifyAccessToken = async () => null,
   shopifyOAuth = null,
   shopifyDomains = null,
@@ -67,7 +68,11 @@ export function buildApp({
     : logger === true
       ? { redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
       : logger
-  const app = Fastify({ logger: loggerOptions, trustProxy, bodyLimit: requestBodyLimitBytes })
+  const app = fastifyFactory({
+    logger: loggerOptions,
+    trustProxy,
+    bodyLimit: requestBodyLimitBytes
+  })
   const installIntentCookie = 'yourprostore_shopify_intent'
   const maxStorefrontAssetRequestBytes = (8 * 1024 * 1024) + (64 * 1024)
 
