@@ -1,6 +1,6 @@
 import pg from 'pg'
 import Fastify from 'fastify'
-import { buildApp } from './server/app.mjs'
+import { buildApp, buildFastifyOptions } from './server/app.mjs'
 import { createSupabaseAccessTokenVerifier } from './server/auth.mjs'
 import { loadServerConfig } from './server/config/env.mjs'
 import { createShopifyOAuthService } from './server/shopify-oauth.mjs'
@@ -17,6 +17,10 @@ import { createShopDataRedactor } from './server/shop-data-redaction.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
+const app = Fastify(buildFastifyOptions({
+  trustProxy: config.trustProxy,
+  requestBodyLimitBytes: config.requestBodyLimitBytes
+}))
 const pool = new Pool({
   connectionString: config.databaseUrl,
   ssl: config.databaseSsl ? { rejectUnauthorized: false } : false
@@ -88,11 +92,9 @@ const storefrontPreview = createStorefrontPreviewService({
   signingSecret: config.storefrontPreviewSigningSecret
 })
 
-const app = buildApp({
+buildApp({
   database: pool,
-  // Keep construction in Vercel's detected entrypoint while buildApp remains
-  // responsible for registering the shared middleware and routes.
-  fastifyFactory: options => Fastify(options),
+  fastifyInstance: app,
   verifyAccessToken,
   shopifyOAuth,
   shopifyDomains,

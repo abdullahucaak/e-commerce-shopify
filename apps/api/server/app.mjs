@@ -25,9 +25,37 @@ import {
   skipDomainSetup
 } from './onboarding.mjs'
 
+export function buildFastifyOptions({
+  logger = true,
+  trustProxy = false,
+  requestBodyLimitBytes = 1024 * 1024
+} = {}) {
+  const sensitiveLogPaths = [
+    'req.headers.authorization',
+    'req.headers.cookie',
+    'req.headers["stripe-signature"]',
+    'req.headers["x-shopify-hmac-sha256"]',
+    'err.accessToken',
+    'err.refreshToken',
+    'err.code',
+    'accessToken',
+    'refreshToken',
+    'supabaseServiceRoleKey',
+    'admin_access_token_ciphertext',
+    'storefront_public_access_token'
+  ]
+  const loggerOptions = logger && typeof logger === 'object'
+    ? { ...logger, redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
+    : logger === true
+      ? { redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
+      : logger
+
+  return { logger: loggerOptions, trustProxy, bodyLimit: requestBodyLimitBytes }
+}
+
 export function buildApp({
   database,
-  fastifyFactory = Fastify,
+  fastifyInstance = null,
   verifyAccessToken = async () => null,
   shopifyOAuth = null,
   shopifyDomains = null,
@@ -49,30 +77,11 @@ export function buildApp({
 } = {}) {
   if (!database?.query) throw new Error('database.query is required.')
 
-  const sensitiveLogPaths = [
-    'req.headers.authorization',
-    'req.headers.cookie',
-    'req.headers["stripe-signature"]',
-    'req.headers["x-shopify-hmac-sha256"]',
-    'err.accessToken',
-    'err.refreshToken',
-    'err.code',
-    'accessToken',
-    'refreshToken',
-    'supabaseServiceRoleKey',
-    'admin_access_token_ciphertext',
-    'storefront_public_access_token'
-  ]
-  const loggerOptions = logger && typeof logger === 'object'
-    ? { ...logger, redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
-    : logger === true
-      ? { redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
-      : logger
-  const app = fastifyFactory({
-    logger: loggerOptions,
+  const app = fastifyInstance || Fastify(buildFastifyOptions({
+    logger,
     trustProxy,
-    bodyLimit: requestBodyLimitBytes
-  })
+    requestBodyLimitBytes
+  }))
   const installIntentCookie = 'yourprostore_shopify_intent'
   const maxStorefrontAssetRequestBytes = (8 * 1024 * 1024) + (64 * 1024)
 
