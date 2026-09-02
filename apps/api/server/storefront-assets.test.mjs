@@ -25,7 +25,7 @@ function databaseFixture({ role = 'owner', usedBytes = 0 } = {}) {
     async query(sql, parameters = []) {
       transactionQueries.push({ sql, parameters })
       if (sql.includes('select store.workspace_id::text')) {
-        return { rows: [{ workspace_id: 'workspace-1', role }] }
+        return { rows: role ? [{ workspace_id: 'workspace-1', role }] : [] }
       }
       if (sql.includes('coalesce(sum(objects.byte_size)')) {
         return { rows: [{ used_bytes: usedBytes }] }
@@ -164,6 +164,11 @@ test('reserves quota, records metadata and uploads through a one-time permit', a
   assert.equal(assetInsert.parameters[8], 400)
   assert.equal(fixture.transactionQueries.some(query =>
     query.sql.includes('insert into private.storefront_asset_write_permits')), true)
+  const audit = fixture.transactionQueries.find(query =>
+    query.sql.includes("'cms.asset.upload_authorized'"))
+  assert.equal(audit.parameters[0], 'workspace-1')
+  assert.equal(audit.parameters[2], 'storefront-1')
+  assert.equal(audit.parameters[3].purpose, 'hero')
 })
 
 test('denies disallowed roles and a storefront quota overflow before storage', async () => {
@@ -205,6 +210,21 @@ test('denies disallowed roles and a storefront quota overflow before storage', a
   assert.equal(quotaStorage.uploads.length, 0)
 })
 
+test('denies an asset upload before reservation when storefront membership is missing', async () => {
+  const buffer = await imageBuffer(400, 400)
+  const fixture = databaseFixture({ role: null })
+  const storage = storageFixture()
+  const service = createStorefrontAssetService({ database: fixture.database, storageGateway: storage.gateway })
+
+  await assert.rejects(service.upload({
+    userId: 'tenant-a-user', accessToken: 'access-token', storefrontId: 'tenant-b',
+    purpose: 'about', claimedMimeType: 'image/png', buffer
+  }), /storefront_access_denied/)
+  assert.equal(storage.uploads.length, 0)
+  assert.equal(fixture.transactionQueries.some(query =>
+    query.sql.includes('insert into public.design_assets')), false)
+})
+
 test('rejects deleting an asset path belonging to another storefront', async () => {
   const fixture = databaseFixture()
   const storage = storageFixture()
@@ -220,4 +240,26 @@ test('rejects deleting an asset path belonging to another storefront', async () 
   }), /invalid_asset_path/)
   assert.equal(storage.removals.length, 0)
   assert.equal(fixture.transactionQueries.length, 0)
+})
+
+test('audits an authorized storefront asset deletion before using its one-time permit', async () => {
+  const fixture = databaseFixture()
+  const storage = storageFixture()
+  const service = createStorefrontAssetService({
+    database: fixture.database,
+    storageGateway: storage.gateway
+  })
+  const path = 'storefront-1/about/11111111-1111-4111-8111-111111111111.webp'
+
+  const result = await service.remove({
+    userId: 'user-1', accessToken: 'access-token', storefrontId: 'storefront-1', path
+  })
+
+  assert.deepEqual(result, { removed: true, path })
+  assert.equal(storage.removals.length, 1)
+  const audit = fixture.transactionQueries.find(query =>
+    query.sql.includes("'cms.asset.delete_authorized'"))
+  assert.deepEqual(audit.parameters, [
+    'workspace-1', 'user-1', 'storefront-1', { storagePath: path, folder: 'about' }
+  ])
 })

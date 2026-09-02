@@ -7,6 +7,7 @@ import AuthHandoffPage from './views/AuthHandoffPage.vue'
 import ContentPage from './views/ContentPage.vue'
 import ForgotPasswordPage from './views/ForgotPasswordPage.vue'
 import UpdatePasswordPage from './views/UpdatePasswordPage.vue'
+import VersionsPage from './views/VersionsPage.vue'
 import { useAuthStore } from './stores/authStore'
 import { pinia } from './stores/pinia'
 
@@ -61,6 +62,12 @@ const router = createRouter({
       path: '/content',
       name: 'content',
       component: ContentPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/versions',
+      name: 'versions',
+      component: VersionsPage,
       meta: { requiresAuth: true }
     }
   ]

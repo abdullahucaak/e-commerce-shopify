@@ -35,7 +35,7 @@ function scopeChanged(draftSettings, publishedSettings, scope) {
 
 async function lockStorefrontAccess(client, { userId, storefrontId, permission }) {
   const access = await client.query(
-    `select membership.role::text
+    `select membership.role::text, store.workspace_id::text
      from public.storefronts storefront
      join public.shopify_stores store on store.id = storefront.shopify_store_id
      join public.workspace_memberships membership
@@ -46,6 +46,16 @@ async function lockStorefrontAccess(client, { userId, storefrontId, permission }
   )
   if (!access.rows[0]) throw new Error('storefront_access_denied')
   assertStorefrontAdminPermission(access.rows[0].role, permission)
+  return access.rows[0]
+}
+
+async function writeCmsAudit(client, { workspaceId, userId, storefrontId, action, metadata }) {
+  await client.query(
+    `insert into private.audit_logs (
+       workspace_id, actor_user_id, action, target_type, target_id, metadata
+     ) values ($1, $2, $3, 'storefront', $4, $5)`,
+    [workspaceId, userId, action, storefrontId, metadata]
+  )
 }
 
 async function readLockedVersions(client, storefrontId) {
@@ -128,6 +138,116 @@ export async function readScopedCmsConfig({ database, userId, storefrontId, scop
   return responseState({ scope, published, draft, effectiveSettings })
 }
 
+export async function listCmsConfigVersions({ database, userId, storefrontId, limit = 25 }) {
+  const safeLimit = Math.min(Math.max(Number(limit) || 25, 1), 100)
+  const result = await database.query(
+    `select version.version, version.status::text, version.created_at,
+            version.updated_at, version.published_at,
+            version.created_by, auth_user.email as created_by_name
+     from public.storefronts storefront
+     join public.shopify_stores store on store.id = storefront.shopify_store_id
+     join public.workspace_memberships membership
+       on membership.workspace_id = store.workspace_id and membership.user_id = $1
+     join public.storefront_config_versions version on version.storefront_id = storefront.id
+     left join auth.users auth_user on auth_user.id = version.created_by
+     where storefront.id = $2
+     order by version.version desc
+     limit $3`,
+    [userId, storefrontId, safeLimit]
+  )
+  if (!result.rows.length) return null
+  return result.rows.map(row => ({
+    version: Number(row.version),
+    status: row.status,
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null,
+    publishedAt: row.published_at || null,
+    createdBy: row.created_by || null,
+    createdByName: row.created_by_name || null
+  }))
+}
+
+export async function restoreCmsConfigVersion({ database, userId, storefrontId, version }) {
+  const targetVersion = Number(version)
+  if (!Number.isInteger(targetVersion) || targetVersion < 1) {
+    throw new Error('invalid_config_version')
+  }
+  const client = await database.connect()
+  try {
+    await client.query('begin')
+    const access = await lockStorefrontAccess(client, {
+      userId, storefrontId, permission: 'configRestore'
+    })
+    const versions = await readLockedVersions(client, storefrontId)
+    const targetResult = await client.query(
+      `select version, settings
+       from public.storefront_config_versions
+       where storefront_id = $1 and version = $2 and status in ('published', 'archived')
+       limit 1`,
+      [storefrontId, targetVersion]
+    )
+    const target = targetResult.rows[0]
+    if (!target) throw new Error('storefront_config_version_not_found')
+
+    const publishedSettings = versions.published?.settings || {}
+    if (isDeepStrictEqual(target.settings || {}, publishedSettings)) {
+      if (versions.draft) {
+        await client.query(
+          `delete from public.storefront_config_versions
+           where storefront_id = $1 and status = 'draft'`,
+          [storefrontId]
+        )
+      }
+      await writeCmsAudit(client, {
+        workspaceId: access.workspace_id,
+        userId,
+        storefrontId,
+        action: 'cms.config.restored',
+        metadata: { restoredFromVersion: targetVersion, draftVersion: null, matchedPublished: true }
+      })
+      await client.query('commit')
+      return { restoredFromVersion: targetVersion, draftVersion: null, hasUnpublishedChanges: false }
+    }
+
+    const nextResult = await client.query(
+      `select coalesce(max(version), 0) + 1 as next_version
+       from public.storefront_config_versions where storefront_id = $1`,
+      [storefrontId]
+    )
+    const draftVersion = Number(nextResult.rows[0].next_version)
+    if (versions.draft) {
+      await client.query(
+        `update public.storefront_config_versions
+         set version = $2, settings = $3, created_by = $4,
+             updated_at = now(), published_at = null
+         where storefront_id = $1 and status = 'draft'`,
+        [storefrontId, draftVersion, target.settings || {}, userId]
+      )
+    } else {
+      await client.query(
+        `insert into public.storefront_config_versions
+         (storefront_id, version, status, settings, created_by)
+         values ($1, $2, 'draft', $3, $4)`,
+        [storefrontId, draftVersion, target.settings || {}, userId]
+      )
+    }
+    await writeCmsAudit(client, {
+      workspaceId: access.workspace_id,
+      userId,
+      storefrontId,
+      action: 'cms.config.restored',
+      metadata: { restoredFromVersion: targetVersion, draftVersion, matchedPublished: false }
+    })
+    await client.query('commit')
+    return { restoredFromVersion: targetVersion, draftVersion, hasUnpublishedChanges: true }
+  } catch (error) {
+    await client.query('rollback')
+    throw error
+  } finally {
+    client.release()
+  }
+}
+
 export async function saveScopedCmsDraft({
   database,
   userId,
@@ -139,7 +259,7 @@ export async function saveScopedCmsDraft({
   const client = await database.connect()
   try {
     await client.query('begin')
-    await lockStorefrontAccess(client, { userId, storefrontId, permission })
+    const access = await lockStorefrontAccess(client, { userId, storefrontId, permission })
     const versions = await readLockedVersions(client, storefrontId)
     const publishedSettings = versions.published?.settings || {}
     const draftSettings = mergeScope(
@@ -183,6 +303,13 @@ export async function saveScopedCmsDraft({
       draft = { version, settings: draftSettings, updated_at: null }
     }
 
+    await writeCmsAudit(client, {
+      workspaceId: access.workspace_id,
+      userId,
+      storefrontId,
+      action: `cms.${scope}.draft_saved`,
+      metadata: { draftVersion: draft ? Number(draft.version) : null, hasUnpublishedChanges: Boolean(draft) }
+    })
     await client.query('commit')
     const effectiveSettings = draft
       ? mergeScope(publishedSettings, scope, projectScope(draft.settings, scope))
@@ -212,7 +339,7 @@ export async function publishScopedCmsDraft({
   const client = await database.connect()
   try {
     await client.query('begin')
-    await lockStorefrontAccess(client, { userId, storefrontId, permission })
+    const access = await lockStorefrontAccess(client, { userId, storefrontId, permission })
     const versions = await readLockedVersions(client, storefrontId)
     const publishedSettings = versions.published?.settings || {}
     if (!versions.draft || !scopeChanged(versions.draft.settings, publishedSettings, scope)) {
@@ -268,6 +395,13 @@ export async function publishScopedCmsDraft({
       }
     }
 
+    await writeCmsAudit(client, {
+      workspaceId: access.workspace_id,
+      userId,
+      storefrontId,
+      action: `cms.${scope}.published`,
+      metadata: { publishedVersion, remainingDraftVersion: remainingDraft ? Number(remainingDraft.version) : null }
+    })
     await client.query('commit')
     return responseState({
       scope,

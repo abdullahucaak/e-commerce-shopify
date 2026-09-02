@@ -145,6 +145,7 @@ test('returns only the verified user account context', async t => {
         designWrite: true,
         contentWrite: true,
         domainsWrite: true,
+        configRestore: true,
         assetFolders: ['logos', 'hero', 'about']
       },
       stores: [{
@@ -469,6 +470,71 @@ test('returns the published runtime config for the request hostname', async t =>
     features: { new_gallery: true }
   })
   assert.equal(response.body.includes('admin_access_token'), false)
+})
+
+test('returns the draft runtime config only with a host-bound preview token', async t => {
+  let receivedParameters
+  let receivedQuery
+  const app = buildApp({
+    database: {
+      async query(query, parameters) {
+        receivedQuery = query
+        receivedParameters = parameters
+        return { rows: [{ ...STOREFRONT_ROW, config_version: 4 }] }
+      }
+    },
+    storefrontPreview: {
+      verify(token) {
+        assert.equal(token, 'valid-token')
+        return {
+          storefrontId: STOREFRONT_ROW.storefront_id,
+          hostname: 'glowfield.co',
+          exp: 1788343500
+        }
+      }
+    },
+    logger: false,
+    shopifyApiVersion: '2026-07'
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/api/storefront/config',
+    headers: {
+      host: 'glowfield.co',
+      authorization: 'StorefrontPreview valid-token'
+    }
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(receivedParameters, ['glowfield.co', STOREFRONT_ROW.storefront_id])
+  assert.doesNotMatch(receivedQuery, /store_subscriptions/)
+  assert.match(receivedQuery, /storefront[.]status in \('onboarding', 'active'\)/)
+  assert.deepEqual(response.json().preview, {
+    active: true,
+    expiresAt: '2026-09-02T10:05:00.000Z'
+  })
+})
+
+test('rejects a preview token issued for another hostname', async t => {
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    storefrontPreview: {
+      verify: () => ({ storefrontId: 'storefront-1', hostname: 'other.example.com', exp: 1 })
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/api/storefront/config?host=glowfield.co',
+    headers: { host: 'glowfield.co', authorization: 'StorefrontPreview valid-token' }
+  })
+
+  assert.equal(response.statusCode, 403)
+  assert.deepEqual(response.json(), { error: 'storefront_preview_scope_mismatch' })
 })
 
 test('returns 404 for an unknown storefront hostname', async t => {

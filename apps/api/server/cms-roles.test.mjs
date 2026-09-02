@@ -12,7 +12,8 @@ function transactionDatabase(role) {
   const client = {
     async query(sql, parameters = []) {
       queries.push({ sql, parameters })
-      if (sql.includes('select membership.role::text')) return { rows: [{ role }] }
+      if (sql.includes('select membership.role::text')) return { rows: [{ role, workspace_id: 'workspace-1' }] }
+      if (sql.includes('insert into private.audit_logs')) return { rows: [] }
       if (sql.includes("status in ('draft', 'published')")) {
         return { rows: [{ version: 1, status: 'published', settings: {} }] }
       }
@@ -32,6 +33,7 @@ test('maps storefront-admin roles to explicit capabilities', () => {
     designWrite: true,
     contentWrite: true,
     domainsWrite: true,
+    configRestore: true,
     assetFolders: ['logos', 'hero', 'about']
   })
   assert.deepEqual(storefrontAdminPermissions('admin'), storefrontAdminPermissions('owner'))
@@ -39,12 +41,14 @@ test('maps storefront-admin roles to explicit capabilities', () => {
     designWrite: false,
     contentWrite: true,
     domainsWrite: false,
+    configRestore: false,
     assetFolders: ['hero', 'about']
   })
   assert.deepEqual(storefrontAdminPermissions('viewer'), {
     designWrite: false,
     contentWrite: false,
     domainsWrite: false,
+    configRestore: false,
     assetFolders: []
   })
 })
@@ -54,6 +58,7 @@ test('fails closed for unknown roles and denied capabilities', () => {
     designWrite: false,
     contentWrite: false,
     domainsWrite: false,
+    configRestore: false,
     assetFolders: []
   })
   assert.throws(

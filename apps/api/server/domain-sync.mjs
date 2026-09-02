@@ -59,7 +59,7 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     }
   }
 
-  async function syncRecord(row) {
+  async function syncRecord(row, { actorUserId = null, action = 'shopify.domain.synced' } = {}) {
     const storefrontId = row.storefront_id
     const adminToken = decryptAdminToken(row.admin_access_token_ciphertext, encryptionSecret)
     const shop = await shopifyPrimaryDomain({
@@ -141,6 +141,16 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
          where id = $1`,
         [row.shopify_store_id, primaryHostname]
       )
+      await client.query(
+        `insert into private.audit_logs (
+           workspace_id, actor_user_id, action, target_type, target_id, metadata
+         ) values ($1, $2, $3, 'storefront', $4, $5)`,
+        [row.workspace_id, actorUserId, action, storefrontId, {
+          primaryHostname,
+          hostnames,
+          sslEnabled: Boolean(shop.primaryDomain.sslEnabled)
+        }]
+      )
       await client.query('commit')
     } catch (error) {
       await client.query('rollback')
@@ -153,6 +163,7 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
   async function sync({ userId, storefrontId }) {
     const access = await database.query(
       `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
+              store.workspace_id::text,
               store.current_myshopify_domain, membership.role::text,
               credentials.admin_access_token_ciphertext
        from public.storefronts storefront
@@ -167,13 +178,14 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     if (!row) throw new Error('storefront_access_denied')
     assertStorefrontAdminPermission(row.role, 'domainsWrite')
 
-    await syncRecord(row)
+    await syncRecord(row, { actorUserId: userId, action: 'cms.domain.synced' })
     return read({ userId, storefrontId })
   }
 
   async function syncStore({ shopifyStoreId }) {
     const result = await database.query(
       `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
+              store.workspace_id::text,
               store.current_myshopify_domain, credentials.admin_access_token_ciphertext
        from public.storefronts storefront
        join public.shopify_stores store on store.id = storefront.shopify_store_id

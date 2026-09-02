@@ -1,21 +1,25 @@
 YOURPROSTORE.AI — TEMİZ MİMARİ VE UYGULAMA YOL HARİTASI
 Tarih: 31 Ağustos 2026
 
-GÜNCEL İLERLEME — 1 EYLÜL 2026
+GÜNCEL İLERLEME — 2 EYLÜL 2026
 
 - Aşama 1 tamamlandı. Uygulama ayrımı ve klasör isim değişiklikleri
-  cb3dfa2 commit'iyle kaydedildi; bu belgeden sonraki CMS güvenliği, taslak/yayın ve
-  parola kurtarma geliştirmeleri henüz commit edilmemiş working tree içindedir.
-- Aşama 2 kod/veritabanı tarafında tamamlandı. Gerçek müşteri oturumuyla son görsel
-  uçtan uca kontrol yapılmalı.
+  cb3dfa2 commit'iyle; CMS asset güvenliği, taslak/yayın ayrımı ve parola kurtarma
+  222a41d commit'iyle kaydedildi. Bu belgede anlatılan güvenli taslak önizleme,
+  sürüm geçmişi, audit genişletmeleri, tenant taraması ve ikinci müşteri OAuth
+  geliştirmeleri henüz commit edilmemiş working tree içindedir.
+- Aşama 2 kod/veritabanı ve temel uçtan uca akışlar bakımından tamamlandı. İkinci
+  gerçek müşteri oturumundan ayrı Shopify Dev Store bağlantısı da doğrulandı.
 - Aşama 3 temel müşteri alanı tamamlandı: Mağazalarım durumları, Abonelikler özeti,
   aylık toplam, Hesabım özeti, çıkış ve Supabase recovery tabanlı parola sıfırlama
   mevcut. Gelişmiş hesap işlemleri daha sonra.
 - Aşama 4 güvenli tek kullanımlık SSO olarak kodlandı ve 0013 migration'ı canlı
-  Supabase'e uygulandı. Güncel API kodu çalışıyor; gerçek müşteri oturumuyla
-  “Mağazayı yönet” butonundan son tıklamalı kontrol yapılmalı.
-- Aşama 5 devam ediyor: owner/admin, editor ve viewer CMS rol matrisi API, UI ve
-  Storage RLS katmanında kodlandı. 0014 migration'ı canlı Supabase'e uygulandı.
+  Supabase'e uygulandı. Gerçek müşteri oturumuyla “Mağazayı yönet” butonundan
+  parolasız storefront-admin geçişi doğrulandı.
+- Aşama 5 tamamlandı: owner/admin, editor ve viewer CMS rol matrisi; güvenli asset
+  işlemleri; taslak/yayın ayrımı; mağaza kapsamlı imzalı önizleme; sürüm geçmişi,
+  güvenli geri dönüş ve CMS audit kayıtları tamamlandı. 0014 ve 0015 migration'ları
+  canlı Supabase'e uygulandı.
 - CMS/onboarding görsellerinde sunucu taraflı gerçek dosya tipi, boyut, görsel ölçüsü
   ve mağaza başına 25 MB kota doğrulaması kodlandı. 0015 migration'ı canlı Supabase'e
   uygulandı.
@@ -23,12 +27,23 @@ GÜNCEL İLERLEME — 1 EYLÜL 2026
   ayrıldı. Kapsam bazlı yayın transaction içinde çalışıyor; editor içerik yayınlarken
   bekleyen tasarım taslağını canlıya alamıyor. Mevcut veritabanı modeli yeterli olduğu
   için bu işte yeni migration gerekmedi.
+- İkinci gerçek müşteri (`kaiwins` workspace'i) oluşturuldu. İki kullanıcı yönünde
+  canlı read-only RLS kontrolünde workspace, üyelik, mağaza, storefront, domain,
+  config, asset ve onboarding kayıtları karşı tenant'a 0 satır döndürdü; abonelik
+  tablosuna browser rolü doğrudan erişemiyor. Public bucket metadata listeleme açığı
+  0016 migration'ıyla kapatıldı; public görsel tesliminin HTTP 200 kaldığı doğrulandı.
+- İkinci müşteri için `Kai Wins Tenant Dev` Shopify mağazası gerçek OAuth akışıyla
+  bağlandı. Shopify mağaza seçimi dönüşündeki `127.0.0.1`/`localhost` çerez sınırı
+  keşfedilip, doğrulanmış `shop` değerini müşteri oturumuna bağlı standart OAuth state
+  akışına taşıyan güvenli devam mekanizması eklendi.
 - `yourprostore-ai` ve `storefront-admin` içinde Supabase recovery tabanlı “Şifremi
   unuttum” ve yeni parola ekranları eklendi. Gerçek e-posta kontrolünden önce Supabase
   redirect allowlist'ine yerel `/update-password` adresleri eklenmeli.
-- Son tam doğrulamada 80 API, 2 storefront, 11 storefront-admin ve 11 yourprostore-ai
-  testi geçti; 33 Shopify tema dosyası ile üç production build doğrulandı.
-- Aktif geliştirme noktası: AŞAMA 5 — GERÇEK STOREFRONT TASLAK ÖNİZLEME AKIŞI.
+- Son tam doğrulamada 91 API, 2 storefront, 12 storefront-admin ve 14 yourprostore-ai
+  testi olmak üzere toplam 119 test geçti; 33 Shopify tema dosyası ile üç production
+  build doğrulandı.
+- Aktif geliştirme noktası: AŞAMA 6 — ikinci müşterinin storefront/Storage yazma
+  işlemlerinde iki yönlü INSERT/UPDATE/DELETE izolasyonunu tamamlamak.
 
 AMAÇ
 
@@ -53,7 +68,10 @@ sağlamak.
    Mevcut kod: apps/storefront-admin
    Planlanan adres: manage.yourprostore.ai
    Durum: Var; rol matrisi, güvenli dosya yükleme ve taslak/yayın ayrımı tamamlandı.
-   Güvenli taslak URL'si, sürüm geçmişi, geri dönüş ve audit log bekliyor.
+   Beş dakikalık, mağaza kapsamlı imzalı güvenli taslak önizlemesi tamamlandı.
+   Sürüm geçmişi ve canlıyı değiştirmeden yeni taslak oluşturan güvenli geri dönüş tamamlandı.
+   Taslak kaydetme, yayınlama, sürümü taslağa geri yükleme, asset izinleri ve müşteri
+   domain senkronizasyonu audit log'a yazılıyor.
 
 3) yourprostore-ai
    Kullanıcı: Yeni veya mevcut YourProStore.ai müşterisi.
@@ -143,12 +161,12 @@ Auth kullanıcı oluşturma tetikleyicisi düzeltilecek:
 
 Canlı Supabase kontrol özeti:
 
-- 1 Auth kullanıcısı
-- 1 workspace
-- 1 owner üyeliği
-- 2 Shopify mağazası
-- 2 storefront
-- 2 mağaza aboneliği
+- 2 Auth kullanıcısı
+- 2 workspace
+- 2 owner üyeliği
+- 3 Shopify mağazası
+- 3 storefront
+- 3 mağaza aboneliği
 - Müşteri tablolarında RLS etkin ve üyelik bazlı SELECT politikaları mevcut.
 - Platform yöneticisi tablosu ve platform-admin RLS/yetki modeli henüz yok.
 
@@ -236,13 +254,19 @@ AŞAMA 5 — STOREFRONT-ADMIN CMS'İNİ TAMAMLA
 3. Logo, banner ve içerik dosyalarında tip, boyut, ölçü ve kota doğrulaması ekle.
    (Tamamlandı; JPEG/PNG/WEBP, kullanım alanı limitleri ve mağaza başına 25 MB.)
 4. Taslak kaydetme ile canlı yayınlamayı kesin olarak ayır. (Tamamlandı.)
-5. Taslak için gerçek storefront ile aynı önizleme üret.
+5. Taslak için gerçek storefront ile aynı önizleme üret. (Tamamlandı; beş dakikalık,
+   mağaza ve hostname kapsamlı HMAC tokenı URL fragment içinde taşınıyor.)
 6. Yayınlama işlemini transaction ve sürüm numarasıyla güvenli yap. (Tamamlandı.)
-7. Ayar geçmişi ve önceki sürüme dönüş ekle.
-8. Bütün CMS değişikliklerini audit log'a yaz.
-9. Domain yönetimini DNS/TLS altyapısına hazır hale getir.
+7. Ayar geçmişi ve önceki sürüme dönüş ekle. (Tamamlandı; canlı sürüm doğrudan
+   değiştirilmeden seçilen sürümden yeni taslak oluşturuluyor.)
+8. Bütün CMS değişikliklerini audit log'a yaz. (Tamamlandı; taslak kaydetme,
+   yayınlama, geri yükleme, asset işlemleri ve müşteri domain senkronizasyonu.)
+9. Domain yönetimini DNS/TLS altyapısına hazır hale getir. (Uygulama katmanı
+   tamamlandı; production DNS/custom hostname/TLS otomasyonu Aşama 10'da.)
 10. Başka storefront ID'si verilerek yetki atlanamadığını test et.
-    (CMS taslak ve dosya işlemlerinde otomatik test var; bütün endpoint taraması Aşama 6'da.)
+    (Tamamlandı; storefront kimliği alan 24 route ailesi başka tenant kimliğiyle
+    403/404 verir ve yazma sorgusu çalıştırmaz. Multipart upload ayrıca servis
+    seviyesinde üyelik yokken reservation/Storage öncesinde reddedilir.)
 
 Bitti sayılma koşulu:
 Müşteri yalnızca yetkili olduğu mağazaları yönetiyor; taslak, önizleme, yayınlama ve
@@ -251,10 +275,14 @@ geri dönüş güvenilir şekilde çalışıyor.
 
 AŞAMA 6 — MÜŞTERİ İZOLASYONU VE GÜVENLİK
 
-1. İkinci gerçek Supabase test kullanıcısı ve ikinci workspace oluştur.
+1. İkinci gerçek Supabase test kullanıcısı ve ikinci workspace oluştur. (Tamamlandı.)
 2. İki kullanıcı ve en az iki mağazayla uçtan uca tenant izolasyon testi yap.
+   (Read-only RLS ve müşteri UI/OAuth yönü tamamlandı; iki yönlü yazma senaryoları
+   devam ediyor.)
 3. API endpoint'lerinin tamamında kullanıcı + workspace + storefront kontrolünü doğrula.
+   (Tamamlandı; storefront kimliği alan 24 route ailesi tarandı.)
 4. RLS politikalarını tablo bazında SELECT/INSERT/UPDATE/DELETE yönünden denetle.
+   (SELECT tamamlandı; INSERT/UPDATE/DELETE canlı doğrulaması devam ediyor.)
 5. Storage yükleme, güncelleme ve silme politikalarını iki müşteriyle test et.
 6. Shopify Admin tokenının hiçbir browser yanıtına/loguna girmediğini doğrula.
 7. Rate limit, dosya kotası, güvenli header, CORS ve request boyutu limitlerini ekle.
@@ -263,6 +291,37 @@ AŞAMA 6 — MÜŞTERİ İZOLASYONU VE GÜVENLİK
 Bitti sayılma koşulu:
 İki ayrı müşteri hiçbir API, RLS, Storage veya UI yolu üzerinden birbirinin verisini
 göremiyor veya değiştiremiyor.
+
+2 EYLÜL 2026 TENANT İZOLASYONU TEST NOTU
+
+- Bu test ürünün normal kullanım modelini değiştirmek için değil, iki ayrı
+  YourProStore müşterisinin birbirinin verisine erişemediğini doğrulamak için yapıldı.
+- İkinci Supabase müşterisi `kaiwins@icloud.com`, `kaiwins` workspace'i ve ayrı bir
+  storefront ile kullanıldı. Shopify tarafında uygulamanın sahibi olan GlowField
+  geliştirme organizasyonu altında `Kai Wins Tenant Dev`
+  (`kai-wins-tenant-dev.myshopify.com`) Dev Store'u oluşturuldu ve yalnızca ikinci
+  müşteriye bağlandı. Oluşan storefront kimliği
+  `d32e579c-54e1-458e-b96b-3fe3ac92eace` oldu.
+- İki Shopify mağazasının aynı geliştirici hesabı altında olması bilinçli ve yalnızca
+  draft uygulama testi içindir. Tenant sınırı Shopify'a giriş yapan kişiyle değil;
+  YourProStore kullanıcısı, workspace, Shopify mağaza kimliği ve mağazaya özel OAuth
+  tokenıyla kurulmaktadır. Tek YourProStore hesabına iki mağaza bağlamak, iki ayrı
+  müşteri arasındaki izolasyonu test etmeyeceği için iki müşteri hesabı kullanıldı.
+- Ayrı Shopify hesabında açılan normal `kai wins music` mağazası draft uygulamayı
+  kuramadı. Aynı hesap altında açılan `Kai Wins Music Dev` mağazası da GlowField
+  uygulama organizasyonuna ait olmadığı için bu testte kullanılmadı ve platforma
+  bağlanmadı. Bunlar üretim tenant'ı veya hedef ürün mimarisinin parçası değildir.
+- Gerçek bağımsız merchant kurulumu bu testten ayrıdır. Public distribution hazır
+  olduğunda, uygulama sahibinden bağımsız bir Shopify hesabıyla Aşama 10 kapsamında
+  ayrıca doğrulanacaktır.
+- Gerçek bağlantı sırasında mağaza seçim niyetini taşıyan çerezin `127.0.0.1` ile
+  `localhost` arasında paylaşılamadığı görüldü. Shopify'ın doğruladığı `shop` dönüşü,
+  oturum açmış müşteri ve workspace'e bağlı standart OAuth state akışını yeniden
+  başlatacak şekilde düzeltildi; hostlar arası çereze bağımlılık kaldırıldı.
+- Sonuçta ikinci müşteri yalnızca `Kai Wins Tenant Dev` mağazasını gördü. İlk
+  müşterinin workspace, üyelik, mağaza, storefront, domain, config, asset, onboarding
+  ve Storage kayıtları canlı read-only RLS kontrolünde 0 satır döndürdü; abonelik
+  tablosu browser rolüne `permission_denied` döndürdü.
 
 
 AŞAMA 7 — SHOPIFY WEBHOOK VE OPERASYON DAYANIKLILIĞI
@@ -327,9 +386,14 @@ AŞAMA 10 — DOMAIN, HOSTING VE PRODUCTION
 6. Database migration pipeline, yedek ve geri yükleme testi ekle.
 7. Hata izleme, uptime alarmı ve webhook alarmı ekle.
 8. Staging üzerinde tam müşteri ve admin uçtan uca testi yap.
+9. Public distribution yapılandırıldıktan sonra, uygulama sahibinden bağımsız bir
+   Shopify merchant hesabıyla kurulum bağlantısı, OAuth izinleri, callback, token
+   saklama ve mağaza bağlantısını uçtan uca doğrula.
 
 Bitti sayılma koşulu:
-Beş uygulama doğru domainlerde, doğru yetkilerle ve gözlemlenebilir şekilde çalışıyor.
+Beş uygulama doğru domainlerde, doğru yetkilerle ve gözlemlenebilir şekilde çalışıyor;
+en az bir bağımsız Shopify merchant hesabı uygulamayı kurup kendi mağazasını başka
+müşterilerin verileriyle karışmadan bağlayabiliyor.
 
 
 AŞAMA 11 — GERÇEK STRIPE'I EN SON AÇ
@@ -354,16 +418,15 @@ Gerçek para akışı yalnızca test mode ve pilot kontrolleri tamamlandıktan s
    `abdullahucaak@gmail.com` hesabıyla gerçek parola kurtarma e-postasını doğrulamak:
    http://127.0.0.1:5174/update-password
    http://127.0.0.1:5175/update-password
-2. Gerçek müşteri oturumuyla “Mağazayı yönet” SSO geçişini bir kez doğrulamak.
-3. Gerçek storefront ile aynı güvenli taslak önizleme URL'sini tamamlamak.
-4. Ayar sürüm geçmişi ve geri dönüş eklemek.
-5. CMS değişikliklerini audit log'a yazmak.
-6. Bütün API endpoint'lerinde başka storefront ID'siyle yetki atlama taraması yapmak.
-7. İkinci müşteriyle tenant/RLS/Storage izolasyon testlerini yapmak.
-8. Shopify webhooklarını tamamlamak.
-9. platform_admins + MFA altyapısı ve ardından yourprostore-ai-admin uygulamasını yapmak.
-10. Production/domain altyapısını tamamlamak.
-11. Stripe test mode ve en son live mode'a geçmek.
+2. İkinci müşteriye ait test storefront/Storage yazma senaryolarıyla iki yönlü
+   INSERT/UPDATE/DELETE izolasyonunu tamamlamak.
+3. Shopify app/uninstalled, zorunlu gizlilik, retry ve başarısız olay yönetimi dahil
+   webhook dayanıklılığını tamamlamak.
+4. platform_admins + MFA altyapısı ve ardından yourprostore-ai-admin uygulamasını yapmak.
+5. Production/domain altyapısını ve public distribution sürecini tamamlamak; bağımsız
+   Shopify merchant kurulum testini staging üzerinde yapmak.
+6. Stripe test mode'u tamamlamak ve bütün sistem/pilot kontrollerinden sonra en son
+   live mode'a geçmek.
 
 
 6. DEĞİŞTİRİLMEYECEK TEMEL KARARLAR

@@ -17,7 +17,8 @@ function cmsDatabase() {
   const client = {
     async query(sql, parameters = []) {
       if (sql === 'begin' || sql === 'commit' || sql === 'rollback') return { rows: [] }
-      if (sql.includes('select membership.role::text')) return { rows: [{ role: 'editor' }] }
+      if (sql.includes('select membership.role::text')) return { rows: [{ role: 'editor', workspace_id: 'workspace-1' }] }
+      if (sql.includes('insert into private.audit_logs')) return { rows: [] }
       if (sql.includes("status in ('draft', 'published')")) {
         return { rows: [state.published, state.draft].filter(Boolean).map(row => ({ ...row })) }
       }

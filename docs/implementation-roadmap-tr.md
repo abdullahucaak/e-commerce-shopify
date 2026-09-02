@@ -65,7 +65,11 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] Dosya tipi, boyut, görsel ölçüsü ve mağaza kotası doğrulamasını sunucu tarafında ekle
 - [x] Taslak kaydetme ile canlı yayınlamayı ayrı API eylemleri olarak uygula
 - [x] Tasarım ve içerik kapsamlarını birbirinden izole ederek yayınla işlemini transaction içinde yap
-- [ ] Gerçek storefront taslağı için güvenli önizleme URL'si oluştur
+- [x] Gerçek storefront taslağı için mağaza kapsamlı, beş dakikalık güvenli önizleme URL'si oluştur
+- [x] Ayar sürüm geçmişini göster ve eski sürümü canlıyı değiştirmeden yeni taslağa geri yükle
+- [x] CMS taslak kaydetme, yayınlama ve sürüm geri dönüşlerini private audit log'a yaz
+- [x] Storefront kimliği alan API route'larında başka tenant kimliğiyle fail-closed matris testi ekle
+- [x] İki gerçek müşteriyle canlı SELECT RLS izolasyonunu ve Storage metadata ayrımını doğrula
 - [ ] Ayar geçmişi ve geri dönüş işlemi ekle
 - [ ] Değişiklikleri audit log'a yaz
 

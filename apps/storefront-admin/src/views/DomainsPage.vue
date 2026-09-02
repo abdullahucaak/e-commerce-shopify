@@ -85,6 +85,7 @@ onMounted(loadDomains)
         <RouterLink to="/design">Tasarım ayarları</RouterLink>
         <RouterLink to="/content">İçerik ayarları</RouterLink>
         <RouterLink to="/domains">Domain ayarları</RouterLink>
+        <RouterLink to="/versions">Sürüm geçmişi</RouterLink>
       </nav>
     </aside>
 

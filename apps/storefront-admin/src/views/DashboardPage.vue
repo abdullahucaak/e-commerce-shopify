@@ -33,6 +33,7 @@ async function signOut() {
         <RouterLink to="/design" class="nav-link">Tasarım ayarları</RouterLink>
         <RouterLink to="/content" class="nav-link">İçerik ayarları</RouterLink>
         <RouterLink to="/domains" class="nav-link">Domain ayarları</RouterLink>
+        <RouterLink to="/versions" class="nav-link">Sürüm geçmişi</RouterLink>
       </nav>
 
       <button class="sign-out" type="button" :disabled="signingOut" @click="signOut">

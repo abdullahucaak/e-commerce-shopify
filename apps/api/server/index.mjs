@@ -11,6 +11,7 @@ import { createProductReadinessService } from './product-readiness.mjs'
 import { createAuthHandoffService } from './auth-handoff.mjs'
 import { createSupabaseStorageGateway } from './supabase-storage.mjs'
 import { createStorefrontAssetService } from './storefront-assets.mjs'
+import { createStorefrontPreviewService } from './storefront-preview.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
@@ -74,6 +75,10 @@ const storefrontAssets = createStorefrontAssetService({
     publishableKey: config.supabasePublishableKey
   })
 })
+const storefrontPreview = createStorefrontPreviewService({
+  database: pool,
+  signingSecret: config.storefrontPreviewSigningSecret
+})
 
 const app = buildApp({
   database: pool,
@@ -86,6 +91,7 @@ const app = buildApp({
   productReadiness,
   authHandoff,
   storefrontAssets,
+  storefrontPreview,
   billingProvider: config.billingProvider,
   shopifyApiVersion: config.shopifyApiVersion,
   allowStorefrontHostOverride: config.allowStorefrontHostOverride,

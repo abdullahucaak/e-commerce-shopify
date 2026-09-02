@@ -7,6 +7,7 @@ import {
   storefrontAssetErrorMessage,
   uploadStorefrontAsset
 } from '../services/storefrontAssets'
+import { buildStorefrontPreviewUrl, createStorefrontPreview } from '../services/storefrontPreview'
 
 const authStore = useAuthStore()
 const canEditContent = computed(() => authStore.canEditContent)
@@ -19,6 +20,7 @@ const selectedStore = computed(() => stores.value.find(store => store.id === sel
 const previewFrame = ref(null)
 const storefrontUrl = (import.meta.env.VITE_STOREFRONT_PREVIEW_URL || 'http://127.0.0.1:5173/').trim()
 const previewHostname = ref('')
+const previewToken = ref('')
 const previewPage = ref('/')
 const previewPages = [
   { label: 'Ana sayfa', path: '/' },
@@ -26,12 +28,13 @@ const previewPages = [
   { label: 'About Us', path: '/about-us' }
 ]
 const previewUrl = computed(() => {
-  if (!previewHostname.value) return ''
-  const url = new URL(storefrontUrl)
-  url.pathname = previewPage.value
-  url.searchParams.set('preview', 'content')
-  url.searchParams.set('previewHost', previewHostname.value)
-  return url.toString()
+  if (!previewHostname.value || !previewToken.value) return ''
+  return buildStorefrontPreviewUrl({
+    baseUrl: storefrontUrl,
+    page: previewPage.value,
+    hostname: previewHostname.value,
+    token: previewToken.value
+  })
 })
 const liveStorefrontUrl = ref('')
 const loading = ref(false)
@@ -160,6 +163,7 @@ async function loadContent() {
 async function loadPreviewDomain() {
   const storefrontId = selectedStore.value?.storefront?.id
   previewHostname.value = ''
+  previewToken.value = ''
   liveStorefrontUrl.value = ''
   if (!storefrontId) return
   try {
@@ -172,12 +176,20 @@ async function loadPreviewDomain() {
       || activeDomains[0]
     const publicDomain = activeDomains.find(domain => domain.isPrimary && domain.kind === 'custom')
       || activeDomains.find(domain => domain.kind === 'custom')
-    previewHostname.value = previewDomain?.hostname || ''
+    if (previewDomain?.hostname) {
+      const preview = await createStorefrontPreview({
+        accessToken: authStore.session.access_token,
+        storefrontId
+      })
+      previewHostname.value = preview.hostname
+      previewToken.value = preview.token
+    }
     liveStorefrontUrl.value = publicDomain
       ? `https://${publicDomain.hostname}`
       : previewUrl.value
   } catch {
     previewHostname.value = ''
+    previewToken.value = ''
   }
 }
 
@@ -331,6 +343,7 @@ onMounted(loadSelectedStore)
         <RouterLink to="/design">Tasarım ayarları</RouterLink>
         <RouterLink to="/content">İçerik ayarları</RouterLink>
         <RouterLink to="/domains">Domain ayarları</RouterLink>
+        <RouterLink to="/versions">Sürüm geçmişi</RouterLink>
       </nav>
     </aside>
     <main>
@@ -357,7 +370,7 @@ onMounted(loadSelectedStore)
               </select>
             </label>
           </div>
-          <iframe v-if="previewUrl" ref="previewFrame" :src="previewUrl" title="Mağaza içerik önizlemesi" @load="sendPreview"></iframe>
+          <iframe v-if="previewUrl" ref="previewFrame" :src="previewUrl" title="Mağaza içerik önizlemesi" referrerpolicy="no-referrer" @load="sendPreview"></iframe>
           <p v-else class="preview-unavailable">Bu mağazanın önizlemesi için önce Domain ayarları bölümünden Shopify domainlerini güncelle.</p>
         </section>
         <section>

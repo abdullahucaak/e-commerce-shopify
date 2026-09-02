@@ -3,14 +3,15 @@ import test from 'node:test'
 import {
   publishScopedCmsDraft,
   readScopedCmsConfig,
+  restoreCmsConfigVersion,
   saveScopedCmsDraft
 } from './cms-config-versions.mjs'
 
-function transactionDatabase({ role = 'owner', published = null, draft = null } = {}) {
+function transactionDatabase({ role = 'owner', published = null, draft = null, archived = [] } = {}) {
   const state = {
     published: published ? { ...published, status: 'published' } : null,
     draft: draft ? { ...draft, status: 'draft' } : null,
-    archived: []
+    archived: archived.map(row => ({ ...row, status: 'archived' }))
   }
   const queries = []
   const client = {
@@ -18,10 +19,16 @@ function transactionDatabase({ role = 'owner', published = null, draft = null } 
       queries.push({ sql, parameters })
       if (sql === 'begin' || sql === 'commit' || sql === 'rollback') return { rows: [] }
       if (sql.includes('select membership.role::text')) {
-        return { rows: role ? [{ role }] : [] }
+        return { rows: role ? [{ role, workspace_id: 'workspace-1' }] : [] }
       }
+      if (sql.includes('insert into private.audit_logs')) return { rows: [] }
       if (sql.includes("status in ('draft', 'published')")) {
         return { rows: [state.published, state.draft].filter(Boolean).map(row => ({ ...row })) }
+      }
+      if (sql.includes("status in ('published', 'archived')")) {
+        const target = [state.published, ...state.archived]
+          .find(row => Number(row?.version) === Number(parameters[1]))
+        return { rows: target ? [{ ...target }] : [] }
       }
       if (sql.includes('select coalesce(max(version)')) {
         const versions = [...state.archived, state.published, state.draft]
@@ -258,5 +265,53 @@ test('does not read or write a storefront outside the user membership', async ()
     /storefront_access_denied/
   )
   assert.equal(fixture.state.draft, null)
+  assert.equal(fixture.queries.at(-1).sql, 'rollback')
+})
+
+test('restores an archived version into a new draft without changing live settings', async () => {
+  const oldSettings = { ...publishedSettings, brand: { name: 'Older brand' } }
+  const fixture = transactionDatabase({
+    published: { version: 4, settings: publishedSettings },
+    draft: { version: 5, settings: { ...publishedSettings, brand: { name: 'Pending brand' } } },
+    archived: [{ version: 2, settings: oldSettings }]
+  })
+
+  const result = await restoreCmsConfigVersion({
+    database: fixture.database,
+    userId: 'user-1',
+    storefrontId: 'storefront-1',
+    version: 2
+  })
+
+  assert.deepEqual(result, {
+    restoredFromVersion: 2,
+    draftVersion: 6,
+    hasUnpublishedChanges: true
+  })
+  assert.equal(fixture.state.published.settings.brand.name, 'Live brand')
+  assert.equal(fixture.state.draft.settings.brand.name, 'Older brand')
+  const audit = fixture.queries.find(query => query.sql.includes('insert into private.audit_logs'))
+  assert.deepEqual(audit.parameters, [
+    'workspace-1', 'user-1', 'cms.config.restored', 'storefront-1',
+    { restoredFromVersion: 2, draftVersion: 6, matchedPublished: false }
+  ])
+  assert.equal(fixture.queries.at(-1).sql, 'commit')
+})
+
+test('denies full configuration restore to an editor', async () => {
+  const fixture = transactionDatabase({
+    role: 'editor',
+    published: { version: 3, settings: publishedSettings },
+    archived: [{ version: 1, settings: { ...publishedSettings, brand: { name: 'Old' } } }]
+  })
+  await assert.rejects(
+    restoreCmsConfigVersion({
+      database: fixture.database,
+      userId: 'editor-1',
+      storefrontId: 'storefront-1',
+      version: 1
+    }),
+    /storefront_write_denied/
+  )
   assert.equal(fixture.queries.at(-1).sql, 'rollback')
 })

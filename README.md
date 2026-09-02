@@ -89,6 +89,10 @@ kaydeder. Canlı mağaza yalnız ayrı yayınlama eylemiyle ve transaction için
 Tasarım ile içerik ayrı yetki kapsamlarıdır; bir kapsam yayınlanırken diğer kapsamdaki
 bekleyen taslak değişiklikler korunur.
 
+CMS gerçek storefront önizlemesi için API'den beş dakika geçerli, imzalı ve mağazaya
+bağlı bir token alır. Token URL fragment'ında tutulur ve storefront tarafından özel
+Authorization başlığıyla gönderilir; normal ziyaretçiler yalnız yayınlanmış ayarı görür.
+
 ## Parola kurtarma
 
 `yourprostore-ai` ve `storefront-admin` giriş ekranları Supabase Auth parola kurtarma

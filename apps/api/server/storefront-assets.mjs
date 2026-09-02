@@ -235,7 +235,7 @@ export function createStorefrontAssetService({
 
     try {
       await client.query('begin')
-      await lockStorefrontAccess(client, {
+      const access = await lockStorefrontAccess(client, {
         userId,
         storefrontId,
         permission: inspected.permission
@@ -278,6 +278,19 @@ export function createStorefrontAssetService({
            user_id = excluded.user_id,
            expires_at = excluded.expires_at`,
         [storagePath, userId, permitLifetimeSeconds]
+      )
+      await client.query(
+        `insert into private.audit_logs (
+           workspace_id, actor_user_id, action, target_type, target_id, metadata
+         ) values ($1, $2, 'cms.asset.upload_authorized', 'storefront', $3, $4)`,
+        [access.workspace_id, userId, storefrontId, {
+          purpose,
+          storagePath,
+          mimeType: inspected.mimeType,
+          byteSize: inspected.byteSize,
+          width: inspected.width,
+          height: inspected.height
+        }]
       )
       await client.query('commit')
     } catch (error) {
@@ -327,7 +340,7 @@ export function createStorefrontAssetService({
     const client = await database.connect()
     try {
       await client.query('begin')
-      await lockStorefrontAccess(client, {
+      const access = await lockStorefrontAccess(client, {
         userId,
         storefrontId,
         permission: permissionForFolder(folder)
@@ -343,6 +356,12 @@ export function createStorefrontAssetService({
            user_id = excluded.user_id,
            expires_at = excluded.expires_at`,
         [path, userId, permitLifetimeSeconds]
+      )
+      await client.query(
+        `insert into private.audit_logs (
+           workspace_id, actor_user_id, action, target_type, target_id, metadata
+         ) values ($1, $2, 'cms.asset.delete_authorized', 'storefront', $3, $4)`,
+        [access.workspace_id, userId, storefrontId, { storagePath: path, folder }]
       )
       await client.query('commit')
     } catch (error) {

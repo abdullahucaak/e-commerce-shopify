@@ -79,6 +79,11 @@ export function loadServerConfig() {
       process.env.AUTH_HANDOFF_ENCRYPTION_KEY?.trim() ||
       process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY?.trim() ||
       required('SHOPIFY_CLIENT_SECRET'),
+    storefrontPreviewSigningSecret:
+      process.env.STOREFRONT_PREVIEW_SIGNING_KEY?.trim() ||
+      process.env.AUTH_HANDOFF_ENCRYPTION_KEY?.trim() ||
+      process.env.SHOPIFY_TOKEN_ENCRYPTION_KEY?.trim() ||
+      required('SHOPIFY_CLIENT_SECRET'),
     storefrontAdminAppUrl,
     shopifyApiVersion: process.env.SHOPIFY_API_VERSION?.trim() || '2026-07',
     stripeSecretKey,

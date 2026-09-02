@@ -30,7 +30,8 @@ export const useAuthStore = defineStore('auth', {
     isConfigured: () => isSupabaseConfigured,
     canEditDesign: state => resolveStorefrontAdminPermissions(state.workspace).designWrite,
     canEditContent: state => resolveStorefrontAdminPermissions(state.workspace).contentWrite,
-    canManageDomains: state => resolveStorefrontAdminPermissions(state.workspace).domainsWrite
+    canManageDomains: state => resolveStorefrontAdminPermissions(state.workspace).domainsWrite,
+    canRestoreConfig: state => resolveStorefrontAdminPermissions(state.workspace).configRestore
   },
 
   actions: {

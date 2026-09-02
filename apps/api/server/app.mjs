@@ -9,6 +9,7 @@ import {
 import { findAccountContext, readBearerToken } from './auth.mjs'
 import { publishDesignConfig, readDesignConfig, saveDesignDraft } from './design-config.mjs'
 import { publishContentConfig, readContentConfig, saveContentDraft } from './content-config.mjs'
+import { listCmsConfigVersions, restoreCmsConfigVersion } from './cms-config-versions.mjs'
 import {
   completeBrandSetup,
   completeDomainSetup,
@@ -32,6 +33,7 @@ export function buildApp({
   productReadiness = null,
   authHandoff = null,
   storefrontAssets = null,
+  storefrontPreview = null,
   billingProvider = 'disabled',
   logger = true,
   shopifyApiVersion = '2026-07',
@@ -557,6 +559,67 @@ export function buildApp({
     }
   })
 
+  app.post('/api/storefronts/:storefrontId/preview', async (request, reply) => {
+    if (!storefrontPreview) return reply.code(503).send({ error: 'storefront_preview_unavailable' })
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await storefrontPreview.issue({
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (error.message === 'storefront_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Storefront preview creation failed')
+      return reply.code(503).send({ error: 'storefront_preview_unavailable' })
+    }
+  })
+
+  app.get('/api/storefronts/:storefrontId/config-versions', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      const versions = await listCmsConfigVersions({
+          database,
+          userId: user.id,
+          storefrontId: request.params.storefrontId,
+          limit: request.query?.limit
+        })
+      if (!versions) return reply.code(404).send({ error: 'storefront_not_found' })
+      return { versions }
+    } catch (error) {
+      app.log.error({ err: error }, 'Storefront configuration history lookup failed')
+      return reply.code(503).send({ error: 'storefront_config_history_unavailable' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/config-versions/:version/restore', async (request, reply) => {
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await restoreCmsConfigVersion({
+        database,
+        userId: user.id,
+        storefrontId: request.params.storefrontId,
+        version: request.params.version
+      })
+    } catch (error) {
+      if (['storefront_access_denied', 'storefront_write_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'invalid_config_version') {
+        return reply.code(400).send({ error: error.message })
+      }
+      if (error.message === 'storefront_config_version_not_found') {
+        return reply.code(404).send({ error: error.message })
+      }
+      app.log.error({ err: error }, 'Storefront configuration restore failed')
+      return reply.code(503).send({ error: 'storefront_config_restore_unavailable' })
+    }
+  })
+
   app.put('/api/storefronts/:storefrontId/design', async (request, reply) => {
     try {
       const user = await authenticatedUser(request, reply)
@@ -815,8 +878,19 @@ export function buildApp({
 
   app.get('/api/storefront/config', async (request, reply) => {
     const requestedOverride = request.query?.host
+    const previewAuthorization = String(request.headers.authorization || '')
+    let previewClaims = null
 
-    if (requestedOverride && !allowStorefrontHostOverride) {
+    if (previewAuthorization.startsWith('StorefrontPreview ')) {
+      if (!storefrontPreview) return reply.code(401).send({ error: 'invalid_storefront_preview_token' })
+      try {
+        previewClaims = storefrontPreview.verify(previewAuthorization.slice('StorefrontPreview '.length))
+      } catch {
+        return reply.code(401).send({ error: 'invalid_storefront_preview_token' })
+      }
+    }
+
+    if (requestedOverride && !allowStorefrontHostOverride && !previewClaims) {
       return reply.code(400).send({
         error: 'storefront_host_override_disabled'
       })
@@ -825,17 +899,24 @@ export function buildApp({
     let hostname
     try {
       hostname = normalizeStorefrontHostname(
-        requestedOverride || request.hostname
+        previewClaims?.hostname || requestedOverride || request.hostname
       )
     } catch {
       return reply.code(400).send({ error: 'invalid_storefront_hostname' })
+    }
+    if (
+      previewClaims && requestedOverride &&
+      normalizeStorefrontHostname(requestedOverride) !== hostname
+    ) {
+      return reply.code(403).send({ error: 'storefront_preview_scope_mismatch' })
     }
 
     try {
       const config = await findStorefrontRuntimeConfig({
         database,
         hostname,
-        shopifyApiVersion
+        shopifyApiVersion,
+        previewStorefrontId: previewClaims?.storefrontId || null
       })
 
       if (!config) {
@@ -845,6 +926,7 @@ export function buildApp({
       // CMS changes must be visible on the very next storefront load. A CDN can
       // add version-aware caching later; browser-level stale caching is unsafe here.
       reply.header('cache-control', 'no-store, no-cache, must-revalidate')
+      if (previewClaims) config.preview.expiresAt = new Date(previewClaims.exp * 1000).toISOString()
       return config
     } catch (error) {
       app.log.error({ err: error, hostname }, 'Storefront configuration lookup failed')

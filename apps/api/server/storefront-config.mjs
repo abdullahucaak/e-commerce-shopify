@@ -1,6 +1,17 @@
 import { domainToASCII } from 'node:url'
 
-const STOREFRONT_CONFIG_QUERY = `
+function storefrontConfigQuery(preview) {
+  const configStatus = preview ? "status in ('draft', 'published')" : "status = 'published'"
+  const configOrder = preview ? "case status when 'draft' then 0 else 1 end, version desc" : 'version desc'
+  const storefrontConstraint = preview ? 'and storefront.id = $2' : ''
+  const subscriptionJoin = preview ? '' : `
+  join public.store_subscriptions subscription
+    on subscription.storefront_id = storefront.id
+    and subscription.status in ('active', 'trialing')`
+  const storefrontStatus = preview
+    ? "and storefront.status in ('onboarding', 'active')"
+    : "and storefront.status = 'active'"
+  return `
   select
     storefront.id::text as storefront_id,
     store.shop_name,
@@ -20,9 +31,7 @@ const STOREFRONT_CONFIG_QUERY = `
     on storefront.id = domain.storefront_id
   join public.shopify_stores store
     on store.id = storefront.shopify_store_id
-  join public.store_subscriptions subscription
-    on subscription.storefront_id = storefront.id
-    and subscription.status in ('active', 'trialing')
+  ${subscriptionJoin}
   left join private.shopify_credentials credentials
     on credentials.shopify_store_id = store.id
   left join lateral (
@@ -32,8 +41,8 @@ const STOREFRONT_CONFIG_QUERY = `
       settings
     from public.storefront_config_versions
     where storefront_id = storefront.id
-      and status = 'published'
-    order by version desc
+      and ${configStatus}
+    order by ${configOrder}
     limit 1
   ) config on true
   left join lateral (
@@ -65,11 +74,13 @@ const STOREFRONT_CONFIG_QUERY = `
       and override.feature_key = flag.key
   ) features on true
   where domain.hostname = $1
+    ${storefrontConstraint}
     and domain.status = 'active'
-    and storefront.status = 'active'
+    ${storefrontStatus}
     and store.status = 'active'
   limit 1
 `
+}
 
 export function normalizeStorefrontHostname(value) {
   const firstValue = Array.isArray(value) ? value[0] : value
@@ -115,9 +126,14 @@ export function normalizeStorefrontHostname(value) {
 export async function findStorefrontRuntimeConfig({
   database,
   hostname,
-  shopifyApiVersion
+  shopifyApiVersion,
+  previewStorefrontId = null
 }) {
-  const result = await database.query(STOREFRONT_CONFIG_QUERY, [hostname])
+  const preview = Boolean(previewStorefrontId)
+  const result = await database.query(
+    storefrontConfigQuery(preview),
+    preview ? [hostname, previewStorefrontId] : [hostname]
+  )
   const row = result.rows[0]
 
   if (!row) return null
@@ -145,6 +161,7 @@ export async function findStorefrontRuntimeConfig({
       version: row.release_version || null,
       channel: row.release_channel
     },
-    features: row.feature_flags || {}
+    features: row.feature_flags || {},
+    ...(preview ? { preview: { active: true, expiresAt: null } } : {})
   }
 }

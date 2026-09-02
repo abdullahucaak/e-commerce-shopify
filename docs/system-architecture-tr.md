@@ -186,6 +186,29 @@ sürüme taşır. Böylece içerik yayınlama yetkisi olan editor, owner/admin t
 hazırlanmış bekleyen tasarım değişikliklerini dolaylı olarak yayınlayamaz. Diğer
 kapsamda bekleyen değişiklik varsa taslak yeni sürüm numarasıyla korunur.
 
+Gerçek storefront taslak önizlemesi, CMS oturumu doğrudan storefront'a taşınmadan
+çalışır. Yetkili workspace üyesi API'den mağaza kimliği ve hostname kapsamlı, HMAC-SHA256
+ile imzalı ve beş dakika geçerli bir önizleme tokenı alır. Token URL query'sine değil
+fragment bölümüne yazıldığı için web sunucusu loglarına ve Referer başlığına taşınmaz;
+storefront JavaScript'i tokenı özel `StorefrontPreview` Authorization şemasıyla API'ye
+gönderir. API token kapsamındaki mağazanın taslağını (taslak yoksa yayınlanmış sürümü)
+döndürür. Tokensız ziyaretçiler yalnız yayınlanmış sürümü görür ve production'da genel
+hostname override kapalı kalır.
+
+CMS sürüm geçmişi draft, published ve archived kayıtlarını mağaza üyeliği kapsamında
+listeler. Geri dönüş yalnız owner/admin tarafından yapılabilir ve canlı sürümün üzerine
+yazmaz; seçilen archived/published ayar yeni, artan numaralı draft sürümüne kopyalanır.
+Tasarım ve içerik mevcut kapsam bazlı yayınlama işlemleriyle ayrıca canlıya alınır.
+Taslak kaydetme, kapsam bazlı yayınlama ve sürümü taslağa geri yükleme işlemleri aynı
+veritabanı transaction'ı içinde `private.audit_logs` tablosuna aktör, workspace,
+storefront, sürüm numarası ve eylem türüyle kaydedilir; ayar içeriğinin kendisi audit
+metadata'sına kopyalanmaz.
+Asset yükleme ve silme izinleri, tek kullanımlık Storage izniyle aynı transaction'da
+`cms.asset.*_authorized` eylemleri olarak kaydedilir; bu adlandırma PostgreSQL ile
+Supabase Storage arasında dağıtık transaction varmış gibi yanlış bir başarı iddiası
+oluşturmaz. Müşterinin başlattığı Shopify domain senkronizasyonu ise domain ve mağaza
+güncellemeleriyle aynı transaction'da `cms.domain.synced` olarak audit edilir.
+
 ## Public runtime endpoint'i
 
 `GET /api/storefront/config`, hostname üzerinden yalnızca aşağıdaki public veriyi döner:
@@ -217,6 +240,13 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
 - `yourprostore-ai-admin` için müşteri workspace rollerinden ayrı platform yetkisi kullanılacaktır.
 - PostgreSQL tenant tablolarında Row Level Security uygulanır.
 - Public endpoint yalnızca aktif domain, aktif abonelik, aktif storefront ve yayınlanmış ayar döndürür.
+- Taslak runtime ayarı yalnız kısa ömürlü, imzalı ve mağaza kapsamlı önizleme tokenıyla döner.
+- Storefront kimliği alan route aileleri başka tenant kimliğiyle toplu negatif testten
+  geçirilir; yetkisiz istek 403/404 ile kapanır ve yazma sorgusu başlatılmaz.
+- Public bucket görselleri storefront ziyaretçilerine public object URL üzerinden
+  sunulur; `storage.objects` metadata SELECT politikası ise yalnız ilgili workspace
+  üyelerine izin verir. Public dosya teslimi, browser kullanıcısına bucket listeleme
+  yetkisi verilmesi anlamına gelmez.
 - Domain girdileri normalize edilir ve SQL sorguları parametreli çalışır.
 - Ürün ve siparişler gereksiz yere platform veritabanına alınmaz.
 

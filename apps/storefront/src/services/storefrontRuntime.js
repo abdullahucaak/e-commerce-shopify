@@ -65,9 +65,16 @@ async function requestRuntimeConfig() {
     endpoint.searchParams.set('host', developmentHostname)
   }
 
+  const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const previewToken = fragment.get('previewToken')?.trim()
+
   try {
     const response = await fetch(endpoint, {
-      headers: { Accept: 'application/json' }
+      headers: {
+        Accept: 'application/json',
+        ...(previewToken ? { Authorization: `StorefrontPreview ${previewToken}` } : {})
+      },
+      referrerPolicy: 'no-referrer'
     })
 
     if (!response.ok) {
