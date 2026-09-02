@@ -39,7 +39,7 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] `shop { id myshopifyDomain primaryDomain name currencyCode }` sorgusunu çalıştır
 - [x] Mağazayı `Shop.id` ile oluştur veya güncelle
 - [x] İlk, güncel ve eski `myshopify.com` alias kayıtlarını yönet
-- [ ] `app/uninstalled`, `shop/update` ve zorunlu gizlilik webhook'larını ekle
+- [x] `app/uninstalled`, `shop/update` ve zorunlu gizlilik webhook'larını ekle
 
 ## Faz 3 — `yourprostore-ai` kurulum sihirbazı
 
@@ -94,13 +94,15 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 
 ## Faz 7 — `yourprostore-ai-admin`
 
-- [ ] Dahili platform yöneticisi yetki modelini müşteri workspace rollerinden ayır
-- [ ] Müşteri ve workspace listeleme ekranlarını ekle
-- [ ] Mağaza, storefront ve kurulum durumu ekranlarını ekle
-- [ ] Mağaza başına abonelik ve ödeme sorunu ekranlarını ekle
-- [ ] Webhook, audit log ve hata kayıtlarını görüntüle
-- [ ] Niche ve banner kataloğu yönetimini ekle
-- [ ] Yetkili destek ve mağaza askıya alma işlemlerini audit log ile sınırla
+- [x] Dahili platform yöneticisi yetki modelini müşteri workspace rollerinden ayır
+- [x] Ayrı Vue build, Supabase giriş ve zorunlu TOTP MFA akışını ekle
+- [x] Toplu sistem sayaçlarını gösteren salt okunur genel durum panelini ekle
+- [x] Müşteri ve workspace listeleme ekranlarını ekle
+- [x] Mağaza, storefront ve kurulum durumu liste ekranını ekle
+- [x] Mağaza başına abonelik durumu ve dönem özetini ekle
+- [x] Webhook, audit log ve hata kayıtlarını güvenli özetlerle görüntüle
+- [x] Niche ve banner kataloğu yönetimini ekle
+- [x] Mağaza askıya alma/etkinleştirme işlemlerini owner/admin, açık onay ve audit ile sınırla
 
 Bu faz, kurulum sihirbazı ve abonelik durum modeli kararlı hale geldikten sonra; ancak
 production pilotundan önce tamamlanır.
@@ -109,10 +111,10 @@ production pilotundan önce tamamlanır.
 
 - [ ] Development, staging ve production ortamlarını ayır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
-- [ ] API rate limit ve kötüye kullanım koruması ekle
+- [x] API rate limit ve kötüye kullanım koruması ekle
 - [ ] Hata izleme ve uptime alarmı ekle
 - [ ] Veritabanı yedek ve geri yükleme testi yap
-- [ ] Webhook retry/dead-letter kuyruğu ekle
+- [x] Webhook retry/dead-letter durum modelini ekle
 - [ ] Hesap silme, veri saklama ve gizlilik akışlarını tamamla
 
 ## Sonraki özellikler

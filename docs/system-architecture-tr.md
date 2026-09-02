@@ -7,7 +7,7 @@ Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
 | Küme | Kod adı | Kullanıcı | Sorumluluk | Durum |
 | --- | --- | --- | --- | --- |
 | 1 | `yourprostore-ai` | Mağaza sahibi | Tanıtım, hesap, Shopify bağlantısı, mağazalar, sihirbaz ve abonelikler | Aktif |
-| 2 | `yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteriler, mağazalar, üyelikler, abonelikler, kurulumlar, hata ve işlem kayıtları | Planlandı |
+| 2 | `yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteriler, mağazalar, üyelikler, abonelikler, kurulumlar, hata ve işlem kayıtları | Temel oturum ve genel durum aktif; geliştirme sürüyor |
 | 3 | `storefront` | Mağaza ziyaretçisi | Müşterinin kendi domaininde çalışan canlı mağazası | Aktif |
 | 4 | `storefront-admin` | Mağaza sahibi | Kendi canlı mağazasının tasarım, içerik ve domain yönetimi | Aktif |
 | 5 | `api` | Bütün uygulamalar | Kimlik doğrulama, tenant izolasyonu ve dış servis entegrasyonları | Aktif |
@@ -19,8 +19,8 @@ Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
 - `storefront-admin`, müşterinin yalnızca yetkili olduğu kendi mağazalarını düzenlediği
   uygulamadır.
 
-Dahili yönetici paneli ayrı build, ayrı yetkilendirme alanı ve mümkünse ayrı subdomain
-ile çalışacaktır. Müşteri çalışma alanındaki `owner`, `admin`, `editor` ve `viewer`
+Dahili yönetici paneli ayrı build ve ayrı yetkilendirme alanıyla çalışır; production'da
+ayrı subdomain üzerinden yayınlanacaktır. Müşteri çalışma alanındaki `owner`, `admin`, `editor` ve `viewer`
 rolleri platform yöneticisi yetkisi vermeyecektir.
 
 ## Kod deposu yapısı
@@ -28,7 +28,7 @@ rolleri platform yöneticisi yetkisi vermeyecektir.
 ```text
 apps/
   yourprostore-ai/        YourProStore.ai sitesi ve mağaza sahibi hesap/kurulum alanı
-  yourprostore-ai-admin/  Dahili operasyon paneli; henüz oluşturulmadı
+  yourprostore-ai-admin/  Dahili operasyon paneli; AAL2 oturumu ve genel durum ekranı
   storefront/             Bütün mağazaların kullandığı ortak canlı Vue vitrini
   storefront-admin/       Mağaza sahibinin storefront yönetim uygulaması
   api/                    Ortak Node.js + Fastify backend
@@ -55,7 +55,7 @@ mağaza sahibinin yönetim alanını dahili `admin.yourprostore.ai` panelinden a
 flowchart TB
     OWNER["Mağaza sahibi"] --> YPS["yourprostore-ai"]
     OWNER --> SFA["storefront-admin"]
-    TEAM["YourProStore.ai ekibi"] --> YPSA["yourprostore-ai-admin — planlandı"]
+    TEAM["YourProStore.ai ekibi"] --> YPSA["yourprostore-ai-admin"]
     VISITOR["Mağaza ziyaretçisi"] --> SF["storefront"]
 
     YPS --> API["api"]
@@ -238,6 +238,11 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
   uygulama tarafından okunmaz; sabit ve allowlist'teki `/update-password` adresine
   dönen kullanıcı yalnız kendi recovery oturumuyla yeni parola belirleyebilir.
 - `yourprostore-ai-admin` için müşteri workspace rollerinden ayrı platform yetkisi kullanılacaktır.
+- Admin API yetkisi `private.platform_admins` içindeki aktif rol ile Supabase tarafından
+  kriptografik olarak doğrulanmış JWT `aal2` claim'inin birlikte bulunmasını gerektirir.
+  `user_metadata`, `app_metadata` rol iddiaları ve müşteri workspace rolleri bu kararı
+  vermez. Admin Auth hesabındaki trusted `account_type=platform_admin` işareti yalnız
+  otomatik müşteri workspace bootstrap'ını atlamak içindir; tek başına erişim sağlamaz.
 - PostgreSQL tenant tablolarında Row Level Security uygulanır.
 - Public endpoint yalnızca aktif domain, aktif abonelik, aktif storefront ve yayınlanmış ayar döndürür.
 - Taslak runtime ayarı yalnız kısa ömürlü, imzalı ve mağaza kapsamlı önizleme tokenıyla döner.
@@ -248,6 +253,21 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
   üyelerine izin verir. Public dosya teslimi, browser kullanıcısına bucket listeleme
   yetkisi verilmesi anlamına gelmez.
 - Domain girdileri normalize edilir ve SQL sorguları parametreli çalışır.
+- API, credential taşımayan açık CORS yanıtları kullanır; browser kimliği yalnız açık
+  `Authorization` başlığıyla taşınır. Helmet güvenlik başlıkları etkindir.
+- Genel JSON istekleri 1 MiB, asset yüklemeleri ayrıca 8 MiB ile sınırlıdır. API
+  endpoint'lerinde IP tabanlı rate-limit; auth handoff için daha dar, imzalı webhooklar
+  için daha geniş rota limiti uygulanır. Tek process sayacı production'da birden fazla
+  instance kullanılmadan önce ortak Redis store'a taşınacaktır.
+- Authorization/cookie, Shopify ve Stripe webhook imzaları ile erişim/yenileme tokenı
+  alanları yapılandırılmış loglarda maskelenir. Shopify Admin tokenı browser yanıtlarına
+  eklenmez; storefront public tokenı ise tanımı gereği public runtime verisidir.
+- Shopify webhook ledger'ı global webhook kimliğiyle idempotent çalışır. Başarısız
+  olay aynı kimlikle yeniden sahiplenilir; sekiz başarısız denemeden sonra dead-letter
+  durumuna alınır. Uninstall mağaza erişim tokenını silip storefront'u transaction
+  içinde askıya alır. Zorunlu customer privacy olaylarının payload'ı saklanmaz çünkü
+  platform Shopify müşterisi veya siparişi tutmaz. `shop/redact` önce service-role ile
+  Storage objelerini, ardından transaction içinde mağaza ve bağlı tenant verilerini siler.
 - Ürün ve siparişler gereksiz yere platform veritabanına alınmaz.
 
 ## Uygulama geliştirme sırası

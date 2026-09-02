@@ -44,9 +44,18 @@ export function createSupabaseAccessTokenVerifier({ supabaseUrl, publishableKey 
   })
 
   return async accessToken => {
-    const { data, error } = await client.auth.getUser(accessToken)
-    if (error || !data.user) return null
-    return data.user
+    const { data, error } = await client.auth.getClaims(accessToken)
+    const claims = data?.claims
+    if (error || !claims?.sub || claims.role !== 'authenticated') return null
+    return {
+      id: claims.sub,
+      email: claims.email || null,
+      authContext: {
+        aal: claims.aal || 'aal1',
+        amr: Array.isArray(claims.amr) ? claims.amr : [],
+        sessionId: claims.session_id || null
+      }
+    }
   }
 }
 

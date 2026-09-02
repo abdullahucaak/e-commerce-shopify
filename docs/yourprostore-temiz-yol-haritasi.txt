@@ -5,9 +5,9 @@ GÜNCEL İLERLEME — 2 EYLÜL 2026
 
 - Aşama 1 tamamlandı. Uygulama ayrımı ve klasör isim değişiklikleri
   cb3dfa2 commit'iyle; CMS asset güvenliği, taslak/yayın ayrımı ve parola kurtarma
-  222a41d commit'iyle kaydedildi. Bu belgede anlatılan güvenli taslak önizleme,
-  sürüm geçmişi, audit genişletmeleri, tenant taraması ve ikinci müşteri OAuth
-  geliştirmeleri henüz commit edilmemiş working tree içindedir.
+  222a41d commit'iyle kaydedildi. Güvenli taslak önizleme, sürüm geçmişi, audit
+  genişletmeleri, tenant taraması ve ikinci müşteri OAuth geliştirmeleri de
+  5afb34c commit'iyle kaydedilip GitHub'a gönderildi.
 - Aşama 2 kod/veritabanı ve temel uçtan uca akışlar bakımından tamamlandı. İkinci
   gerçek müşteri oturumundan ayrı Shopify Dev Store bağlantısı da doğrulandı.
 - Aşama 3 temel müşteri alanı tamamlandı: Mağazalarım durumları, Abonelikler özeti,
@@ -32,6 +32,11 @@ GÜNCEL İLERLEME — 2 EYLÜL 2026
   config, asset ve onboarding kayıtları karşı tenant'a 0 satır döndürdü; abonelik
   tablosuna browser rolü doğrudan erişemiyor. Public bucket metadata listeleme açığı
   0016 migration'ıyla kapatıldı; public görsel tesliminin HTTP 200 kaldığı doğrulandı.
+- İki gerçek müşteri yönünde storefront, config, asset ve `storage.objects` için canlı
+  INSERT/UPDATE/DELETE izolasyonu transaction ve savepoint'lerle doğrulandı. Yetkisiz
+  INSERT'ler engellendi; UPDATE/DELETE işlemleri permission denied veya sıfır satırla
+  kapandı. Her ana transaction rollback edildi ve korunan kayıtların işlem öncesi ile
+  sonrası aynı kaldığı ayrıca doğrulandı. Gerçek Storage dosyası oluşturulmadı.
 - İkinci müşteri için `Kai Wins Tenant Dev` Shopify mağazası gerçek OAuth akışıyla
   bağlandı. Shopify mağaza seçimi dönüşündeki `127.0.0.1`/`localhost` çerez sınırı
   keşfedilip, doğrulanmış `shop` değerini müşteri oturumuna bağlı standart OAuth state
@@ -42,8 +47,18 @@ GÜNCEL İLERLEME — 2 EYLÜL 2026
 - Son tam doğrulamada 91 API, 2 storefront, 12 storefront-admin ve 14 yourprostore-ai
   testi olmak üzere toplam 119 test geçti; 33 Shopify tema dosyası ile üç production
   build doğrulandı.
-- Aktif geliştirme noktası: AŞAMA 6 — ikinci müşterinin storefront/Storage yazma
-  işlemlerinde iki yönlü INSERT/UPDATE/DELETE izolasyonunu tamamlamak.
+- Aşama 6 API güvenlik paketi tamamlandı: Shopify Admin tokenının browser yanıtına
+  girmediği korundu; Helmet, credential'sız CORS, genel ve rota bazlı rate-limit,
+  JSON/asset istek boyutu sınırları ve hassas log alanı maskelemesi test edildi.
+  Bellek içi rate-limit deposu çok instance'lı production öncesinde Redis'e taşınacak.
+- Aşama 7 webhook kodu tamamlandı: app uninstall, shop/domain güncellemesi, zorunlu
+  gizlilik konuları, retry ve sekiz deneme sonrası dead-letter modeli eklendi.
+  `shop/redact` Storage dosyalarını service-role ile sildikten sonra mağaza ve bağlı
+  verileri transaction içinde kaldırıyor; customer privacy payload'ları saklanmıyor.
+  0017 migration'ı canlı Supabase'e uygulandı; Shopify app config deploy'u henüz yapılmadı.
+- Aktif geliştirme noktası: backend deployment secret'larını ve Shopify app config
+  deploy'unu tamamlamak. Aşama 8 backend yetki temeli ve 0018 migration'ı canlı
+  Supabase'e uygulandı; ilk ayrı platform owner hesabı henüz provision edilmedi.
 
 AMAÇ
 
@@ -277,16 +292,28 @@ AŞAMA 6 — MÜŞTERİ İZOLASYONU VE GÜVENLİK
 
 1. İkinci gerçek Supabase test kullanıcısı ve ikinci workspace oluştur. (Tamamlandı.)
 2. İki kullanıcı ve en az iki mağazayla uçtan uca tenant izolasyon testi yap.
-   (Read-only RLS ve müşteri UI/OAuth yönü tamamlandı; iki yönlü yazma senaryoları
-   devam ediyor.)
+   (Tamamlandı; read-only RLS, müşteri UI/OAuth ve iki yönlü yazma senaryoları
+   gerçek iki müşteriyle doğrulandı.)
 3. API endpoint'lerinin tamamında kullanıcı + workspace + storefront kontrolünü doğrula.
    (Tamamlandı; storefront kimliği alan 24 route ailesi tarandı.)
 4. RLS politikalarını tablo bazında SELECT/INSERT/UPDATE/DELETE yönünden denetle.
-   (SELECT tamamlandı; INSERT/UPDATE/DELETE canlı doğrulaması devam ediyor.)
+   (Tamamlandı; storefront, config ve asset kayıtlarında iki yönlü canlı doğrulama
+   rollback edilen transaction'larla yapıldı.)
 5. Storage yükleme, güncelleme ve silme politikalarını iki müşteriyle test et.
+   (Tamamlandı; `storage.objects` metadata yazmaları iki yönde doğrulandı. Yetkisiz
+   yükleme için INSERT engellendi, UPDATE/DELETE sıfır satır veya permission denied
+   oldu; gerçek Storage objesi oluşturulmadı.)
 6. Shopify Admin tokenının hiçbir browser yanıtına/loguna girmediğini doğrula.
+   (Tamamlandı; Admin tokenı private şemada şifreli kalıyor, browser yanıt testi ve
+   yapılandırılmış log redaction testi mevcut. Public Storefront API tokenı bilinçli
+   olarak public runtime sözleşmesinin parçasıdır.)
 7. Rate limit, dosya kotası, güvenli header, CORS ve request boyutu limitlerini ekle.
+   (Tamamlandı; Helmet, credential'sız CORS, 1 MiB JSON/8 MiB asset limitleri, genel
+   IP limiti ve auth/webhook rota limitleri eklendi. Çok instance'lı production için
+   ortak Redis rate-limit store'u deployment işi olarak bekliyor.)
 8. Audit log, uygulama hata logu ve hassas veri maskelemesini tamamla.
+   (CMS/domain/billing audit kayıtları ve yapılandırılmış uygulama hata logları mevcut;
+   Authorization/cookie, webhook imzası ve oturum tokenı alanları maskeleniyor.)
 
 Bitti sayılma koşulu:
 İki ayrı müşteri hiçbir API, RLS, Storage veya UI yolu üzerinden birbirinin verisini
@@ -326,12 +353,21 @@ göremiyor veya değiştiremiyor.
 
 AŞAMA 7 — SHOPIFY WEBHOOK VE OPERASYON DAYANIKLILIĞI
 
-1. app/uninstalled webhook'unu tamamla.
-2. shop/update ve domain değişikliği senkronizasyonunu tamamla.
-3. Shopify zorunlu gizlilik webhook'larını ekle.
+1. app/uninstalled webhook'unu tamamla. (Kodlandı ve transaction testi eklendi.)
+2. shop/update ve domain değişikliği senkronizasyonunu tamamla. (Tamamlandı.)
+3. Shopify zorunlu gizlilik webhook'larını ekle. (Kod ve TOML tamamlandı.)
 4. Webhook idempotency, retry ve başarısız olay kaydını tamamla.
+   (Global event ID, başarısız olayı yeniden sahiplenme ve sekiz deneme sonrası
+   dead-letter tamamlandı.)
 5. Kaldırılan Shopify uygulamasında ilgili storefront'u güvenli duruma geçir.
+   (Tamamlandı; storefront askıya alınıyor ve Admin credential siliniyor.)
 6. Ürünleri platform veritabanına kopyalamadan ürün hazır olma kontrolünü koru.
+   (Korundu.)
+
+Canlıya alma notu:
+- `0017_shopify_webhook_resilience.sql` canlı Supabase'e uygulandı ve şeması doğrulandı.
+- `SUPABASE_SERVICE_ROLE_KEY` backend secret manager'a eklenmeli.
+- `shopify.app.toml` değişikliği production için ayrıca Shopify CLI ile deploy edilmeli.
 
 Bitti sayılma koşulu:
 Shopify bağlantısı kaldırıldığında veya mağaza bilgisi değiştiğinde sistem doğru ve
@@ -340,16 +376,22 @@ tekrarlanabilir biçimde güncelleniyor.
 
 AŞAMA 8 — YOURPROSTORE.AI-ADMIN YETKİ TEMELİ
 
-1. platform_admins migration'ını oluştur.
+1. platform_admins migration'ını oluştur. (0018 canlı Supabase'e uygulandı ve doğrulandı.)
 2. Müşteri kayıt tetikleyicisini müşteri/admin ayrımına göre güvenli hale getir.
-3. Platform yöneticisi self-signup özelliğini kapalı tut.
+   (Hazır; trusted Auth app metadata işareti admin hesabına workspace açılmasını önlüyor.)
+3. Platform yöneticisi self-signup özelliğini kapalı tut. (Backend modeli yalnız
+   trusted Auth admin işlemiyle oluşturulan hesapları kabul ediyor.)
 4. İlk platform owner hesabı için tekrar çalıştırılabilir güvenli provision komutu oluştur.
+   (Tamamlandı; müşteri workspace üyeliği bulunan hesabı reddediyor ve audit yazıyor.)
 5. Admin oturumunda platform_admins aktiflik ve rol kontrolünü her API isteğinde yap.
-6. Zorunlu Supabase MFA/AAL2 kontrolü ekle.
+   (Temel middleware ve `/api/admin/session` rotası tamamlandı.)
+6. Zorunlu Supabase MFA/AAL2 kontrolü ekle. (Tamamlandı; doğrulanmış JWT claim'i kullanılıyor.)
 7. Admin API endpoint'lerini müşteri endpoint'lerinden ayrı namespace altında tut:
-   /api/admin/...
+   /api/admin/... (Başlatıldı; session doğrulama rotası bu namespace altında.)
 8. Admin işlemlerini audit log'a yaz; destek rolüne gereksiz yazma yetkisi verme.
+   (Provision işlemi audit ediliyor; sonraki admin yazma rotalarında rol matrisi genişletilecek.)
 9. Platform admin yetkisinin müşteri JWT metadata'sına güvenerek verilmesini engelle.
+   (Tamamlandı ve negatif test eklendi.)
 
 Bitti sayılma koşulu:
 Normal müşteri admin.yourprostore.ai ve /api/admin endpoint'lerine erişemiyor; yalnızca
@@ -358,16 +400,23 @@ aktif, MFA doğrulanmış platform yöneticileri rol sınırları içinde erişe
 
 AŞAMA 9 — YOURPROSTORE.AI-ADMIN UYGULAMASI
 
-1. apps/yourprostore-ai-admin uygulamasını ayrı Vue build olarak oluştur.
-2. Ayrı admin giriş/MFA ekranını ekle.
-3. Genel durum panelini ekle.
-4. Müşteri, workspace ve üyelik listelerini ekle.
-5. Shopify mağazası ve storefront detaylarını ekle.
-6. Kurulum adımları ve son hata durumunu göster.
-7. Mağaza bazlı abonelik, ödeme sorunu ve dönem bilgilerini göster.
-8. Webhook olayları, audit kayıtları ve sistem hatalarını göster.
-9. Niche/banner kataloğu yönetimini ekle.
+1. apps/yourprostore-ai-admin uygulamasını ayrı Vue build olarak oluştur. (Tamamlandı.)
+2. Ayrı admin giriş/MFA ekranını ekle. (Tamamlandı; AAL2 ve TOTP zorunlu.)
+3. Genel durum panelini ekle. (Tamamlandı; yalnız toplu operasyon sayaçları gösteriliyor.)
+4. Müşteri, workspace ve üyelik listelerini ekle. (Tamamlandı; salt okunur, sayfalı
+   sahip/üye/mağaza özeti canlı AAL2 oturumuyla doğrulandı.)
+5. Shopify mağazası ve storefront detaylarını ekle. (Liste özeti tamamlandı; tekil detay ekranı sırada.)
+6. Kurulum adımları ve son hata durumunu göster. (Tamamlanan/toplam adım özeti eklendi;
+   tekil adımlar ve hata detayı sırada.)
+7. Mağaza bazlı abonelik, ödeme sorunu ve dönem bilgilerini göster. (Durum, plan,
+   dönem sonu ve dönem sonunda iptal özeti tamamlandı.)
+8. Webhook olayları, audit kayıtları ve sistem hatalarını göster. (Webhook ve audit
+   listeleri tamamlandı; payload/metadata dışlanıyor ve hata sırları maskeleniyor.)
+9. Niche/banner kataloğu yönetimini ekle. (Tamamlandı; listeleme ile owner/admin için
+   gerekçeli, transaction ve audit korumalı aktif/pasif yönetimi eklendi.)
 10. Askıya alma gibi etkili işlemlerde gerekçe, onay ve audit zorunluluğu getir.
+    (Tamamlandı; owner/admin, en az 10 karakter gerekçe, mağaza adıyla açık onay ve
+    transaction içi audit zorunlu.)
 11. Müşteri parolası veya Shopify tokenı gibi sırları hiçbir admin ekranında gösterme.
 
 Bitti sayılma koşulu:
@@ -377,9 +426,11 @@ müşteri paneli ile dahili panel arasında yetki karışıklığı bulunmuyor.
 
 AŞAMA 10 — DOMAIN, HOSTING VE PRODUCTION
 
-1. Development, staging ve production ortamlarını ayır.
+1. Development, staging ve production ortamlarını ayır. (Staging/production env policy
+   şablonları ve deploy öncesi güvenlik doğrulayıcısı tamamlandı.)
 2. storefront, storefront-admin, yourprostore-ai, yourprostore-ai-admin ve api için
-   ayrı deployment oluştur.
+   ayrı deployment oluştur. (Sağlayıcı-bağımsız web/API container ve health check
+   temeli tamamlandı; gerçek hosting servislerinin oluşturulması bekliyor.)
 3. Secret manager, HTTPS, CORS ve güvenli cookie/session ayarlarını tamamla.
 4. Müşteri domaini için DNS doğrulama, custom hostname ve TLS otomasyonu ekle.
 5. Kök domain ve www yönlendirmesini tamamla.
@@ -418,12 +469,12 @@ Gerçek para akışı yalnızca test mode ve pilot kontrolleri tamamlandıktan s
    `abdullahucaak@gmail.com` hesabıyla gerçek parola kurtarma e-postasını doğrulamak:
    http://127.0.0.1:5174/update-password
    http://127.0.0.1:5175/update-password
-2. İkinci müşteriye ait test storefront/Storage yazma senaryolarıyla iki yönlü
-   INSERT/UPDATE/DELETE izolasyonunu tamamlamak.
-3. Shopify app/uninstalled, zorunlu gizlilik, retry ve başarısız olay yönetimi dahil
+2. Shopify app/uninstalled, zorunlu gizlilik, retry ve başarısız olay yönetimi dahil
    webhook dayanıklılığını tamamlamak.
-4. platform_admins + MFA altyapısı ve ardından yourprostore-ai-admin uygulamasını yapmak.
-5. Production/domain altyapısını ve public distribution sürecini tamamlamak; bağımsız
+3. İlk platform owner hesabı güvenli biçimde provision edildi; dahili panelin gerçek
+   TOTP/AAL2 girişi ve canlı genel durum sayaçları doğrulandı. Sırada müşteri/workspace
+   liste ekranını eklemek var.
+4. Production/domain altyapısını ve public distribution sürecini tamamlamak; bağımsız
    Shopify merchant kurulum testini staging üzerinde yapmak.
 6. Stripe test mode'u tamamlamak ve bütün sistem/pilot kontrollerinden sonra en son
    live mode'a geçmek.

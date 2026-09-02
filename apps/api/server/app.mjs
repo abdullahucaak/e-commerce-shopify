@@ -2,11 +2,14 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import multipart from '@fastify/multipart'
+import rateLimit from '@fastify/rate-limit'
 import {
   findStorefrontRuntimeConfig,
   normalizeStorefrontHostname
 } from './storefront-config.mjs'
 import { findAccountContext, readBearerToken } from './auth.mjs'
+import { authorizePlatformAdmin } from './platform-admin-auth.mjs'
+import { listPlatformOperations, listPlatformStores, listPlatformWorkspaces, readPlatformCatalog, readPlatformOverview, readPlatformStore, setPlatformCatalogActive, setPlatformStorefrontStatus } from './platform-admin-operations.mjs'
 import { publishDesignConfig, readDesignConfig, saveDesignDraft } from './design-config.mjs'
 import { publishContentConfig, readContentConfig, saveContentDraft } from './content-config.mjs'
 import { listCmsConfigVersions, restoreCmsConfigVersion } from './cms-config-versions.mjs'
@@ -38,11 +41,33 @@ export function buildApp({
   logger = true,
   shopifyApiVersion = '2026-07',
   allowStorefrontHostOverride = false,
-  trustProxy = false
+  trustProxy = false,
+  requestBodyLimitBytes = 1024 * 1024,
+  rateLimitMax = 300,
+  rateLimitWindowMs = 60 * 1000
 } = {}) {
   if (!database?.query) throw new Error('database.query is required.')
 
-  const app = Fastify({ logger, trustProxy })
+  const sensitiveLogPaths = [
+    'req.headers.authorization',
+    'req.headers.cookie',
+    'req.headers["stripe-signature"]',
+    'req.headers["x-shopify-hmac-sha256"]',
+    'err.accessToken',
+    'err.refreshToken',
+    'err.code',
+    'accessToken',
+    'refreshToken',
+    'supabaseServiceRoleKey',
+    'admin_access_token_ciphertext',
+    'storefront_public_access_token'
+  ]
+  const loggerOptions = logger && typeof logger === 'object'
+    ? { ...logger, redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
+    : logger === true
+      ? { redact: { paths: sensitiveLogPaths, censor: '[REDACTED]' } }
+      : logger
+  const app = Fastify({ logger: loggerOptions, trustProxy, bodyLimit: requestBodyLimitBytes })
   const installIntentCookie = 'yourprostore_shopify_intent'
   const maxStorefrontAssetRequestBytes = (8 * 1024 * 1024) + (64 * 1024)
 
@@ -73,8 +98,12 @@ export function buildApp({
     contentSecurityPolicy: false
   })
   app.register(cors, {
-    origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    origin: '*',
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['authorization', 'content-type', 'storefrontpreview'],
+    maxAge: 600,
+    strictPreflight: true
   })
   app.register(multipart, {
     limits: {
@@ -85,9 +114,25 @@ export function buildApp({
     }
   })
 
-  app.get('/api/health', async () => ({ status: 'ok' }))
+  app.register(async function apiRoutes(app) {
+    await app.register(rateLimit, {
+      global: true,
+      max: rateLimitMax,
+      timeWindow: rateLimitWindowMs,
+      cache: 10_000,
+      enableDraftSpec: true,
+      errorResponseBuilder: (_request, context) => ({
+        statusCode: 429,
+        error: 'rate_limit_exceeded',
+        retryAfterSeconds: context.ttlInSeconds
+      })
+    })
 
-  app.post('/api/shopify/webhooks', async (request, reply) => {
+    app.get('/api/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
+
+  app.post('/api/shopify/webhooks', {
+    config: { rateLimit: { max: 1000, timeWindow: rateLimitWindowMs } }
+  }, async (request, reply) => {
     if (!shopifyWebhooks) {
       return reply.code(503).send({ error: 'shopify_webhooks_unavailable' })
     }
@@ -110,7 +155,9 @@ export function buildApp({
     }
   })
 
-  app.post('/api/stripe/webhooks', async (request, reply) => {
+  app.post('/api/stripe/webhooks', {
+    config: { rateLimit: { max: 1000, timeWindow: rateLimitWindowMs } }
+  }, async (request, reply) => {
     if (!stripeBilling) {
       return reply.code(503).send({ error: 'stripe_billing_unavailable' })
     }
@@ -164,6 +211,99 @@ export function buildApp({
     return user
   }
 
+  async function platformAdmin(request, reply) {
+    const user = await authenticatedUser(request, reply)
+    if (!user?.id) return null
+    try {
+      return await authorizePlatformAdmin({ database, user })
+    } catch (error) {
+      if (error.message === 'platform_admin_mfa_required') {
+        reply.header('x-auth-required-aal', 'aal2')
+        return reply.code(403).send({ error: error.message })
+      }
+      if (error.message === 'platform_admin_access_denied') {
+        return reply.code(403).send({ error: error.message })
+      }
+      throw error
+    }
+  }
+
+  app.get('/api/admin/session', async (request, reply) => {
+    try {
+      const admin = await platformAdmin(request, reply)
+      if (!admin?.userId) return
+      return { admin }
+    } catch (error) {
+      app.log.error({ err: error }, 'Platform admin session lookup failed')
+      return reply.code(503).send({ error: 'platform_admin_unavailable' })
+    }
+  })
+
+  app.get('/api/admin/overview', async (request, reply) => {
+    try {
+      const admin = await platformAdmin(request, reply)
+      if (!admin?.userId) return
+      return { overview: await readPlatformOverview({ database }) }
+    } catch (error) {
+      app.log.error({ err: error }, 'Platform overview lookup failed')
+      return reply.code(503).send({ error: 'platform_overview_unavailable' })
+    }
+  })
+
+  app.get('/api/admin/workspaces', async (request, reply) => {
+    try {
+      const admin = await platformAdmin(request, reply)
+      if (!admin?.userId) return
+      return {
+        workspaces: await listPlatformWorkspaces({
+          database, page: request.query?.page, pageSize: request.query?.pageSize
+        })
+      }
+    } catch (error) {
+      app.log.error({ err: error }, 'Platform workspace listing failed')
+      return reply.code(503).send({ error: 'platform_workspaces_unavailable' })
+    }
+  })
+
+  app.get('/api/admin/stores', async (request, reply) => {
+    try {
+      const admin = await platformAdmin(request, reply)
+      if (!admin?.userId) return
+      return { stores: await listPlatformStores({
+        database, page: request.query?.page, pageSize: request.query?.pageSize
+      }) }
+    } catch (error) {
+      app.log.error({ err: error }, 'Platform store listing failed')
+      return reply.code(503).send({ error: 'platform_stores_unavailable' })
+    }
+  })
+
+  app.get('/api/admin/stores/:storeId', async (request, reply) => {
+    try {
+      const admin = await platformAdmin(request, reply); if (!admin?.userId) return
+      const store = await readPlatformStore({ database, storeId: request.params.storeId })
+      return store ? { store } : reply.code(404).send({ error: 'platform_store_not_found' })
+    } catch (error) {
+      if (error.message === 'invalid_store_id') return reply.code(400).send({ error: error.message })
+      app.log.error({ err: error }, 'Platform store detail failed')
+      return reply.code(503).send({ error: 'platform_store_unavailable' })
+    }
+  })
+
+  app.get('/api/admin/operations', async (request, reply) => {
+    try {
+      const admin = await platformAdmin(request, reply); if (!admin?.userId) return
+      return { operations: await listPlatformOperations({ database, limit: request.query?.limit }) }
+    } catch (error) {
+      app.log.error({ err:error }, 'Platform operations listing failed')
+      return reply.code(503).send({ error:'platform_operations_unavailable' })
+    }
+  })
+
+  app.get('/api/admin/catalog',async(request,reply)=>{try{const admin=await platformAdmin(request,reply);if(!admin?.userId)return;return{catalog:await readPlatformCatalog({database})}}catch(error){app.log.error({err:error},'Platform catalog failed');return reply.code(503).send({error:'platform_catalog_unavailable'})}})
+  app.patch('/api/admin/catalog/:kind/:id/active',async(request,reply)=>{try{const admin=await platformAdmin(request,reply);if(!admin?.userId)return;return{item:await setPlatformCatalogActive({database,admin,kind:request.params.kind,id:request.params.id,active:request.body?.active,reason:request.body?.reason})}}catch(error){if(error.message==='platform_admin_write_denied')return reply.code(403).send({error:error.message});if(error.message==='invalid_catalog_change')return reply.code(400).send({error:error.message});if(error.message==='catalog_item_not_found')return reply.code(404).send({error:error.message});app.log.error({err:error},'Platform catalog update failed');return reply.code(503).send({error:'platform_catalog_unavailable'})}})
+  app.patch('/api/admin/stores/:storeId/storefront-status',async(request,reply)=>{try{const admin=await platformAdmin(request,reply);if(!admin?.userId)return;return{storefront:await setPlatformStorefrontStatus({database,admin,storeId:request.params.storeId,status:request.body?.status,reason:request.body?.reason,confirmation:request.body?.confirmation})}}catch(error){if(error.message==='platform_admin_write_denied')return reply.code(403).send({error:error.message});if(['invalid_storefront_status_change','storefront_confirmation_mismatch'].includes(error.message))return reply.code(400).send({error:error.message});if(error.message==='platform_store_not_found')return reply.code(404).send({error:error.message});app.log.error({err:error},'Platform storefront status update failed');return reply.code(503).send({error:'platform_storefront_update_unavailable'})}})
+
   function sendStorefrontAssetError(error, reply) {
     if (error.statusCode === 413 || error.message === 'asset_too_large') {
       return reply.code(413).send({ error: 'asset_too_large', details: error.details || null })
@@ -187,7 +327,9 @@ export function buildApp({
     return reply.code(503).send({ error: 'storefront_asset_storage_failed' })
   }
 
-  app.post('/api/auth/handoff', async (request, reply) => {
+  app.post('/api/auth/handoff', {
+    config: { rateLimit: { max: 20, timeWindow: rateLimitWindowMs } }
+  }, async (request, reply) => {
     if (!authHandoff) return reply.code(503).send({ error: 'auth_handoff_unavailable' })
     try {
       const accessToken = readBearerToken(request.headers.authorization)
@@ -209,7 +351,9 @@ export function buildApp({
     }
   })
 
-  app.post('/api/auth/handoff/exchange', async (request, reply) => {
+  app.post('/api/auth/handoff/exchange', {
+    config: { rateLimit: { max: 20, timeWindow: rateLimitWindowMs } }
+  }, async (request, reply) => {
     if (!authHandoff) return reply.code(503).send({ error: 'auth_handoff_unavailable' })
     try {
       return await authHandoff.exchange({ code: request.body?.code })
@@ -932,6 +1076,8 @@ export function buildApp({
       app.log.error({ err: error, hostname }, 'Storefront configuration lookup failed')
       return reply.code(503).send({ error: 'storefront_config_unavailable' })
     }
+  })
+
   })
 
   return app

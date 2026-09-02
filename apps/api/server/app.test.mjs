@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { Writable } from 'node:stream'
 import { buildApp } from './app.mjs'
 import { normalizeStorefrontHostname } from './storefront-config.mjs'
 
@@ -90,6 +91,118 @@ test('rejects account access without a bearer token', async t => {
   assert.equal(response.statusCode, 401)
   assert.deepEqual(response.json(), { error: 'authentication_required' })
   assert.equal(queried, false)
+})
+
+test('denies platform admin routes to customer roles even with aal2', async t => {
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async () => ({ id: 'customer-1', authContext: { aal: 'aal2' } }),
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/api/admin/session',
+    headers: { authorization: 'Bearer customer-token' }
+  })
+
+  assert.equal(response.statusCode, 403)
+  assert.deepEqual(response.json(), { error: 'platform_admin_access_denied' })
+})
+
+test('requires aal2 before returning an active platform admin session', async t => {
+  const database = {
+    async query() { return { rows: [{ role: 'support', status: 'active', mfa_required: true }] } }
+  }
+  const aal1App = buildApp({
+    database,
+    verifyAccessToken: async () => ({ id: 'admin-1', authContext: { aal: 'aal1' } }),
+    logger: false
+  })
+  t.after(() => aal1App.close())
+  const rejected = await aal1App.inject({
+    method: 'GET', url: '/api/admin/session', headers: { authorization: 'Bearer aal1' }
+  })
+  assert.equal(rejected.statusCode, 403)
+  assert.equal(rejected.headers['x-auth-required-aal'], 'aal2')
+
+  const aal2App = buildApp({
+    database,
+    verifyAccessToken: async () => ({
+      id: 'admin-1', email: 'support@example.com', authContext: { aal: 'aal2' }
+    }),
+    logger: false
+  })
+  t.after(() => aal2App.close())
+  const accepted = await aal2App.inject({
+    method: 'GET', url: '/api/admin/session', headers: { authorization: 'Bearer aal2' }
+  })
+  assert.equal(accepted.statusCode, 200)
+  assert.deepEqual(accepted.json(), {
+    admin: { userId: 'admin-1', email: 'support@example.com', role: 'support' }
+  })
+})
+
+test('does not query platform aggregates when admin access is denied', async t => {
+  let aggregateQueried = false
+  const app = buildApp({
+    database: {
+      async query(query) {
+        if (query.includes('workspace_count')) aggregateQueried = true
+        return { rows: [] }
+      }
+    },
+    verifyAccessToken: async () => ({ id: 'customer-1', authContext: { aal: 'aal2' } }),
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET', url: '/api/admin/overview', headers: { authorization: 'Bearer customer-token' }
+  })
+
+  assert.equal(response.statusCode, 403)
+  assert.equal(aggregateQueried, false)
+})
+
+test('returns aggregate platform overview to an active aal2 admin', async t => {
+  const app = buildApp({
+    database: {
+      async query(query) {
+        if (query.includes('from private.platform_admins')) {
+          return { rows: [{ role: 'read_only', status: 'active', mfa_required: true }] }
+        }
+        return { rows: [{
+          workspace_count: 4,
+          shopify_store_count: 5,
+          storefront_count: 5,
+          active_subscription_count: 3,
+          failed_webhook_count: 2,
+          dead_letter_webhook_count: 1
+        }] }
+      }
+    },
+    verifyAccessToken: async () => ({ id: 'admin-1', authContext: { aal: 'aal2' } }),
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET', url: '/api/admin/overview', headers: { authorization: 'Bearer admin-token' }
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(response.json(), {
+    overview: {
+      workspaces: 4,
+      shopifyStores: 5,
+      storefronts: 5,
+      activeSubscriptions: 3,
+      failedWebhooks: 2,
+      deadLetterWebhooks: 1
+    }
+  })
 })
 
 test('returns only the verified user account context', async t => {
@@ -682,4 +795,99 @@ test('passes the exact raw request body to Stripe signature verification', async
   assert.equal(response.statusCode, 200)
   assert.equal(received.rawBody.toString('utf8'), payload)
   assert.equal(received.signature, 't=123,v1=signature')
+})
+
+test('sets security headers and keeps cross-origin API access credentialless', async t => {
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'OPTIONS',
+    url: '/api/account',
+    headers: {
+      origin: 'https://merchant.example',
+      'access-control-request-method': 'GET',
+      'access-control-request-headers': 'authorization'
+    }
+  })
+
+  assert.equal(response.statusCode, 204)
+  assert.equal(response.headers['access-control-allow-origin'], '*')
+  assert.equal(response.headers['access-control-allow-credentials'], undefined)
+  assert.match(response.headers['access-control-allow-headers'], /authorization/i)
+  assert.equal(response.headers['x-content-type-options'], 'nosniff')
+  assert.equal(response.headers['x-frame-options'], 'SAMEORIGIN')
+})
+
+test('rejects JSON request bodies above the configured limit', async t => {
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    logger: false,
+    requestBodyLimitBytes: 64
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/auth/handoff/exchange',
+    payload: { code: 'x'.repeat(100) }
+  })
+
+  assert.equal(response.statusCode, 413)
+  assert.equal(response.json().code, 'FST_ERR_CTP_BODY_TOO_LARGE')
+})
+
+test('rate limits API clients without limiting health checks', async t => {
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    logger: false,
+    rateLimitMax: 2,
+    rateLimitWindowMs: 60_000
+  })
+  t.after(() => app.close())
+
+  assert.equal((await app.inject('/api/account')).statusCode, 401)
+  assert.equal((await app.inject('/api/account')).statusCode, 401)
+  const limited = await app.inject('/api/account')
+  assert.equal(limited.statusCode, 429)
+  assert.equal(limited.json().error, 'rate_limit_exceeded')
+  assert.ok(Number(limited.headers['retry-after']) > 0)
+
+  assert.equal((await app.inject('/api/health')).statusCode, 200)
+  assert.equal((await app.inject('/api/health')).statusCode, 200)
+  assert.equal((await app.inject('/api/health')).statusCode, 200)
+})
+
+test('redacts access credentials from structured error logs', async t => {
+  const chunks = []
+  const stream = new Writable({
+    write(chunk, _encoding, callback) {
+      chunks.push(chunk.toString())
+      callback()
+    }
+  })
+  const secret = 'shpat_must_never_reach_logs'
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    verifyAccessToken: async () => {
+      const error = new Error('verification failed')
+      error.accessToken = secret
+      throw error
+    },
+    logger: { level: 'info', stream }
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/api/account',
+    headers: { authorization: `Bearer ${secret}` }
+  })
+
+  assert.equal(response.statusCode, 503)
+  assert.doesNotMatch(chunks.join(''), new RegExp(secret))
+  assert.match(chunks.join(''), /\[REDACTED\]/)
 })

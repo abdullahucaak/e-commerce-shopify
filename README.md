@@ -9,14 +9,23 @@ yayınlanabilir.
 | Uygulama | Kullanıcı | Sorumluluk | Durum |
 | --- | --- | --- | --- |
 | `apps/yourprostore-ai` | Mağaza sahibi | YourProStore.ai sitesi, hesap, Shopify bağlantısı, mağazalar, kurulum sihirbazı ve abonelikler | Aktif |
-| `apps/yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteri, mağaza, abonelik, kurulum ve sistem operasyonları | Planlandı; henüz kodlanmadı |
+| `apps/yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteri, mağaza, abonelik, kurulum ve sistem operasyonları | Genel durum, workspace ve mağaza operasyon listeleri aktif; geliştirme sürüyor |
 | `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Aktif |
 | `apps/storefront-admin` | Mağaza sahibi | Kendi storefront'unun tasarım, içerik ve domain yönetimi | Aktif |
 | `apps/api` | Uygulamaların tamamı | Supabase, Shopify, Stripe, OAuth, webhook ve public runtime API | Aktif |
 
 `yourprostore-ai-admin` ile `storefront-admin` farklı yetki alanlarıdır. İlki yalnızca
 bizim ekibimize, ikincisi mağaza sahibine açıktır. Dahili yönetici paneli mevcut
-müşteri uygulamasına eklenmeyecek; ileride ayrı uygulama olarak oluşturulacaktır.
+müşteri uygulamasına eklenmemiş, ayrı bir Vue uygulaması olarak oluşturulmuştur.
+
+Dahili admin backend temeli `private.platform_admins` kaydı ile doğrulanmış Supabase
+JWT `aal2` claim'ini birlikte zorunlu tutar. Workspace `owner/admin` rolleri veya JWT
+metadata alanları platform erişimi vermez. Admin hesapları Auth tarafında yalnız
+trusted yönetim işlemiyle `app_metadata.account_type=platform_admin` olarak oluşturulur;
+bu hesaplara müşteri workspace'i açılmaz. `0018_platform_admin_foundation.sql` canlı
+Supabase'e uygulanmıştır. İlk platform `owner` hesabı provision edilmiş ve bu hesap
+için TOTP/AAL2 zorunlu tutulmuştur. Gerçek owner oturumuyla giriş ve salt okunur genel
+durum API'si yerel ortamda doğrulanmıştır.
 
 Supabase ayrı bir uygulama klasörü değildir. Auth, PostgreSQL ve Storage sağlayan ortak
 altyapıdır. Shopify ürün, fiyat, stok, sepet, checkout ve siparişler için ana kaynaktır;
@@ -52,13 +61,17 @@ npm run dev:storefront-admin
 npm run dev:yourprostore-ai
 ```
 
+### YourProStore.ai dahili yönetim — `http://127.0.0.1:5176`
+
+```sh
+npm run dev:yourprostore-ai-admin
+```
+
 ### Backend API — `http://127.0.0.1:3000`
 
 ```sh
 npm run dev:api
 ```
-
-`apps/yourprostore-ai-admin` henüz oluşturulmadığı için bir geliştirme komutu yoktur.
 
 ## Ortam değişkenleri
 
@@ -92,6 +105,26 @@ bekleyen taslak değişiklikler korunur.
 CMS gerçek storefront önizlemesi için API'den beş dakika geçerli, imzalı ve mağazaya
 bağlı bir token alır. Token URL fragment'ında tutulur ve storefront tarafından özel
 Authorization başlığıyla gönderilir; normal ziyaretçiler yalnız yayınlanmış ayarı görür.
+
+API varsayılan olarak IP başına dakikada 300 istekle sınırlandırılır; auth handoff
+endpoint'leri daha dar, imzalı webhook endpoint'leri daha geniş limite sahiptir. Genel
+JSON gövde limiti 1 MiB, görsel upload limiti ayrıca 8 MiB'dir. Bu değerler
+`API_RATE_LIMIT_MAX`, `API_RATE_LIMIT_WINDOW_MS` ve `API_BODY_LIMIT_BYTES` ile
+ayarlanabilir. Tek process geliştirme kurulumu bellekte sayaç kullanır; çok instance'lı
+production dağıtımında ortak Redis store zorunludur. Authorization, cookie, webhook
+imzası ve oturum tokenı alanları yapılandırılmış API loglarında maskelenir.
+
+Shopify webhook abonelikleri `shopify.app.toml` içinde uygulama kapsamlı tanımlanır:
+uninstall, mağaza/domain güncellemeleri ve zorunlu `customers/data_request`,
+`customers/redact`, `shop/redact` konuları aynı imzalı endpoint'e gelir. Olay kimliği
+idempotency anahtarıdır; başarısız teslimatlar yeniden işlenebilir ve sekizinci
+başarısızlıktan sonra operasyon incelemesi için dead-letter durumunda tutulur.
+`shop/redact`, Storage dosyalarını silmek için yalnız backend'de bulunan
+`SUPABASE_SERVICE_ROLE_KEY` değerini gerektirir; platform Shopify müşterisi veya
+siparişi tutmadığı için customer privacy payload'ları event ledger'a kopyalanmaz.
+
+`0017_shopify_webhook_resilience.sql` canlı Supabase'e uygulanmıştır. Yeni handler
+backend'e dağıtıldıktan sonra Shopify app config ayrıca deploy edilmelidir.
 
 ## Parola kurtarma
 
@@ -152,9 +185,11 @@ npm run db:migrate:stripe-billing
 npm run test:api
 npm run test:storefront
 npm run test:storefront-admin
+npm run test:yourprostore-ai
+npm run test:yourprostore-ai-admin
 npm run test:theme
 npm run build
 ```
 
-`npm run build`, aktif üç Vue uygulamasını production için derler. Backend Node.js
+`npm run build`, aktif dört Vue uygulamasını production için derler. Backend Node.js
 tarafından doğrudan çalıştırılır.

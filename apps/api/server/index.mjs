@@ -12,6 +12,7 @@ import { createAuthHandoffService } from './auth-handoff.mjs'
 import { createSupabaseStorageGateway } from './supabase-storage.mjs'
 import { createStorefrontAssetService } from './storefront-assets.mjs'
 import { createStorefrontPreviewService } from './storefront-preview.mjs'
+import { createShopDataRedactor } from './shop-data-redaction.mjs'
 
 const { Pool } = pg
 const config = loadServerConfig()
@@ -39,11 +40,17 @@ const shopifyDomains = createShopifyDomainService({
   apiVersion: config.shopifyApiVersion,
   encryptionSecret: config.shopifyTokenEncryptionSecret
 })
+const shopDataRedactor = createShopDataRedactor({
+  database: pool,
+  supabaseUrl: config.supabaseUrl,
+  serviceRoleKey: config.supabaseServiceRoleKey
+})
 const shopifyWebhooks = createShopifyWebhookService({
   database: pool,
   clientSecret: config.shopifyClientSecret,
   previousClientSecret: config.shopifyPreviousClientSecret,
-  domainService: shopifyDomains
+  domainService: shopifyDomains,
+  shopDataRedactor
 })
 const stripeBilling = config.stripeBillingEnabled
   ? createStripeBillingService({
@@ -95,7 +102,10 @@ const app = buildApp({
   billingProvider: config.billingProvider,
   shopifyApiVersion: config.shopifyApiVersion,
   allowStorefrontHostOverride: config.allowStorefrontHostOverride,
-  trustProxy: config.trustProxy
+  trustProxy: config.trustProxy,
+  requestBodyLimitBytes: config.requestBodyLimitBytes,
+  rateLimitMax: config.rateLimitMax,
+  rateLimitWindowMs: config.rateLimitWindowMs
 })
 
 const shutdown = async signal => {

@@ -8,6 +8,14 @@ function required(name) {
   return value
 }
 
+function positiveInteger(name, fallback) {
+  const value = Number(process.env[name] || fallback)
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer.`)
+  }
+  return value
+}
+
 export function resolveBillingProvider({ nodeEnv, requestedProvider, stripeConfigured }) {
   const provider = requestedProvider?.trim().toLowerCase() ||
     (stripeConfigured ? 'stripe' : 'disabled')
@@ -62,6 +70,7 @@ export function loadServerConfig() {
     supabasePublishableKey:
       process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ||
       required('VITE_SUPABASE_PUBLISHABLE_KEY'),
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null,
     shopifyClientId: required('SHOPIFY_CLIENT_ID'),
     shopifyClientSecret: required('SHOPIFY_CLIENT_SECRET'),
     shopifyPreviousClientSecret:
@@ -96,6 +105,9 @@ export function loadServerConfig() {
     allowStorefrontHostOverride:
       process.env.ALLOW_STOREFRONT_HOST_OVERRIDE === 'true' ||
       nodeEnv !== 'production',
-    trustProxy: process.env.TRUST_PROXY === 'true'
+    trustProxy: process.env.TRUST_PROXY === 'true',
+    requestBodyLimitBytes: positiveInteger('API_BODY_LIMIT_BYTES', 1024 * 1024),
+    rateLimitMax: positiveInteger('API_RATE_LIMIT_MAX', 300),
+    rateLimitWindowMs: positiveInteger('API_RATE_LIMIT_WINDOW_MS', 60 * 1000)
   }
 }

@@ -15,6 +15,9 @@
     "db:migrate:cms-roles": "node --env-file=../../.env server/db/apply-migration.mjs 0014_storefront_admin_roles.sql",
     "db:migrate:asset-validation": "node --env-file=../../.env server/db/apply-migration.mjs 0015_storefront_asset_validation.sql",
     "db:migrate:asset-read-isolation": "node --env-file=../../.env server/db/apply-migration.mjs 0016_storefront_asset_read_isolation.sql",
+    "db:migrate:shopify-webhook-resilience": "node --env-file=../../.env server/db/apply-migration.mjs 0017_shopify_webhook_resilience.sql",
+    "db:migrate:platform-admin-foundation": "node --env-file=../../.env server/db/apply-migration.mjs 0018_platform_admin_foundation.sql",
+    "db:provision:platform-admin": "node --env-file=../../.env server/db/provision-platform-admin.mjs",
     "db:seed:glowfield": "node --env-file=../../.env server/db/seed-glowfield.mjs",
     "db:claim:glowfield-owner": "node --env-file=../../.env server/db/claim-glowfield-owner.mjs",
     "db:verify-tenant-rls": "node --env-file=../../.env server/db/verify-tenant-rls.mjs"
@@ -23,6 +26,7 @@
     "@fastify/cors": "^11.1.0",
     "@fastify/helmet": "^13.0.2",
     "@fastify/multipart": "^10.1.1",
+    "@fastify/rate-limit": "^11.2.0",
     "@supabase/supabase-js": "^2.112.2",
     "fastify": "^5.5.0",
     "pg": "^8.16.3",
