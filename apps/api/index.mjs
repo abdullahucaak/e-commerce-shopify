@@ -124,10 +124,14 @@ const shutdown = async signal => {
 process.on('SIGINT', () => shutdown('SIGINT'))
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 
-try {
-  await app.listen({ port: config.port, host: config.host })
-} catch (error) {
-  app.log.error(error)
-  await pool.end()
-  process.exit(1)
+if (process.env.VERCEL) {
+  // Keep this call identical to Vercel's Fastify entrypoint contract so its
+  // build adapter can replace the listener with a serverless request handler.
+  app.listen({ port: 3000 })
+} else {
+  app.listen({ port: config.port, host: config.host }).catch(async error => {
+    app.log.error(error)
+    await pool.end()
+    process.exit(1)
+  })
 }
