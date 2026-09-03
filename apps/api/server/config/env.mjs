@@ -16,18 +16,26 @@ function positiveInteger(name, fallback) {
   return value
 }
 
-export function resolveBillingProvider({ nodeEnv, requestedProvider, stripeConfigured }) {
+export function resolveBillingProvider({
+  nodeEnv,
+  requestedProvider,
+  stripeConfigured,
+  shopifyAppPricingConfigured = false
+}) {
   const provider = requestedProvider?.trim().toLowerCase() ||
-    (stripeConfigured ? 'stripe' : 'disabled')
+    (shopifyAppPricingConfigured ? 'shopify_app_pricing' : stripeConfigured ? 'stripe' : 'disabled')
 
-  if (!['disabled', 'mock', 'stripe'].includes(provider)) {
-    throw new Error('BILLING_PROVIDER must be disabled, mock or stripe.')
+  if (!['disabled', 'mock', 'stripe', 'shopify_app_pricing'].includes(provider)) {
+    throw new Error('BILLING_PROVIDER must be disabled, mock, stripe or shopify_app_pricing.')
   }
   if (provider === 'mock' && nodeEnv === 'production') {
     throw new Error('BILLING_PROVIDER=mock is forbidden in production.')
   }
   if (provider === 'stripe' && !stripeConfigured) {
     throw new Error('Stripe billing requires all Stripe environment variables.')
+  }
+  if (provider === 'shopify_app_pricing' && !shopifyAppPricingConfigured) {
+    throw new Error('Shopify App Pricing requires all Partner API environment variables.')
   }
   return provider
 }
@@ -39,6 +47,10 @@ export function loadServerConfig() {
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim() || null
   const stripeStarterMonthlyPriceId =
     process.env.STRIPE_STARTER_MONTHLY_PRICE_ID?.trim() || null
+  const shopifyPartnerOrganizationId = process.env.SHOPIFY_PARTNER_ORG_ID?.trim() || null
+  const shopifyPartnerApiAccessToken = process.env.SHOPIFY_PARTNER_API_ACCESS_TOKEN?.trim() || null
+  const shopifyAppGid = process.env.SHOPIFY_APP_GID?.trim() || null
+  const shopifyAppHandle = process.env.SHOPIFY_APP_HANDLE?.trim() || null
 
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error('PORT must be a valid TCP port.')
@@ -51,10 +63,23 @@ export function loadServerConfig() {
     )
   }
   const stripeConfigured = stripeValues.every(Boolean)
+  const shopifyAppPricingValues = [
+    shopifyPartnerOrganizationId,
+    shopifyPartnerApiAccessToken,
+    shopifyAppGid,
+    shopifyAppHandle
+  ]
+  if (shopifyAppPricingValues.some(Boolean) && !shopifyAppPricingValues.every(Boolean)) {
+    throw new Error(
+      'SHOPIFY_PARTNER_ORG_ID, SHOPIFY_PARTNER_API_ACCESS_TOKEN, SHOPIFY_APP_GID and SHOPIFY_APP_HANDLE must be configured together.'
+    )
+  }
+  const shopifyAppPricingConfigured = shopifyAppPricingValues.every(Boolean)
   const billingProvider = resolveBillingProvider({
     nodeEnv,
     requestedProvider: process.env.BILLING_PROVIDER,
-    stripeConfigured
+    stripeConfigured,
+    shopifyAppPricingConfigured
   })
   const storefrontAdminAppUrl =
     process.env.STOREFRONT_ADMIN_APP_URL?.trim() ||
@@ -98,9 +123,14 @@ export function loadServerConfig() {
     stripeSecretKey,
     stripeWebhookSecret,
     stripeStarterMonthlyPriceId,
+    shopifyPartnerOrganizationId,
+    shopifyPartnerApiAccessToken,
+    shopifyAppGid,
+    shopifyAppHandle,
     billingProvider,
     stripeBillingEnabled: billingProvider === 'stripe',
     mockBillingEnabled: billingProvider === 'mock',
+    shopifyAppPricingEnabled: billingProvider === 'shopify_app_pricing',
     databaseSsl: process.env.DATABASE_SSL !== 'false',
     allowStorefrontHostOverride:
       process.env.ALLOW_STOREFRONT_HOST_OVERRIDE === 'true' ||

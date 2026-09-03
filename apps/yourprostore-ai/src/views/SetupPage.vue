@@ -294,18 +294,14 @@ async function savePlan() {
     })
     const checkout = await checkoutResponse.json().catch(() => ({}))
     if (!checkoutResponse.ok || !checkout.checkoutUrl) {
-      throw new Error(checkout.error || 'stripe_checkout_failed')
+      throw new Error(checkout.error || 'shopify_app_pricing_unavailable')
     }
     window.location.assign(checkout.checkoutUrl)
   } catch (cause) {
     console.error('Store plan selection failed', cause)
     if (billingIsMock.value) {
       error.value = 'The test payment could not be completed. Please try again.'
-    } else if (cause.message === 'store_subscription_requires_management') {
-      error.value = 'Update this subscription’s payment details from the Stripe customer portal.'
-    } else {
-      error.value = 'The secure payment page could not be opened. Please try again.'
-    }
+    } else error.value = 'The Shopify plan selection page could not be opened. Please try again.'
   } finally { savingPlan.value = false }
 }
 async function simulateMockBilling(action, { fromPlanSelection = false } = {}) {
@@ -346,16 +342,19 @@ async function openBillingPortal() {
       method: 'POST', body: JSON.stringify({})
     })
     const payload = await response.json().catch(() => ({}))
-    if (!response.ok || !payload.portalUrl) throw new Error(payload.error || 'stripe_portal_failed')
+    if (!response.ok || !payload.portalUrl) throw new Error(payload.error || 'shopify_app_pricing_unavailable')
     window.location.assign(payload.portalUrl)
   } catch (cause) {
-    console.error('Stripe billing portal failed', cause)
+    console.error('Shopify subscription management failed', cause)
     error.value = 'Subscription management could not be opened. Please try again.'
   } finally { openingPortal.value = false }
 }
 async function waitForPaymentConfirmation() {
-  message.value = 'Payment completed. Waiting for Stripe confirmation…'
+  message.value = 'Plan selected. Confirming the subscription with Shopify…'
   for (let attempt = 0; attempt < 8; attempt += 1) {
+    await request(`/api/storefronts/${route.params.storefrontId}/billing/sync`, {
+      method: 'POST', body: JSON.stringify({})
+    }).catch(() => null)
     await load()
     if (subscriptionActive.value) {
       message.value = 'Your payment was confirmed. You can now finish setting up your store.'
@@ -365,7 +364,7 @@ async function waitForPaymentConfirmation() {
     }
     await new Promise(resolve => window.setTimeout(resolve, 1250))
   }
-  message.value = 'Payment received; subscription confirmation is processing. Refresh the page shortly.'
+  message.value = 'Shopify is still processing the subscription. Refresh the page shortly.'
 }
 async function completeSetup() {
   completingSetup.value = true
@@ -392,7 +391,7 @@ onMounted(async () => {
   await load()
   if (route.query.billing === 'success') await waitForPaymentConfirmation()
   if (route.query.billing === 'cancelled') message.value = 'The payment was canceled; your store is not active yet.'
-  if (route.query.billing === 'portal_return') message.value = 'Your subscription status is being updated from Stripe.'
+  if (route.query.billing === 'portal_return') message.value = 'Your subscription status is being updated from Shopify.'
 })
 </script>
 
@@ -497,12 +496,12 @@ onMounted(async () => {
       <p class="eyebrow">Step 8</p>
       <h2>Choose a plan for your store</h2>
       <p v-if="billingIsMock" class="notice">Development mode: no real charge is made. The test action changes only this store’s subscription status.</p>
-      <p v-else class="muted">Each Shopify store requires a separate subscription. Payment is collected on Stripe’s secure payment page and activates only this store.</p>
+      <p v-else class="muted">Each Shopify store requires a separate subscription. Shopify displays the plan, handles approval, and adds the charge to the store’s Shopify invoice.</p>
       <div v-if="subscriptionActive" class="subscription-summary">
         <p class="success-text"><strong>Subscription active.</strong> {{ billingIsMock ? 'The test payment for this store is complete.' : 'Payment for this store was verified.' }}</p>
         <p v-if="data?.subscription?.cancel_at_period_end" class="muted">The subscription will end after the current billing period.</p>
         <button v-if="canManageBilling && !billingIsMock" class="secondary-button" :disabled="openingPortal" @click="openBillingPortal">
-          {{ openingPortal ? 'Opening Stripe…' : 'Manage subscription' }}
+          {{ openingPortal ? 'Opening Shopify…' : 'Manage subscription' }}
         </button>
         <details v-if="billingIsMock" class="mock-controls">
           <summary>Simulate test subscription states</summary>
@@ -526,12 +525,12 @@ onMounted(async () => {
           {{ simulatingBilling ? 'Updating test subscription…' : 'Reactivate test subscription' }}
         </button>
         <button v-else-if="subscriptionNeedsAttention && canManageBilling" :disabled="openingPortal" @click="openBillingPortal">
-          {{ openingPortal ? 'Opening Stripe…' : 'Update payment details' }}
+          {{ openingPortal ? 'Opening Shopify…' : 'Manage subscription in Shopify' }}
         </button>
         <button v-else :disabled="savingPlan || !selectedPlanKey" @click="savePlan">
-          {{ savingPlan ? (billingIsMock ? 'Completing test payment…' : 'Preparing secure payment…') : (billingIsMock ? 'Choose plan and complete test payment' : 'Choose plan and continue to secure payment') }}
+          {{ savingPlan ? (billingIsMock ? 'Completing test payment…' : 'Opening Shopify…') : (billingIsMock ? 'Choose plan and complete test payment' : 'Choose plan in Shopify') }}
         </button>
-        <p v-if="planCompleted" id="plan-complete" class="muted">Plan selected; {{ billingIsMock ? 'activate the test subscription' : 'confirm the payment' }} to finish setup.</p>
+        <p v-if="planCompleted" id="plan-complete" class="muted">Plan selected; {{ billingIsMock ? 'activate the test subscription' : 'approve it in Shopify' }} to finish setup.</p>
       </template>
     </section>
     <section v-if="subscriptionActive" id="setup-complete" class="card wizard-section completion-card">

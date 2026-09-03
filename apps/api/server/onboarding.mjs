@@ -14,7 +14,7 @@ export const STORE_PLAN_CATALOG = Object.freeze([
   Object.freeze({
     key: 'starter_monthly',
     name: 'YourProStore Starter',
-    description: 'Tek bir Shopify mağazası için Vue vitrini ve mağaza yönetim paneli.',
+    description: 'A buyer-facing storefront and store management panel for one Shopify store.',
     billingInterval: 'month',
     unitAmount: 900,
     currencyCode: 'USD'
@@ -103,7 +103,7 @@ export async function selectStorePlan({ database, userId, storefrontId, planKey 
     const subscription = await client.query(
       `insert into public.store_subscriptions
          (storefront_id, plan_key, status, unit_amount, currency_code, provider)
-       values ($1, $2, 'incomplete', $3, $4, 'stripe')
+       values ($1, $2, 'incomplete', $3, $4, 'shopify_app_pricing')
        on conflict (storefront_id) do update set
          plan_key = excluded.plan_key,
          unit_amount = excluded.unit_amount,

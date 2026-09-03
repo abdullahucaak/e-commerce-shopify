@@ -26,7 +26,10 @@ test('fails closed across every storefront route family for another tenant id', 
     verifyAccessToken: async () => ({ id: 'tenant-a-user' }),
     storefrontPreview: { issue: denied, verify: denied },
     productReadiness: { check: denied },
-    stripeBilling: { createCheckout: denied, createPortal: denied },
+    shopifyAppPricing: {
+      createPlanSelection: denied,
+      synchronize: denied
+    },
     mockBilling: { simulate: denied },
     shopifyDomains: { read: async () => null, sync: denied },
     storefrontAssets: { remove: denied },

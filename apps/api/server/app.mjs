@@ -62,6 +62,7 @@ export function buildApp({
   shopifyWebhooks = null,
   stripeBilling = null,
   mockBilling = null,
+  shopifyAppPricing = null,
   productReadiness = null,
   authHandoff = null,
   storefrontAssets = null,
@@ -143,6 +144,28 @@ export function buildApp({
     })
 
     app.get('/api/health', { config: { rateLimit: false } }, async () => ({ status: 'ok' }))
+
+    app.get('/api/shopify/billing/callback', async (request, reply) => {
+      if (!shopifyAppPricing) {
+        return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
+      }
+      try {
+        const result = await shopifyAppPricing.handleCallback({
+          shop: request.query?.shop,
+          planHandle: request.query?.plan_handle
+        })
+        return reply.redirect(result.redirectUrl)
+      } catch (error) {
+        if (['invalid_shop_domain', 'shopify_store_not_found'].includes(error.message)) {
+          return reply.code(400).send({ error: error.message })
+        }
+        if (error.message === 'shopify_pricing_not_active') {
+          return reply.code(409).send({ error: error.message })
+        }
+        app.log.error({ err: error }, 'Shopify App Pricing callback failed')
+        return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
+      }
+    })
 
   app.post('/api/shopify/webhooks', {
     config: { rateLimit: { max: 1000, timeWindow: rateLimitWindowMs } }
@@ -598,33 +621,42 @@ export function buildApp({
   })
 
   app.post('/api/storefronts/:storefrontId/billing/checkout', async (request, reply) => {
-    if (!stripeBilling) {
-      return reply.code(503).send({ error: 'stripe_billing_unavailable' })
+    if (!shopifyAppPricing) {
+      return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
     }
     try {
       const user = await authenticatedUser(request, reply)
       if (!user?.id) return
-      return await stripeBilling.createCheckout({
+      return await shopifyAppPricing.createPlanSelection({
         userId: user.id,
-        userEmail: user.email || null,
         storefrontId: request.params.storefrontId
       })
     } catch (error) {
       if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
         return reply.code(403).send({ error: error.message })
       }
-      if ([
-        'store_plan_not_selected',
-        'store_subscription_already_active',
-        'store_subscription_requires_management'
-      ].includes(error.message)) {
-        return reply.code(409).send({ error: error.message })
+      app.log.error({ err: error }, 'Shopify plan selection failed')
+      return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
+    }
+  })
+
+  app.post('/api/storefronts/:storefrontId/billing/sync', async (request, reply) => {
+    if (!shopifyAppPricing) {
+      return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
+    }
+    try {
+      const user = await authenticatedUser(request, reply)
+      if (!user?.id) return
+      return await shopifyAppPricing.synchronize({
+        userId: user.id,
+        storefrontId: request.params.storefrontId
+      })
+    } catch (error) {
+      if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
+        return reply.code(403).send({ error: error.message })
       }
-      if (['store_plan_price_unavailable', 'store_plan_price_mismatch'].includes(error.message)) {
-        return reply.code(503).send({ error: error.message })
-      }
-      app.log.error({ err: error }, 'Stripe Checkout creation failed')
-      return reply.code(503).send({ error: 'stripe_checkout_failed' })
+      app.log.error({ err: error }, 'Shopify subscription synchronization failed')
+      return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
     }
   })
 
@@ -655,25 +687,23 @@ export function buildApp({
   }
 
   app.post('/api/storefronts/:storefrontId/billing/portal', async (request, reply) => {
-    if (!stripeBilling) {
-      return reply.code(503).send({ error: 'stripe_billing_unavailable' })
+    if (!shopifyAppPricing) {
+      return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
     }
     try {
       const user = await authenticatedUser(request, reply)
       if (!user?.id) return
-      return await stripeBilling.createPortal({
+      const result = await shopifyAppPricing.createPlanSelection({
         userId: user.id,
         storefrontId: request.params.storefrontId
       })
+      return { portalUrl: result.checkoutUrl }
     } catch (error) {
       if (['storefront_access_denied', 'storefront_billing_denied'].includes(error.message)) {
         return reply.code(403).send({ error: error.message })
       }
-      if (error.message === 'stripe_customer_unavailable') {
-        return reply.code(409).send({ error: error.message })
-      }
-      app.log.error({ err: error }, 'Stripe customer portal creation failed')
-      return reply.code(503).send({ error: 'stripe_portal_failed' })
+      app.log.error({ err: error }, 'Shopify subscription management failed')
+      return reply.code(503).send({ error: 'shopify_app_pricing_unavailable' })
     }
   })
 

@@ -17,6 +17,7 @@
     "db:migrate:asset-read-isolation": "node --env-file=../../.env server/db/apply-migration.mjs 0016_storefront_asset_read_isolation.sql",
     "db:migrate:shopify-webhook-resilience": "node --env-file=../../.env server/db/apply-migration.mjs 0017_shopify_webhook_resilience.sql",
     "db:migrate:platform-admin-foundation": "node --env-file=../../.env server/db/apply-migration.mjs 0018_platform_admin_foundation.sql",
+    "db:migrate:shopify-app-pricing": "node --env-file=../../.env server/db/apply-migration.mjs 0019_shopify_app_pricing.sql",
     "db:provision:platform-admin": "node --env-file=../../.env server/db/provision-platform-admin.mjs",
     "db:seed:glowfield": "node --env-file=../../.env server/db/seed-glowfield.mjs",
     "db:claim:glowfield-owner": "node --env-file=../../.env server/db/claim-glowfield-owner.mjs",

@@ -8,6 +8,7 @@ import { createShopifyDomainService } from './server/domain-sync.mjs'
 import { createShopifyWebhookService } from './server/shopify-webhooks.mjs'
 import { createStripeBillingService } from './server/stripe-billing.mjs'
 import { createMockBillingService } from './server/mock-billing.mjs'
+import { createShopifyAppPricingService } from './server/shopify-app-pricing.mjs'
 import { createProductReadinessService } from './server/product-readiness.mjs'
 import { createAuthHandoffService } from './server/auth-handoff.mjs'
 import { createSupabaseStorageGateway } from './server/supabase-storage.mjs'
@@ -71,6 +72,17 @@ const stripeBilling = config.stripeBillingEnabled
 const mockBilling = config.mockBillingEnabled
   ? createMockBillingService({ database: pool })
   : null
+const shopifyAppPricing = config.shopifyAppPricingEnabled
+  ? createShopifyAppPricingService({
+    database: pool,
+    organizationId: config.shopifyPartnerOrganizationId,
+    appId: config.shopifyAppGid,
+    appHandle: config.shopifyAppHandle,
+    accessToken: config.shopifyPartnerApiAccessToken,
+    yourProStoreUrl: config.yourProStoreAppUrl,
+    apiVersion: config.shopifyApiVersion
+  })
+  : null
 const productReadiness = createProductReadinessService({
   database: pool,
   apiVersion: config.shopifyApiVersion
@@ -101,6 +113,7 @@ buildApp({
   shopifyWebhooks,
   stripeBilling,
   mockBilling,
+  shopifyAppPricing,
   productReadiness,
   authHandoff,
   storefrontAssets,

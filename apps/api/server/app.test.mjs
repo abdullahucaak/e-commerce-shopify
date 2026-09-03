@@ -705,15 +705,15 @@ test('allows an explicit storefront host only in configured development environm
   assert.deepEqual(receivedParameters, ['glowfield.co'])
 })
 
-test('creates Stripe Checkout only for the authenticated storefront user', async t => {
+test('opens Shopify App Pricing only for the authenticated storefront user', async t => {
   let received = null
   const app = buildApp({
     database: { query: async () => ({ rows: [] }) },
     verifyAccessToken: async token => ({ id: 'user-1', email: `${token}@example.com` }),
-    stripeBilling: {
-      async createCheckout(input) {
+    shopifyAppPricing: {
+      async createPlanSelection(input) {
         received = input
-        return { checkoutUrl: 'https://checkout.stripe.test/session', sessionId: 'cs_test_1' }
+        return { checkoutUrl: 'https://admin.shopify.com/store/example/charges/app/pricing_plans' }
       }
     },
     logger: false
@@ -730,8 +730,33 @@ test('creates Stripe Checkout only for the authenticated storefront user', async
   assert.equal(response.statusCode, 200)
   assert.deepEqual(received, {
     userId: 'user-1',
-    userEmail: 'owner@example.com',
     storefrontId: 'storefront-1'
+  })
+})
+
+test('verifies the Shopify App Pricing callback before redirecting', async t => {
+  let received = null
+  const app = buildApp({
+    database: { query: async () => ({ rows: [] }) },
+    shopifyAppPricing: {
+      async handleCallback(input) {
+        received = input
+        return { redirectUrl: 'https://yourprostore.ai/setup/storefront-1?billing=success' }
+      }
+    },
+    logger: false
+  })
+  t.after(() => app.close())
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/api/shopify/billing/callback?shop=example.myshopify.com&plan_handle=starter-monthly'
+  })
+
+  assert.equal(response.statusCode, 302)
+  assert.equal(response.headers.location, 'https://yourprostore.ai/setup/storefront-1?billing=success')
+  assert.deepEqual(received, {
+    shop: 'example.myshopify.com', planHandle: 'starter-monthly'
   })
 })
 

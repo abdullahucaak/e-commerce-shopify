@@ -31,6 +31,7 @@
     "db:migrate:storage": "npm run db:migrate:storage --workspace @yourprostore/api",
     "db:migrate:store-selection": "npm run db:migrate:store-selection --workspace @yourprostore/api",
     "db:migrate:stripe-billing": "npm run db:migrate:stripe-billing --workspace @yourprostore/api",
+    "db:migrate:shopify-app-pricing": "npm run db:migrate:shopify-app-pricing --workspace @yourprostore/api",
     "db:migrate:banner-catalog": "npm run db:migrate:banner-catalog --workspace @yourprostore/api",
     "db:migrate:auth-handoff": "npm run db:migrate:auth-handoff --workspace @yourprostore/api",
     "db:migrate:cms-roles": "npm run db:migrate:cms-roles --workspace @yourprostore/api",

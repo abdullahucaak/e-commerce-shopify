@@ -68,6 +68,14 @@ fiyat planı, inceleme iletişimleri ve test hesabı/video/talimatları bekliyor
 İngilizce dil ve “özel yetenek yok” beyanları nihai değildir; aşağıdaki ürün ve
 sınıflandırma ön koşulları tamamlandıktan sonra yeniden doğrulanacaktır.
 
+**3 Eylül 2026 production arayüz güncellemesi:** `yourprostore-ai` ve
+`storefront-admin` mağaza sahibi arayüzleri İngilizceleştirildi; ilgili 26 test ve
+iki production build geçti. `aa7911d` commit'i GitHub `main` dalına gönderildi,
+iki Vercel deployment'ı `Ready` oldu ve `yourprostore.ai` ana sayfası ile
+`manage.yourprostore.ai` giriş ekranı canlıda İngilizce doğrulandı. Tam kayıt,
+Shopify bağlantısı, onboarding, abonelik ve CMS akış testi Shopify App Pricing
+entegrasyonu tamamlandıktan sonra yapılacaktır.
+
 ### Devam ederken bilinmesi gereken teknik durum
 
 - Canlı Supabase'e en az `0012`–`0018` migration'ları uygulanmıştır; mevcut
@@ -214,8 +222,10 @@ production pilotundan önce tamamlanır.
 - [x] Mağaza sahibinin kullandığı `storefront-admin` arayüzünü eksiksiz İngilizceleştir
 - [ ] İngilizce arayüzü kayıt, giriş, onboarding, mağazalar, abonelikler ve CMS akışlarında test et
 - [x] Shopify App Pricing içinde `Starter` (`starter-monthly`, 9 USD/ay) public planını taslak olarak oluştur; geliştirme mağazalarında ücretsiz testi aç
-- [ ] Public App Store aboneliği için Stripe yerine Shopify App Pricing modelini uygula
-- [ ] Partner API Active Subscription sorgusunu ve Shopify plan dönüş URL'sini uygulamaya bağla
+- [x] Public App Store aboneliği için Stripe yerine Shopify App Pricing modelini uygula
+- [x] Partner API Active Subscription sorgusunu ve Shopify plan dönüş URL'sini uygulamaya bağla
+- [x] Yalnız `Manage apps` yetkili Partner API istemcisini oluştur ve gerekli Shopify App Pricing değişkenlerini Vercel production ortamına gizli olarak kaydet
+- [ ] `0019_shopify_app_pricing.sql` migration'ını production veritabanına uygula ve yeni API sürümünü deploy et
 - [ ] Shopify App Pricing test mağazası akışını; seçim, onay, aktif, iptal ve başarısız durumlarla doğrula
 - [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
 - [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula

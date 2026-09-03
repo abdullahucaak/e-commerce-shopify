@@ -32,3 +32,17 @@ test('defaults to disabled without Stripe credentials', () => {
     nodeEnv: 'test', requestedProvider: '', stripeConfigured: false
   }), 'disabled')
 })
+
+test('prefers Shopify App Pricing when Partner API credentials are configured', () => {
+  assert.equal(resolveBillingProvider({
+    nodeEnv: 'production', requestedProvider: '', stripeConfigured: false,
+    shopifyAppPricingConfigured: true
+  }), 'shopify_app_pricing')
+  assert.throws(
+    () => resolveBillingProvider({
+      nodeEnv: 'production', requestedProvider: 'shopify_app_pricing', stripeConfigured: false,
+      shopifyAppPricingConfigured: false
+    }),
+    /requires all Partner API environment variables/
+  )
+})

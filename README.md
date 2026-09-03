@@ -12,7 +12,7 @@ yayınlanabilir.
 | `apps/yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteri, mağaza, abonelik, kurulum ve sistem operasyonları | Genel durum, workspace ve mağaza operasyon listeleri aktif; geliştirme sürüyor |
 | `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Aktif |
 | `apps/storefront-admin` | Mağaza sahibi | Kendi storefront'unun tasarım, içerik ve domain yönetimi | Aktif |
-| `apps/api` | Uygulamaların tamamı | Supabase, Shopify, Stripe, OAuth, webhook ve public runtime API | Aktif |
+| `apps/api` | Uygulamaların tamamı | Supabase, Shopify App Pricing, OAuth, webhook ve public runtime API | Aktif |
 
 `yourprostore-ai-admin` ile `storefront-admin` farklı yetki alanlarıdır. İlki yalnızca
 bizim ekibimize, ikincisi mağaza sahibine açıktır. Dahili yönetici paneli mevcut
@@ -29,7 +29,7 @@ durum API'si yerel ortamda doğrulanmıştır.
 
 Supabase ayrı bir uygulama klasörü değildir. Auth, PostgreSQL ve Storage sağlayan ortak
 altyapıdır. Shopify ürün, fiyat, stok, sepet, checkout ve siparişler için ana kaynaktır;
-platform veritabanı ürün kopyası tutmaz. Stripe mağaza başına platform aboneliğini
+platform veritabanı ürün kopyası tutmaz. Shopify App Pricing mağaza başına platform aboneliğini
 yönetir.
 
 - Sistem mimarisi: [`docs/system-architecture-tr.md`](docs/system-architecture-tr.md)
@@ -145,7 +145,7 @@ http://127.0.0.1:5175/update-password
 Production ortamında aynı listenin `https://manage.yourprostore.ai/update-password`
 ve `https://yourprostore.ai/update-password` adreslerini de içermesi gerekir.
 
-## Stripe mağaza abonelikleri
+## Shopify App Pricing mağaza abonelikleri
 
 Günlük geliştirme ve sihirbaz testlerinde gerçek ödeme yerine aşağıdaki güvenli mock
 modu kullanılır:
@@ -160,24 +160,24 @@ Mock mod yalnızca seçilen storefront aboneliğini değiştirir; aktivasyon, ba
 `NODE_ENV=production` ortamında `BILLING_PROVIDER=mock` seçilirse API güvenlik amacıyla
 başlamaz.
 
-Gerçek Stripe testlerine geçildiğinde `BILLING_PROVIDER=stripe` kullanılır:
+Public App Store production abonelikleri Shopify App Pricing üzerinden yürür. Shopify,
+plan seçimini ve mağaza faturasına yansıtılan tahsilatı yönetir; uygulama dönüş URL'sine
+güvenmeden Partner API Active Subscription sorgusuyla aboneliği doğrular.
 
-1. Stripe'ta aylık `9 USD` tutarında yinelenen bir Price oluştur.
-2. `.env.example` içindeki `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` ve
-   `STRIPE_STARTER_MONTHLY_PRICE_ID` değerlerini `.env` dosyasında tanımla.
-3. Stripe billing migration'ını çalıştır:
+1. Partner Dashboard'da `Starter` / `starter-monthly` / `9 USD aylık` planını tanımla.
+2. Manage apps yetkili Partner API istemcisi oluştur ve `.env.example` içindeki
+   `SHOPIFY_PARTNER_*`, `SHOPIFY_APP_GID` ve `SHOPIFY_APP_HANDLE` değerlerini yalnız
+   backend secret manager içinde tanımla.
+3. Provider migration'ını çalıştır:
 
 ```sh
-npm run db:migrate:stripe-billing
+npm run db:migrate:shopify-app-pricing
 ```
 
-4. Stripe webhook adresini `https://API-ADRESI/api/stripe/webhooks` olarak ekle ve
-   `checkout.session.completed`, `checkout.session.expired`,
-   `customer.subscription.created`, `customer.subscription.updated`,
-   `customer.subscription.deleted`, `invoice.paid` ve `invoice.payment_failed`
-   olaylarını seç.
-5. Ödeme yöntemi güncelleme ve abonelik iptali için Stripe Customer Portal'ı
-   Dashboard'dan etkinleştir.
+4. Production'da `BILLING_PROVIDER=shopify_app_pricing` seç.
+5. Development store üzerinden plan seçimi, dönüş URL'si, aktif abonelik ve iptal
+   durumlarını doğrula. Shopify App Pricing abonelik değişiklikleri webhook göndermez;
+   uygulama dönüşte ve abonelik ekranı açıldığında Partner API'den güncel durumu okur.
 
 ## Test ve build
 
