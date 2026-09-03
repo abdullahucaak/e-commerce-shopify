@@ -125,7 +125,7 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] `localStorage.isAdmin` ve sahte `/admins` girişini kaldır
 - [x] İlk kullanıcı için workspace oluşturma işlemini ekle
 - [x] Workspace üyelik ve rol kontrollerini backend'e ekle
-- [ ] İki kullanıcının birbirinin mağaza ayarlarını göremediğini test et
+- [x] İki kullanıcının birbirinin mağaza ayarlarını göremediğini test et (Faz 4'teki iki gerçek müşteriyle çift yönlü canlı RLS/Storage doğrulaması ve storefront route fail-closed matrisiyle kanıtlandı; ilgili 9 otomatik test yeniden geçti)
 
 ## Faz 2 — Shopify mağaza bağlantısı
 
