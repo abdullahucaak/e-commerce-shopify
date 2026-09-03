@@ -8,6 +8,13 @@ import { loadStorefrontRuntimeConfig } from './services/storefrontRuntime'
 
 import './assets/base.css'
 
+if (window.location.hostname === 'store-staging.yourprostore.ai') {
+  const robots = document.createElement('meta')
+  robots.name = 'robots'
+  robots.content = 'noindex,nofollow,noarchive'
+  document.head.append(robots)
+}
+
 function enablePlatformDraftPreview() {
   if (!import.meta.env.DEV || window.top === window) return
 

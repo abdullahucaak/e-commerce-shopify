@@ -46,6 +46,16 @@ api.yourprostore.ai         -> apps/api
 müşterinin-domaini.com      -> apps/storefront
 ```
 
+Aktif online staging adresleri:
+
+```text
+staging.yourprostore.ai          -> apps/yourprostore-ai
+admin-staging.yourprostore.ai    -> apps/yourprostore-ai-admin
+manage-staging.yourprostore.ai   -> apps/storefront-admin
+api-staging.yourprostore.ai      -> apps/api
+store-staging.yourprostore.ai    -> apps/storefront
+```
+
 Uygulama adı ile domain adının aynı olması zorunlu değildir. `manage.yourprostore.ai`,
 mağaza sahibinin yönetim alanını dahili `admin.yourprostore.ai` panelinden ayırır.
 
@@ -99,7 +109,7 @@ Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğ
 ## Online test ve ortam ayrımı
 
 Mağaza sahibinin terminal çalıştırmadan bütün ürünü test edebilmesi için internette
-çalışan ayrı bir staging ortamı kurulacaktır. Staging, production'ın kopyası gibi çalışır
+çalışan ayrı staging altyapısı kurulmuştur. Staging, production'ın kopyası gibi çalışır
 ancak gerçek müşterilerden, production veritabanından ve gerçek uygulama aboneliklerinden
 ayrılır.
 
@@ -128,6 +138,12 @@ Staging kuralları:
   workspace owner/admin kontrolü birlikte sağlandığında açılır.
 - Production'da mock endpoint'i kapalı kalır ve Shopify aboneliği Partner API ile doğrulanır.
 - Mock ortamda aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumları denenir.
+
+Staging Supabase ve sabit Vercel adresleri aktiftir. Ortamın test kullanımına açılması
+için yetkili test hesabı oluşturulacak, ardından genel kayıt kapatılacak ve ayrı Shopify
+geliştirme mağazası bağlanacaktır. Staging hostlarında platform, CMS ve storefront
+sayfaları dinamik `noindex,nofollow,noarchive` meta etiketi kullanır; dahili admin
+uygulaması bütün ortamlarda zaten `noindex,nofollow` olarak işaretlidir.
 - Mock testler tamamlanınca gerçek para alınmadan ayrı Shopify geliştirme mağazasında
   App Pricing plan seçimi/onayı test edilir.
 - Shopify App Pricing'in genel etkinleştirilmesi ve App Store incelemesine gönderim

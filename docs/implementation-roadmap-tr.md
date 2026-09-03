@@ -11,7 +11,8 @@ promptu tutulmamalıdır.
 - Kullanıcıyla Türkçe konuş; güvenli ve kapsam içindeki sıradaki işi yalnızca
   raporlamak yerine uygula.
 - Working tree'deki kullanıcı değişikliklerini geri alma, resetleme veya üzerine yazma.
-- Commit ve push işlemini yalnızca kullanıcı açıkça istediğinde yap.
+- Kullanıcının bu proje için verdiği sürekli onay gereği, tamamlanıp test edilen kapsam içi
+  değişiklikleri ayrıca sormadan commit ve push et; ilgisiz kullanıcı değişikliklerini dahil etme.
 - Secret değerleri mesaja veya Git'e yazma; yalnızca Git tarafından yok sayılan
   `.env` dosyalarında veya hosting secret manager içinde tut.
 - Public App Store aboneliklerinde Shopify App Pricing tek gerçek ödeme yöntemidir;
@@ -62,6 +63,16 @@ etmeden önce giriş korumalı online staging ortamını kurmak. Mock ödeme dur
 ürünün tamamı bu ortamda terminal gerektirmeden tarayıcıdan test edilecek. Sonrasında
 ücretsiz geliştirme mağazası Shopify App Pricing testi yapılacak. App Pricing'i
 etkinleştirme ve “Submit for review” işlemleri ayrı açık kullanıcı onayları gerektirir.
+
+**3 Eylül 2026 online staging ilerlemesi:** Production'dan ayrı
+`ecommerce-shopify-staging` Supabase projesi oluşturuldu ve `0001`–`0019`
+migration'ları uygulandı. Ayrı Vercel projeleri `staging.yourprostore.ai`,
+`api-staging.yourprostore.ai`, `manage-staging.yourprostore.ai`,
+`admin-staging.yourprostore.ai` ve `store-staging.yourprostore.ai` adreslerinde HTTPS
+üzerinden yayına alındı. Staging API `APP_ENV=staging` ve mock billing kilidiyle ayrı
+veritabanına bağlandı; `/api/health` yanıtı `ok` olarak doğrulandı. Supabase Auth site
+ve redirect allowlist'i yalnız staging adresleriyle yapılandırıldı. Yetkili test hesabı
+oluşturma, yeni kayıtları kapatma ve ayrı Shopify geliştirme mağazası bağlantısı sıradadır.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -206,8 +217,8 @@ production pilotundan önce tamamlanır.
 
 ## Faz 8 — Üretim güvenliği ve operasyon
 
-- [ ] Development, online staging ve production ortamlarını veri, secret ve domain düzeyinde ayır
-- [ ] Online staging için sabit platform, API, CMS ve storefront adreslerini oluştur
+- [x] Development, online staging ve production ortamlarını veri, secret ve domain düzeyinde ayır
+- [x] Online staging için sabit platform, API, CMS ve storefront adreslerini oluştur
 - [ ] Staging erişimini yalnız yetkili test kullanıcılarıyla sınırla; arama motorlarından gizle
 - [ ] Staging'e ayrı Supabase proje/veritabanı, Storage alanı ve ayrı Shopify geliştirme mağazası bağla
 - [x] `APP_ENV=staging` ve `ALLOW_MOCK_BILLING=true` birlikteyken mock billing'i online staging build'inde açan; `APP_ENV=production` için kesin olarak reddeden ortam kilidini ve testlerini ekle
