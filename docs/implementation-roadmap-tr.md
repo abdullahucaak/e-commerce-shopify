@@ -225,7 +225,7 @@ production pilotundan önce tamamlanır.
 - [x] Public App Store aboneliği için Stripe yerine Shopify App Pricing modelini uygula
 - [x] Partner API Active Subscription sorgusunu ve Shopify plan dönüş URL'sini uygulamaya bağla
 - [x] Yalnız `Manage apps` yetkili Partner API istemcisini oluştur ve gerekli Shopify App Pricing değişkenlerini Vercel production ortamına gizli olarak kaydet
-- [ ] `0019_shopify_app_pricing.sql` migration'ını production veritabanına uygula ve yeni API sürümünü deploy et
+- [x] `0019_shopify_app_pricing.sql` migration'ını production veritabanına uygula ve yeni API sürümünü deploy et (`c39575f`, Vercel `Ready`, `/api/health` `ok`)
 - [ ] Shopify App Pricing test mağazası akışını; seçim, onay, aktif, iptal ve başarısız durumlarla doğrula
 - [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
 - [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula
