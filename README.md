@@ -157,13 +157,17 @@ modu kullanılır:
 
 ```text
 NODE_ENV=development
+APP_ENV=development
 BILLING_PROVIDER=mock
 ```
 
 Mock mod yalnızca seçilen storefront aboneliğini değiştirir; aktivasyon, başarısız
 ödeme, duraklatma, iptal ve yeniden etkinleştirme senaryolarını audit log ile kaydeder.
-`NODE_ENV=production` ortamında `BILLING_PROVIDER=mock` seçilirse API güvenlik amacıyla
-başlamaz.
+Online staging Vercel üzerinde optimize edilmiş bir production build'i çalıştırdığı için
+`NODE_ENV=production`, `APP_ENV=staging`, `ALLOW_MOCK_BILLING=true` ve
+`BILLING_PROVIDER=mock` birlikte kullanılır. Mock billing yalnız giriş korumalı, ayrı
+veritabanlı staging ortamında bu açık anahtarla başlar. `APP_ENV=production` ortamında
+`ALLOW_MOCK_BILLING=true` verilse bile mock provider reddedilir.
 
 Public App Store production abonelikleri Shopify App Pricing üzerinden yürür. Shopify,
 plan seçimini ve mağaza faturasına yansıtılan tahsilatı yönetir; uygulama dönüş URL'sine

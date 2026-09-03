@@ -18,6 +18,8 @@ function positiveInteger(name, fallback) {
 
 export function resolveBillingProvider({
   nodeEnv,
+  appEnv = nodeEnv,
+  allowMockBilling = false,
   requestedProvider,
   stripeConfigured,
   shopifyAppPricingConfigured = false
@@ -28,8 +30,12 @@ export function resolveBillingProvider({
   if (!['disabled', 'mock', 'stripe', 'shopify_app_pricing'].includes(provider)) {
     throw new Error('BILLING_PROVIDER must be disabled, mock, stripe or shopify_app_pricing.')
   }
-  if (provider === 'mock' && nodeEnv === 'production') {
-    throw new Error('BILLING_PROVIDER=mock is forbidden in production.')
+  if (provider === 'mock') {
+    const localEnvironment = nodeEnv !== 'production' && ['development', 'test'].includes(appEnv)
+    const protectedStaging = appEnv === 'staging' && allowMockBilling === true
+    if (!localEnvironment && !protectedStaging) {
+      throw new Error('BILLING_PROVIDER=mock is allowed only in local development/test or explicitly enabled staging.')
+    }
   }
   if (provider === 'stripe' && !stripeConfigured) {
     throw new Error('Stripe billing requires all Stripe environment variables.')
@@ -43,6 +49,12 @@ export function resolveBillingProvider({
 export function loadServerConfig() {
   const port = Number(process.env.PORT || 3000)
   const nodeEnv = process.env.NODE_ENV?.trim() || 'development'
+  const appEnv = process.env.APP_ENV?.trim().toLowerCase() ||
+    (nodeEnv === 'production' ? 'production' : nodeEnv === 'test' ? 'test' : 'development')
+  if (!['development', 'test', 'staging', 'production'].includes(appEnv)) {
+    throw new Error('APP_ENV must be development, test, staging or production.')
+  }
+  const allowMockBilling = process.env.ALLOW_MOCK_BILLING === 'true'
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim() || null
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim() || null
   const stripeStarterMonthlyPriceId =
@@ -77,6 +89,8 @@ export function loadServerConfig() {
   const shopifyAppPricingConfigured = shopifyAppPricingValues.every(Boolean)
   const billingProvider = resolveBillingProvider({
     nodeEnv,
+    appEnv,
+    allowMockBilling,
     requestedProvider: process.env.BILLING_PROVIDER,
     stripeConfigured,
     shopifyAppPricingConfigured
@@ -88,6 +102,7 @@ export function loadServerConfig() {
 
   return {
     port,
+    appEnv,
     host: process.env.API_HOST?.trim() || '127.0.0.1',
     databaseUrl: required('DATABASE_URL'),
     supabaseUrl:

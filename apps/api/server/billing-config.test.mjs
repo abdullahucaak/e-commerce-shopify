@@ -3,15 +3,27 @@ import test from 'node:test'
 
 import { resolveBillingProvider } from './config/env.mjs'
 
-test('uses mock billing only outside production', () => {
+test('uses mock billing locally and in explicitly enabled staging, never in production', () => {
   assert.equal(resolveBillingProvider({
-    nodeEnv: 'development', requestedProvider: 'mock', stripeConfigured: false
+    nodeEnv: 'development', appEnv: 'development', requestedProvider: 'mock', stripeConfigured: false
+  }), 'mock')
+  assert.equal(resolveBillingProvider({
+    nodeEnv: 'production', appEnv: 'staging', allowMockBilling: true,
+    requestedProvider: 'mock', stripeConfigured: false
   }), 'mock')
   assert.throws(
     () => resolveBillingProvider({
-      nodeEnv: 'production', requestedProvider: 'mock', stripeConfigured: false
+      nodeEnv: 'production', appEnv: 'staging', allowMockBilling: false,
+      requestedProvider: 'mock', stripeConfigured: false
     }),
-    /forbidden in production/
+    /explicitly enabled staging/
+  )
+  assert.throws(
+    () => resolveBillingProvider({
+      nodeEnv: 'production', appEnv: 'production', allowMockBilling: true,
+      requestedProvider: 'mock', stripeConfigured: false
+    }),
+    /explicitly enabled staging/
   )
 })
 

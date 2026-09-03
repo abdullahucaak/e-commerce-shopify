@@ -210,7 +210,7 @@ production pilotundan önce tamamlanır.
 - [ ] Online staging için sabit platform, API, CMS ve storefront adreslerini oluştur
 - [ ] Staging erişimini yalnız yetkili test kullanıcılarıyla sınırla; arama motorlarından gizle
 - [ ] Staging'e ayrı Supabase proje/veritabanı, Storage alanı ve ayrı Shopify geliştirme mağazası bağla
-- [ ] `APP_ENV=staging` ve açık güvenlik anahtarıyla mock billing'i yalnız staging'de etkinleştir; production korumasını kaldırma
+- [x] `APP_ENV=staging` ve `ALLOW_MOCK_BILLING=true` birlikteyken mock billing'i online staging build'inde açan; `APP_ENV=production` için kesin olarak reddeden ortam kilidini ve testlerini ekle
 - [ ] Mock ödeme senaryolarını tarayıcı arayüzünden aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
 - [x] API rate limit ve kötüye kullanım koruması ekle
