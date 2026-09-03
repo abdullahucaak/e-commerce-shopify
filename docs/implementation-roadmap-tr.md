@@ -14,8 +14,9 @@ promptu tutulmamalıdır.
 - Commit ve push işlemini yalnızca kullanıcı açıkça istediğinde yap.
 - Secret değerleri mesaja veya Git'e yazma; yalnızca Git tarafından yok sayılan
   `.env` dosyalarında veya hosting secret manager içinde tut.
-- Gerçek Stripe live mode'u son aşamaya kadar açma. Mock billing production'da
-  kullanılmamalı ve zaten reddedilmelidir.
+- Public App Store aboneliklerinde Shopify App Pricing tek gerçek ödeme yöntemidir;
+  Stripe live mode açılmayacaktır. Mock billing yalnız erişimi sınırlandırılmış online
+  staging/test ortamında kullanılmalı, gerçek production ortamında reddedilmelidir.
 - Shopify incelemesine nihai gönderim, ödeme veya benzeri geri dönüşü zor işlemleri
   açık kullanıcı onayı olmadan yapma.
 
@@ -35,7 +36,7 @@ Shopify ürün, varyant, fiyat ve stok için tek kaynaktır. Müşteri workspace
 platform yöneticisi yetkisi vermez. Kalıcı mağaza kimliği Shopify shop ID ve
 `myshopify.com` alan adıdır; custom domain tenant anahtarı değildir.
 
-## Güncel durum — 2 Eylül 2026
+## Güncel durum — 3 Eylül 2026
 
 Production altyapısının ilk kurulumu tamamlandı:
 
@@ -50,14 +51,17 @@ Production altyapısının ilk kurulumu tamamlandı:
   istemci bilgileri, dağıtım tipi, İngilizce ana dil ve uygulama ikonu yapılandırıldı.
 - Shopify App Store kayıt ücreti tamamlandı ve acil geliştirici iletişim bilgileri kaydedildi.
 
-**Kaldığımız kesin nokta:** Shopify App Store İngilizce listing taslağının güvenli
-metin alanları kısmen dolduruldu. Ancak ürün henüz İngilizce listing, Shopify App Pricing,
+**Kaldığımız kesin nokta:** Shopify App Pricing kodu ve production bağlantısı hazır,
+ancak Shopify tarafındaki geri dönüşü zor etkinleştirme işlemi yapılmadı. Ürün henüz
+online staging ortamı, tarayıcıdan yürütülecek mock ve uçtan uca manuel testler,
 Sales Channel sınıflandırması, production app config eşleştirmesi, yasal/destek
-sayfaları ve inceleme materyalleri bakımından gönderime hazır değildir.
+sayfaları, listing görselleri ve inceleme materyalleri bakımından gönderime hazır değildir.
 
-**Bir sonraki işlem:** App Store formuna devam etmeden önce aşağıdaki Faz 9A
-ön koşullarını sırasıyla tamamlamak. Son “Submit for review” işlemi yalnızca bütün
-ön koşullar ve kontroller geçtikten ve açık kullanıcı onayı alındıktan sonra yapılacak.
+**Bir sonraki işlem:** App Store formuna ve gerçek Shopify abonelik aktivasyonuna devam
+etmeden önce giriş korumalı online staging ortamını kurmak. Mock ödeme durumları dahil
+ürünün tamamı bu ortamda terminal gerektirmeden tarayıcıdan test edilecek. Sonrasında
+ücretsiz geliştirme mağazası Shopify App Pricing testi yapılacak. App Pricing'i
+etkinleştirme ve “Submit for review” işlemleri ayrı açık kullanıcı onayları gerektirir.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -78,7 +82,7 @@ entegrasyonu tamamlandıktan sonra yapılacaktır.
 
 ### Devam ederken bilinmesi gereken teknik durum
 
-- Canlı Supabase'e en az `0012`–`0018` migration'ları uygulanmıştır; mevcut
+- Canlı Supabase'e en az `0012`–`0019` migration'ları uygulanmıştır; mevcut
   migration'lar ledger kontrolü yapılmadan tekrar çalıştırılmamalıdır.
 - İki gerçek müşteriyle RLS ve Storage metadata tenant izolasyonu doğrulanmıştır.
 - `yourprostore-ai` → `storefront-admin` geçişi 60 saniyelik, tek kullanımlık,
@@ -89,9 +93,10 @@ entegrasyonu tamamlandıktan sonra yapılacaktır.
   maskeleme ve webhook retry/dead-letter modeli mevcuttur.
 - Production ortam değişkenleri Vercel'dedir; yerel `.env` ve secret dosyalarının
   Git'e eklenmemesi bilinçli ve gereklidir.
-- Son kapsamlı yerel doğrulama kaydında toplam 119 test, 33 Shopify tema dosyası ve
-  üç production build başarılıydı. Yeni kod değişikliğinden sonra güncel sonuçlar
-  yeniden `npm test && npm run build` ile alınmalıdır.
+- Son kapsamlı yerel doğrulamada 150 uygulama testi, 33 Shopify tema dosyası ve dört
+  Vue production build'i başarılıydı. Shopify App Pricing değişikliğinden sonra API
+  testleri ayrıca 118/118 geçti; `c39575f` production deployment'ı `Ready` ve canlı
+  `/api/health` yanıtı `ok` olarak doğrulandı.
 
 ## Faz 0 — Headless çoklu mağaza temeli
 
@@ -201,7 +206,12 @@ production pilotundan önce tamamlanır.
 
 ## Faz 8 — Üretim güvenliği ve operasyon
 
-- [ ] Development, staging ve production ortamlarını ayır
+- [ ] Development, online staging ve production ortamlarını veri, secret ve domain düzeyinde ayır
+- [ ] Online staging için sabit platform, API, CMS ve storefront adreslerini oluştur
+- [ ] Staging erişimini yalnız yetkili test kullanıcılarıyla sınırla; arama motorlarından gizle
+- [ ] Staging'e ayrı Supabase proje/veritabanı, Storage alanı ve ayrı Shopify geliştirme mağazası bağla
+- [ ] `APP_ENV=staging` ve açık güvenlik anahtarıyla mock billing'i yalnız staging'de etkinleştir; production korumasını kaldırma
+- [ ] Mock ödeme senaryolarını tarayıcı arayüzünden aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
 - [x] API rate limit ve kötüye kullanım koruması ekle
 - [ ] Hata izleme ve uptime alarmı ekle
@@ -215,9 +225,14 @@ production pilotundan önce tamamlanır.
 - [x] Production uygulama URL'si, OAuth callback'i ve API izinlerini yapılandır
 - [x] Public distribution, App Store kaydı, İngilizce ana dil ve uygulama ikonunu tamamla
 - [x] Acil geliştirici iletişim bilgilerini kaydet
+- [x] Platform admin için ayrı şifremi unuttum ve yeni şifre belirleme ekranlarını ekle
+- [x] `https://admin.yourprostore.ai/update-password` adresini Supabase Auth redirect allowlist'ine ekle
+- [ ] Admin şifre kurtarma akışını production'da yeni tek kullanımlık bağlantıyla doğrula
 
 ### Faz 9A — Formdan önce zorunlu ürün hazırlığı
 
+- [ ] Faz 8'deki giriş korumalı online staging ortamını tamamla
+- [ ] Kayıt, giriş, parola kurtarma, Shopify bağlantısı, onboarding, mağazalar, mock abonelikler ve CMS akışlarını yalnız tarayıcıdan uçtan uca test et
 - [x] Mağaza sahibinin kullandığı `yourprostore-ai` arayüzünü eksiksiz İngilizceleştir
 - [x] Mağaza sahibinin kullandığı `storefront-admin` arayüzünü eksiksiz İngilizceleştir
 - [ ] İngilizce arayüzü kayıt, giriş, onboarding, mağazalar, abonelikler ve CMS akışlarında test et
@@ -226,7 +241,8 @@ production pilotundan önce tamamlanır.
 - [x] Partner API Active Subscription sorgusunu ve Shopify plan dönüş URL'sini uygulamaya bağla
 - [x] Yalnız `Manage apps` yetkili Partner API istemcisini oluştur ve gerekli Shopify App Pricing değişkenlerini Vercel production ortamına gizli olarak kaydet
 - [x] `0019_shopify_app_pricing.sql` migration'ını production veritabanına uygula ve yeni API sürümünü deploy et (`c39575f`, Vercel `Ready`, `/api/health` `ok`)
-- [ ] Shopify App Pricing test mağazası akışını; seçim, onay, aktif, iptal ve başarısız durumlarla doğrula
+- [ ] Mock ödeme hata/durum senaryolarını staging'de doğruladıktan sonra Shopify App Pricing'i geliştirme mağazasında ücretsiz seçim, onay, aktif ve iptal akışlarıyla doğrula
+- [ ] Bütün ürün ve ödeme testleri bitene kadar Shopify App Pricing'i etkinleştirme
 - [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
 - [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula
 - [ ] Repo `shopify.app.toml` dosyasını etkin production Shopify sürümüyle eşitle
@@ -252,7 +268,7 @@ production pilotundan önce tamamlanır.
 ## Sonraki özellikler
 
 - [ ] AI banner üretimini kuyruklu ve kota kontrollü ekle
-- [ ] Stripe test-mode doğrulamasından sonra live-mode mağaza aboneliklerini aç
+- [ ] Online staging ve ücretsiz geliştirme mağazası testleri bittikten sonra açık kullanıcı onayıyla Shopify App Pricing'i etkinleştir
 - [ ] Ekip daveti ve gelişmiş roller ekle
 - [ ] Analitik ve mağaza sağlık kontrolleri ekle
 

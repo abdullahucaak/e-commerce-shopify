@@ -32,6 +32,7 @@ async function submit() {
       <p v-if="message" class="notice">{{ message }}</p>
       <label>E-posta<input v-model="email" type="email" autocomplete="username" required></label>
       <label>Şifre<input v-model="password" type="password" autocomplete="current-password" required></label>
+      <RouterLink class="text-link forgot-link" to="/forgot-password">Şifremi unuttum</RouterLink>
       <button :disabled="auth.loading">{{ auth.loading ? 'Doğrulanıyor…' : 'Giriş yap' }}</button>
     </form>
   </main>

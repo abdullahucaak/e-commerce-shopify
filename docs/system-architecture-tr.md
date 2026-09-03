@@ -20,7 +20,7 @@ Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
   uygulamadır.
 
 Dahili yönetici paneli ayrı build ve ayrı yetkilendirme alanıyla çalışır; production'da
-ayrı subdomain üzerinden yayınlanacaktır. Müşteri çalışma alanındaki `owner`, `admin`, `editor` ve `viewer`
+`admin.yourprostore.ai` subdomaininde yayınlanmıştır. Müşteri çalışma alanındaki `owner`, `admin`, `editor` ve `viewer`
 rolleri platform yöneticisi yetkisi vermeyecektir.
 
 ## Kod deposu yapısı
@@ -36,7 +36,7 @@ legacy/cms/               Aktif olmayan eski tek-mağaza ekranları
 shopify-theme/            Aktif olmayan Liquid prototipi
 ```
 
-Planlanan production adresleri:
+Aktif production adresleri:
 
 ```text
 yourprostore.ai             -> apps/yourprostore-ai
@@ -65,7 +65,8 @@ flowchart TB
 
     API --> SUPABASE["Supabase Auth + PostgreSQL + Storage"]
     API --> SHOPIFY_ADMIN["Shopify Admin API + Webhooks"]
-    API --> STRIPE["Stripe abonelikleri"]
+    API --> PARTNER_API["Shopify Partner API\nActive Subscription"]
+    YPS --> APP_PRICING["Shopify App Pricing\nplan seçimi"]
     SF --> SHOPIFY_STOREFRONT["Shopify Storefront API"]
     SHOPIFY_STOREFRONT --> CHECKOUT["Shopify Checkout"]
 ```
@@ -82,12 +83,55 @@ bağlanır. Ürün ve sipariş verileri bizim PostgreSQL veritabanımıza kopyal
 - **Tenant ve uygulama verileri:** Supabase PostgreSQL
 - **Logo ve banner dosyaları:** Supabase Storage
 - **Ürün ve ticaret verileri:** Shopify
-- **Platform abonelikleri:** Stripe
+- **Public platform abonelikleri:** Shopify App Pricing + Partner API Active Subscription
 
 Development ve test ortamında gerçek ücret almadan onboarding'i doğrulamak için
 `BILLING_PROVIDER=mock` kullanılabilir. Bu mod mağaza bazında aktif, başarısız ödeme,
 duraklatma, iptal ve yeniden etkinleştirme durumlarını simüle eder; production ortamında
 API tarafından kesin olarak reddedilir.
+
+Production'da `BILLING_PROVIDER=shopify_app_pricing` kullanılır. Uygulama Shopify'ın
+barındırdığı plan seçim ekranını açar; dönüşte Partner API Active Subscription sorgusuyla
+planın gerçekten aktif olduğunu doğrulamadan yerel aboneliği aktif saymaz. Ürün, fiyat,
+stok ve storefront checkout ödemeleri yine ilgili Shopify mağazasının sorumluluğundadır;
+Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğini tahsil eder.
+
+## Online test ve ortam ayrımı
+
+Mağaza sahibinin terminal çalıştırmadan bütün ürünü test edebilmesi için internette
+çalışan ayrı bir staging ortamı kurulacaktır. Staging, production'ın kopyası gibi çalışır
+ancak gerçek müşterilerden, production veritabanından ve gerçek uygulama aboneliklerinden
+ayrılır.
+
+```mermaid
+flowchart LR
+    TESTER["Yetkili test kullanıcısı"] --> STAGING["Giriş korumalı online staging"]
+    STAGING --> STAGING_API["Staging API"]
+    STAGING_API --> STAGING_DB["Ayrı staging Supabase"]
+    STAGING_API --> MOCK["Mock billing durum makinesi"]
+    STAGING --> DEV_SHOP["Ayrı Shopify geliştirme mağazası"]
+
+    MERCHANT["Gerçek mağaza sahibi"] --> PROD["Production"]
+    PROD --> PROD_API["Production API"]
+    PROD_API --> PROD_DB["Production Supabase"]
+    PROD_API --> APP_PRICING2["Shopify App Pricing"]
+```
+
+Staging kuralları:
+
+- Sabit online adresler kullanır; test kullanıcısı yalnız tarayıcıyla çalışır.
+- Erişim yetkili hesaplarla sınırlandırılır ve ortam arama motorlarına kapatılır.
+- Supabase veritabanı, Auth, Storage secret'ları ve Shopify geliştirme mağazası production'dan ayrıdır.
+- `NODE_ENV=production` build optimizasyonu için kalabilir; uygulama ortamı ayrıca
+  `APP_ENV=staging` ile belirlenir.
+- Mock billing ancak `APP_ENV=staging`, açık bir sunucu tarafı izin anahtarı ve yetkili
+  workspace owner/admin kontrolü birlikte sağlandığında açılır.
+- Production'da mock endpoint'i kapalı kalır ve Shopify aboneliği Partner API ile doğrulanır.
+- Mock ortamda aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumları denenir.
+- Mock testler tamamlanınca gerçek para alınmadan ayrı Shopify geliştirme mağazasında
+  App Pricing plan seçimi/onayı test edilir.
+- Shopify App Pricing'in genel etkinleştirilmesi ve App Store incelemesine gönderim
+  birbirinden ayrı, açık kullanıcı onayları gerektirir.
 
 | Veri | Ana kaynak |
 | --- | --- |
@@ -236,7 +280,10 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
   `private` şemada AES-GCM ile şifreli tutulur ve kod kullanıldıktan sonra tekrar kullanılamaz.
 - Parola kurtarma Supabase Auth recovery bağlantısıyla yapılır. Mevcut parola hiçbir
   uygulama tarafından okunmaz; sabit ve allowlist'teki `/update-password` adresine
-  dönen kullanıcı yalnız kendi recovery oturumuyla yeni parola belirleyebilir.
+  dönen kullanıcı yalnız kendi recovery oturumuyla yeni parola belirleyebilir. Platform
+  yöneticisi bu işlemi `admin.yourprostore.ai` üzerindeki ayrı kurtarma ekranından yapar;
+  şifre değişikliği admin yetkisini veya TOTP faktörünü kaldırmaz ve sonraki giriş yine
+  `private.platform_admins` ile `aal2` kontrolünden geçer.
 - `yourprostore-ai-admin` için müşteri workspace rollerinden ayrı platform yetkisi kullanılacaktır.
 - Admin API yetkisi `private.platform_admins` içindeki aktif rol ile Supabase tarafından
   kriptografik olarak doğrulanmış JWT `aal2` claim'inin birlikte bulunmasını gerektirir.
@@ -259,7 +306,7 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
   endpoint'lerinde IP tabanlı rate-limit; auth handoff için daha dar, imzalı webhooklar
   için daha geniş rota limiti uygulanır. Tek process sayacı production'da birden fazla
   instance kullanılmadan önce ortak Redis store'a taşınacaktır.
-- Authorization/cookie, Shopify ve Stripe webhook imzaları ile erişim/yenileme tokenı
+- Authorization/cookie, Shopify webhook imzaları, Partner API ve erişim/yenileme tokenı
   alanları yapılandırılmış loglarda maskelenir. Shopify Admin tokenı browser yanıtlarına
   eklenmez; storefront public tokenı ise tanımı gereği public runtime verisidir.
 - Shopify webhook ledger'ı global webhook kimliğiyle idempotent çalışır. Başarısız
@@ -284,7 +331,9 @@ admin panelini beklemez; panel daha sonra bu mevcut operasyon verilerini görün
 3. Çoklu mağaza, iki hesap, RLS ve uçtan uca testler
 4. `yourprostore-ai-admin` dahili operasyon paneli
 5. Production güvenliği, deployment ve pilot yayın
-6. Stripe test-mode doğrulaması ve en son live-mode ödeme açılışı
+6. Giriş korumalı online staging'de mock ödeme ve uçtan uca manuel testler
+7. Shopify geliştirme mağazasında ücretsiz App Pricing testi
+8. Açık kullanıcı onayıyla Shopify App Pricing etkinleştirme ve daha sonra ayrı onayla App Store gönderimi
 
 ## Aktif olmayan klasörler
 

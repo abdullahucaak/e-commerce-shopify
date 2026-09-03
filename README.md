@@ -128,7 +128,7 @@ backend'e dağıtıldıktan sonra Shopify app config ayrıca deploy edilmelidir.
 
 ## Parola kurtarma
 
-`yourprostore-ai` ve `storefront-admin` giriş ekranları Supabase Auth parola kurtarma
+`yourprostore-ai`, `storefront-admin` ve `yourprostore-ai-admin` giriş ekranları Supabase Auth parola kurtarma
 akışını kullanır. Kullanıcıya hesap bulunup bulunmadığını açıklamayan bir yanıt verilir;
 e-postadaki tek kullanımlık bağlantı `/update-password` sayfasında recovery oturumu
 oluşturduktan sonra yeni parola iki kez doğrulanarak kaydedilir. Service-role anahtarı
@@ -143,7 +143,10 @@ http://127.0.0.1:5175/update-password
 ```
 
 Production ortamında aynı listenin `https://manage.yourprostore.ai/update-password`
-ve `https://yourprostore.ai/update-password` adreslerini de içermesi gerekir.
+ve `https://yourprostore.ai/update-password` adreslerinin yanında
+`https://admin.yourprostore.ai/update-password` adresini de içermesi gerekir. Admin
+akışı başarılı güncellemeden sonra recovery oturumunu kapatır; kullanıcı yeni şifresiyle
+yeniden giriş yapar ve mevcut TOTP faktörüyle `aal2` doğrulamasını tamamlar.
 
 ## Shopify App Pricing mağaza abonelikleri
 

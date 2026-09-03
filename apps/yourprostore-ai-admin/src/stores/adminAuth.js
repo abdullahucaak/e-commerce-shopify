@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { getSupabaseClient, isSupabaseConfigured } from '../services/supabase.js'
 import { fetchAdminSession, resolveAdminAuthStep } from '../services/adminSession.js'
+import { requestAdminPasswordRecovery } from '../services/passwordRecovery.js'
 
 let initializationPromise = null
 
@@ -54,6 +55,19 @@ export const useAdminAuthStore = defineStore('adminAuth', {
         this.error = error.message
         throw error
       } finally { this.loading = false }
+    },
+    async requestPasswordReset(email) {
+      if (!isSupabaseConfigured) throw new Error('supabase_not_configured')
+      return requestAdminPasswordRecovery(getSupabaseClient(), email)
+    },
+    async updateRecoveredPassword(password) {
+      if (!isSupabaseConfigured) throw new Error('supabase_not_configured')
+      const client = getSupabaseClient()
+      const { error } = await client.auth.updateUser({ password })
+      if (error) throw error
+      await client.auth.signOut()
+      this.$reset()
+      this.initialized = true
     },
     async refreshAssurance() {
       const client = getSupabaseClient()

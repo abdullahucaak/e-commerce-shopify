@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from './views/LoginPage.vue'
+import ForgotPasswordPage from './views/ForgotPasswordPage.vue'
+import UpdatePasswordPage from './views/UpdatePasswordPage.vue'
 import MfaPage from './views/MfaPage.vue'
 import DashboardPage from './views/DashboardPage.vue'
 import WorkspacesPage from './views/WorkspacesPage.vue'
@@ -15,6 +17,8 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/dashboard' },
     { path: '/login', name: 'login', component: LoginPage },
+    { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordPage },
+    { path: '/update-password', name: 'update-password', component: UpdatePasswordPage },
     { path: '/mfa', name: 'mfa', component: MfaPage, meta: { requiresSession: true } },
     { path: '/dashboard', name: 'dashboard', component: DashboardPage, meta: { requiresAdmin: true } },
     { path: '/workspaces', name: 'workspaces', component: WorkspacesPage, meta: { requiresAdmin: true } },
