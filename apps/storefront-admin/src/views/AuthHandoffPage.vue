@@ -26,7 +26,7 @@ onMounted(async () => {
     await authStore.acceptHandoffSession(payload)
     await router.replace(payload.returnPath || '/dashboard')
   } catch {
-    error.value = 'Güvenli giriş bağlantısı geçersiz veya süresi dolmuş. YourProStore.ai üzerinden tekrar aç.'
+    error.value = 'The secure login link is invalid or expired. Open it again from YourProStore.ai.'
   }
 })
 </script>
@@ -35,10 +35,10 @@ onMounted(async () => {
   <main class="handoff-page">
     <section class="handoff-card">
       <p class="eyebrow">YourProStore.ai</p>
-      <h1>Mağaza yönetimi açılıyor</h1>
+      <h1>Opening storefront management</h1>
       <p v-if="error" class="error-message">{{ error }}</p>
-      <p v-else>Güvenli oturumun doğrulanıyor…</p>
-      <a v-if="error" :href="yourProStoreUrl">YourProStore.ai’a dön</a>
+      <p v-else>Verifying your secure session…</p>
+      <a v-if="error" :href="yourProStoreUrl">Return to YourProStore.ai</a>
     </section>
   </main>
 </template>

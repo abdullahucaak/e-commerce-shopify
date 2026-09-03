@@ -17,7 +17,7 @@ async function manageStore(storefrontId) {
   try {
     await openStorefrontAdmin({ session: account.session, storefrontId })
   } catch {
-    error.value = 'Mağaza yönetimi açılamadı. Lütfen tekrar giriş yapıp yeniden dene.'
+    error.value = 'Store management could not be opened. Please log in again and retry.'
     openingStorefrontId.value = ''
   }
 }
@@ -35,7 +35,7 @@ async function connectShopify(shop = null) {
     if (!response.ok || !payload.authorizationUrl) throw new Error()
     window.location.assign(payload.authorizationUrl)
   } catch {
-    error.value = 'Shopify bağlantısı başlatılamadı.'
+    error.value = 'The Shopify connection could not be started.'
     connecting.value = false
   }
 }
@@ -50,9 +50,9 @@ onMounted(() => {
 
 <template>
   <div class="shell">
-    <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">Mağazalarım</RouterLink><RouterLink to="/subscriptions">Abonelikler</RouterLink><RouterLink to="/account">Hesabım</RouterLink></nav></aside>
+    <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">My stores</RouterLink><RouterLink to="/subscriptions">Subscriptions</RouterLink><RouterLink to="/account">My account</RouterLink></nav></aside>
     <main>
-      <header><div><p class="eyebrow">Müşteri platformu</p><h1>Mağazalarım</h1></div><button @click="connectShopify()">{{ connecting ? 'Shopify açılıyor…' : 'Shopify ile devam et' }}</button></header>
+      <header><div><p class="eyebrow">Merchant platform</p><h1>My stores</h1></div><button @click="connectShopify()">{{ connecting ? 'Opening Shopify…' : 'Continue with Shopify' }}</button></header>
       <p v-if="error" class="notice error">{{ error }}</p>
       <section class="store-grid">
         <article v-for="store in stores" :key="store.id" class="card">
@@ -64,10 +64,10 @@ onMounted(() => {
             v-if="store.storefront && storeCardState(store).action === 'manage'"
             :disabled="openingStorefrontId === store.storefront.id"
             @click="manageStore(store.storefront.id)"
-          >{{ openingStorefrontId === store.storefront.id ? 'Yönetim açılıyor…' : storeCardState(store).label }}</button>
+          >{{ openingStorefrontId === store.storefront.id ? 'Opening management…' : storeCardState(store).label }}</button>
           <RouterLink v-else-if="store.storefront" :to="`/setup/${store.storefront.id}`">{{ storeCardState(store).label }}</RouterLink>
         </article>
-        <article v-if="!stores.length" class="card empty"><h2>Henüz mağazan yok</h2><p class="muted">Shopify hesabınla devam ederek mağazanı seçebilirsin.</p></article>
+        <article v-if="!stores.length" class="card empty"><h2>You do not have a store yet</h2><p class="muted">Continue with your Shopify account to select a store.</p></article>
       </section>
     </main>
   </div>

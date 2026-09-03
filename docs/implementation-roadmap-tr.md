@@ -1,4 +1,89 @@
-# Uygulama sırası ve yapılacaklar listesi
+# YourProStore.ai — Tek Güncel Yol Haritası
+
+Bu belge projenin **tek güncel ilerleme ve devam kaynağıdır**. Yeni bir çalışma
+oturumunda önce bu dosya, ardından `docs/system-architecture-tr.md`, `README.md`,
+`git status --short` ve ilgili diff'ler okunmalıdır. Başka bir roadmap veya devam
+promptu tutulmamalıdır.
+
+## Çalışma kuralları
+
+- Proje yolu: `/Users/abdullah.ucak/Desktop/e-commerce-shopify`
+- Kullanıcıyla Türkçe konuş; güvenli ve kapsam içindeki sıradaki işi yalnızca
+  raporlamak yerine uygula.
+- Working tree'deki kullanıcı değişikliklerini geri alma, resetleme veya üzerine yazma.
+- Commit ve push işlemini yalnızca kullanıcı açıkça istediğinde yap.
+- Secret değerleri mesaja veya Git'e yazma; yalnızca Git tarafından yok sayılan
+  `.env` dosyalarında veya hosting secret manager içinde tut.
+- Gerçek Stripe live mode'u son aşamaya kadar açma. Mock billing production'da
+  kullanılmamalı ve zaten reddedilmelidir.
+- Shopify incelemesine nihai gönderim, ödeme veya benzeri geri dönüşü zor işlemleri
+  açık kullanıcı onayı olmadan yapma.
+
+## Kesin uygulama ve domain mimarisi
+
+1. `apps/storefront`: Müşterinin ziyaretçilere açık ortak Shopify vitrini.
+2. `apps/storefront-admin`: Müşterinin mağazalarını yönettiği CMS —
+   `manage.yourprostore.ai`.
+3. `apps/yourprostore-ai`: Kayıt, giriş, Shopify bağlantısı, mağazalar, kurulum
+   sihirbazı ve abonelik alanı — `yourprostore.ai`.
+4. `apps/yourprostore-ai-admin`: Yalnızca platform yöneticisinin kullandığı ayrı
+   yönetim uygulaması — `admin.yourprostore.ai`.
+5. `apps/api`: Ortak Node/Fastify backend — `api.yourprostore.ai`.
+
+Supabase ayrı bir frontend değildir; Auth, PostgreSQL ve Storage altyapısıdır.
+Shopify ürün, varyant, fiyat ve stok için tek kaynaktır. Müşteri workspace rolleri
+platform yöneticisi yetkisi vermez. Kalıcı mağaza kimliği Shopify shop ID ve
+`myshopify.com` alan adıdır; custom domain tenant anahtarı değildir.
+
+## Güncel durum — 2 Eylül 2026
+
+Production altyapısının ilk kurulumu tamamlandı:
+
+- Vercel Pro takımı `yourprostore-ai` oluşturuldu ve GitHub deposu bağlandı.
+- API, platform, storefront yönetimi ve dahili admin ayrı Vercel projeleri olarak deploy edildi.
+- `yourprostore.ai`, `api.yourprostore.ai`, `admin.yourprostore.ai` ve
+  `manage.yourprostore.ai` adresleri ilgili projelere bağlandı; HTTPS/TLS aktif.
+- API'nin Vercel/Fastify başlangıç sorunları giderildi ve `/api/health` yanıtı doğrulandı.
+- Production ortam değişkenleri Vercel'e taşındı; secret değerleri Git'e eklenmedi.
+- Shopify Partner hesabı ve `YourProStore.ai` public uygulaması oluşturuldu.
+- Shopify uygulama URL'si, OAuth callback'i, gerekli Storefront API izinleri,
+  istemci bilgileri, dağıtım tipi, İngilizce ana dil ve uygulama ikonu yapılandırıldı.
+- Shopify App Store kayıt ücreti tamamlandı ve acil geliştirici iletişim bilgileri kaydedildi.
+
+**Kaldığımız kesin nokta:** Shopify App Store İngilizce listing taslağının güvenli
+metin alanları kısmen dolduruldu. Ancak ürün henüz İngilizce listing, Shopify App Pricing,
+Sales Channel sınıflandırması, production app config eşleştirmesi, yasal/destek
+sayfaları ve inceleme materyalleri bakımından gönderime hazır değildir.
+
+**Bir sonraki işlem:** App Store formuna devam etmeden önce aşağıdaki Faz 9A
+ön koşullarını sırasıyla tamamlamak. Son “Submit for review” işlemi yalnızca bütün
+ön koşullar ve kontroller geçtikten ve açık kullanıcı onayı alındıktan sonra yapılacak.
+
+**3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
+`Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
+giriş ve detay metinleri, üç özellik, kart alt başlığı, beş arama terimi ve satış
+kanalı gereksinimi kodla doğrulanarak kaydedildi. Listing uyarı sayısı 19'dan 10'a
+düştü. Feature media, üç masaüstü ekran görüntüsü, destek/gizlilik bilgileri,
+fiyat planı, inceleme iletişimleri ve test hesabı/video/talimatları bekliyor.
+İngilizce dil ve “özel yetenek yok” beyanları nihai değildir; aşağıdaki ürün ve
+sınıflandırma ön koşulları tamamlandıktan sonra yeniden doğrulanacaktır.
+
+### Devam ederken bilinmesi gereken teknik durum
+
+- Canlı Supabase'e en az `0012`–`0018` migration'ları uygulanmıştır; mevcut
+  migration'lar ledger kontrolü yapılmadan tekrar çalıştırılmamalıdır.
+- İki gerçek müşteriyle RLS ve Storage metadata tenant izolasyonu doğrulanmıştır.
+- `yourprostore-ai` → `storefront-admin` geçişi 60 saniyelik, tek kullanımlık,
+  hash saklanan ve hedef adresi sınırlandırılmış SSO handoff kullanır.
+- CMS rol matrisi, güvenli dosya kontrolleri, taslak/yayın ayrımı, gerçek storefront
+  önizlemesi, sürüm geçmişi, geri dönüş ve audit log işlemleri tamamlanmıştır.
+- API rate limit, request boyutu sınırları, güvenli header/CORS, hassas log
+  maskeleme ve webhook retry/dead-letter modeli mevcuttur.
+- Production ortam değişkenleri Vercel'dedir; yerel `.env` ve secret dosyalarının
+  Git'e eklenmemesi bilinçli ve gereklidir.
+- Son kapsamlı yerel doğrulama kaydında toplam 119 test, 33 Shopify tema dosyası ve
+  üç production build başarılıydı. Yeni kod değişikliğinden sonra güncel sonuçlar
+  yeniden `npm test && npm run build` ile alınmalıdır.
 
 ## Faz 0 — Headless çoklu mağaza temeli
 
@@ -70,12 +155,11 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] CMS taslak kaydetme, yayınlama ve sürüm geri dönüşlerini private audit log'a yaz
 - [x] Storefront kimliği alan API route'larında başka tenant kimliğiyle fail-closed matris testi ekle
 - [x] İki gerçek müşteriyle canlı SELECT RLS izolasyonunu ve Storage metadata ayrımını doğrula
-- [ ] Ayar geçmişi ve geri dönüş işlemi ekle
-- [ ] Değişiklikleri audit log'a yaz
 
 ## Faz 5 — Domain ve hosting otomasyonu
 
-- [ ] Storefront'u production hosting'e kur
+- [x] Storefront, platform, API ve yönetim uygulamalarını production hosting'e kur
+- [x] Platform domainlerini Vercel projelerine bağla ve TLS/SSL'i etkinleştir
 - [ ] Kullanıcının domain ekleme ekranını oluştur
 - [ ] DNS doğrulama kaydını üret
 - [ ] Hosting sağlayıcısında custom hostname oluştur
@@ -116,6 +200,44 @@ production pilotundan önce tamamlanır.
 - [ ] Veritabanı yedek ve geri yükleme testi yap
 - [x] Webhook retry/dead-letter durum modelini ekle
 - [ ] Hesap silme, veri saklama ve gizlilik akışlarını tamamla
+
+## Faz 9 — Shopify App Store yayını
+
+- [x] Shopify Partner organizasyonunu ve public uygulamayı oluştur
+- [x] Production uygulama URL'si, OAuth callback'i ve API izinlerini yapılandır
+- [x] Public distribution, App Store kaydı, İngilizce ana dil ve uygulama ikonunu tamamla
+- [x] Acil geliştirici iletişim bilgilerini kaydet
+
+### Faz 9A — Formdan önce zorunlu ürün hazırlığı
+
+- [x] Mağaza sahibinin kullandığı `yourprostore-ai` arayüzünü eksiksiz İngilizceleştir
+- [x] Mağaza sahibinin kullandığı `storefront-admin` arayüzünü eksiksiz İngilizceleştir
+- [ ] İngilizce arayüzü kayıt, giriş, onboarding, mağazalar, abonelikler ve CMS akışlarında test et
+- [x] Shopify App Pricing içinde `Starter` (`starter-monthly`, 9 USD/ay) public planını taslak olarak oluştur; geliştirme mağazalarında ücretsiz testi aç
+- [ ] Public App Store aboneliği için Stripe yerine Shopify App Pricing modelini uygula
+- [ ] Partner API Active Subscription sorgusunu ve Shopify plan dönüş URL'sini uygulamaya bağla
+- [ ] Shopify App Pricing test mağazası akışını; seçim, onay, aktif, iptal ve başarısız durumlarla doğrula
+- [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
+- [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula
+- [ ] Repo `shopify.app.toml` dosyasını etkin production Shopify sürümüyle eşitle
+- [ ] Production install → OAuth → uygulama arayüzüne yönlendirme akışını yeniden test et
+- [ ] `yourprostore.ai/privacy` gizlilik politikası sayfasını oluştur ve production'da yayınla
+- [ ] `yourprostore.ai/support` destek sayfasını oluştur ve production'da yayınla
+- [ ] Destek ve inceleme iletişim e-postalarını kesinleştir
+- [ ] Gerçek müşteri verisi içermeyen listing feature media ve üç masaüstü ekran görüntüsünü hazırla
+- [ ] İki aşamalı doğrulama gerektirmeyen, yalnız incelemeye ayrılmış test hesabını hazırla
+- [ ] Onboarding ve temel işlevleri gösteren 3–8 dakikalık screencast hazırla
+- [ ] İnceleme ekibi için adım adım İngilizce test talimatlarını hazırla
+
+### Faz 9B — Listing ve gönderim
+
+- [ ] İngilizce App Store listing içeriğini tamamla
+- [ ] Korumalı müşteri verisi kullanım beyanını son scope ve veri akışlarıyla yeniden doğrula
+- [ ] Uygulama yeteneklerini Shopify sınıflandırma teyidine göre son kez seç
+- [ ] Test hesabı, ekran kaydı ve inceleme talimatlarını hazırla
+- [ ] Otomatik kontrolleri çalıştır ve bütün hataları gider
+- [ ] Shopify AI self-review ve App Store Requirements kontrolünü tamamla
+- [ ] Son kullanıcı onayından sonra uygulamayı Shopify incelemesine gönder
 
 ## Sonraki özellikler
 

@@ -6,21 +6,21 @@ export function storeCardState(store) {
   const subscriptionStatus = storefront?.subscription?.status || 'incomplete'
 
   if (storefront?.status === 'active' && ACTIVE_SUBSCRIPTION_STATUSES.has(subscriptionStatus)) {
-    return { label: 'Mağazayı yönet', statusLabel: 'Aktif', action: 'manage' }
+    return { label: 'Manage store', statusLabel: 'Active', action: 'manage' }
   }
 
   if (BILLING_ATTENTION_STATUSES.has(subscriptionStatus)) {
     const statusLabel = subscriptionStatus === 'past_due'
-      ? 'Ödeme bekliyor'
+      ? 'Payment due'
       : subscriptionStatus === 'paused'
-        ? 'Duraklatıldı'
-        : 'Abonelik iptal edildi'
-    return { label: 'Ödemeyi düzelt', statusLabel, action: 'setup' }
+        ? 'Paused'
+        : 'Subscription canceled'
+    return { label: 'Fix payment', statusLabel, action: 'setup' }
   }
 
   if (storefront?.subscription?.planKey && subscriptionStatus === 'incomplete') {
-    return { label: 'Ödemeyi tamamla', statusLabel: 'Ödeme tamamlanmadı', action: 'setup' }
+    return { label: 'Complete payment', statusLabel: 'Payment incomplete', action: 'setup' }
   }
 
-  return { label: 'Kuruluma devam et', statusLabel: 'Kurulum devam ediyor', action: 'setup' }
+  return { label: 'Continue setup', statusLabel: 'Setup in progress', action: 'setup' }
 }

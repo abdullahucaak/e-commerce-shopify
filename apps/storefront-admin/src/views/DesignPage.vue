@@ -43,7 +43,7 @@ const previewHostname = ref('')
 const previewToken = ref('')
 const previewPage = ref('/')
 const previewPages = [
-  { label: 'Ana sayfa', path: '/' },
+  { label: 'Home', path: '/' },
   { label: 'Shop', path: '/shop' },
   { label: 'About Us', path: '/about-us' }
 ]
@@ -88,13 +88,13 @@ const hasLocalChanges = computed(() => (
   Boolean(savedSnapshot.value) && designSnapshot() !== savedSnapshot.value
 ))
 const versionStatus = computed(() => {
-  if (hasLocalChanges.value) return 'Kaydedilmemiş değişiklikler var.'
+  if (hasLocalChanges.value) return 'You have unsaved changes.'
   if (hasUnpublishedChanges.value) {
-    return `Taslak sürüm ${draftVersion.value} hazır · canlı sürüm ${publishedVersion.value || 'yok'}.`
+    return `Draft version ${draftVersion.value} is ready · live version ${publishedVersion.value || 'none'}.`
   }
   return publishedVersion.value
-    ? `Canlı sürüm ${publishedVersion.value} ile eşit.`
-    : 'Henüz canlı bir sürüm yok.'
+    ? `Matches live version ${publishedVersion.value}.`
+    : 'There is no live version yet.'
 })
 
 function sendPreview() {
@@ -143,7 +143,7 @@ async function loadDesign() {
     hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
     savedSnapshot.value = designSnapshot()
   } catch {
-    error.value = 'Tasarım ayarları yüklenemedi.'
+    error.value = 'Design settings could not be loaded.'
   } finally {
     loading.value = false
   }
@@ -204,10 +204,10 @@ async function saveDesign() {
     hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
     savedSnapshot.value = designSnapshot()
     message.value = hasUnpublishedChanges.value
-      ? `Tasarım taslağı kaydedildi (taslak sürüm ${draftVersion.value}). Canlı mağaza değişmedi.`
-      : 'Tasarım canlı sürümle eşitlendi; bekleyen taslak kalmadı.'
+      ? `Design draft saved (draft version ${draftVersion.value}). The live store did not change.`
+      : 'The design now matches the live version; there is no pending draft.'
   } catch {
-    error.value = 'Ayarlar kaydedilemedi. Alanları kontrol et.'
+    error.value = 'Settings could not be saved. Check the fields.'
   } finally {
     saving.value = false
   }
@@ -229,11 +229,11 @@ async function publishDesign() {
     draftVersion.value = payload.draftVersion
     hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
     savedSnapshot.value = designSnapshot()
-    message.value = `Tasarım canlıda yayınlandı (sürüm ${publishedVersion.value}).`
+    message.value = `Design published to the live store (version ${publishedVersion.value}).`
   } catch (publishError) {
     error.value = publishError.message === 'storefront_no_draft_changes'
-      ? 'Yayınlanacak kayıtlı bir tasarım taslağı yok.'
-      : 'Tasarım yayınlanamadı. Lütfen tekrar dene.'
+      ? 'There is no saved design draft to publish.'
+      : 'The design could not be published. Please try again.'
   } finally {
     publishing.value = false
   }
@@ -244,7 +244,7 @@ async function removeLogo() {
   error.value = ''
   message.value = ''
   form.logoUrl = ''
-  message.value = 'Logo taslaktan kaldırılacak. Önce taslağı kaydet, ardından yayınla.'
+  message.value = 'The logo will be removed from the draft. Save the draft, then publish it.'
 }
 
 async function uploadLogo(event) {
@@ -254,11 +254,11 @@ async function uploadLogo(event) {
   error.value = ''
   message.value = ''
   if (file.size > 2 * 1024 * 1024) {
-    error.value = 'Logo en fazla 2 MB olabilir.'
+    error.value = 'The logo can be up to 2 MB.'
     return
   }
   if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-    error.value = 'PNG, JPG veya WEBP logo seç.'
+    error.value = 'Choose a PNG, JPG, or WEBP logo.'
     return
   }
 
@@ -279,7 +279,7 @@ async function uploadLogo(event) {
         publicUrl: previousDraftUrl
       }).catch(() => {})
     }
-    message.value = 'Logo seçildi. Önce taslağı kaydet, ardından yayınla.'
+    message.value = 'Logo selected. Save the draft, then publish it.'
   } catch (uploadError) {
     error.value = storefrontAssetErrorMessage(uploadError, 'Logo')
   } finally {
@@ -297,19 +297,19 @@ onMounted(loadSelectedStore)
     <aside>
       <div><p class="wordmark">YourProStore.ai</p><p class="wordmark-subtitle">storefront admin</p></div>
       <nav>
-        <RouterLink to="/dashboard">Genel bakış</RouterLink>
-        <RouterLink to="/design">Tasarım ayarları</RouterLink>
-        <RouterLink to="/content">İçerik ayarları</RouterLink>
-        <RouterLink to="/domains">Domain ayarları</RouterLink>
-        <RouterLink to="/versions">Sürüm geçmişi</RouterLink>
+        <RouterLink to="/dashboard">Overview</RouterLink>
+        <RouterLink to="/design">Design settings</RouterLink>
+        <RouterLink to="/content">Content settings</RouterLink>
+        <RouterLink to="/domains">Domain settings</RouterLink>
+        <RouterLink to="/versions">Version history</RouterLink>
       </nav>
     </aside>
     <main>
       <header>
-        <div><p class="eyebrow">Mağaza vitrini</p><h1>Tasarım ayarları</h1></div>
+        <div><p class="eyebrow">Storefront</p><h1>Design settings</h1></div>
         <div class="header-actions">
-          <a v-if="liveStorefrontUrl" class="storefront-link" :href="liveStorefrontUrl" target="_blank" rel="noopener">Mağazayı görüntüle</a>
-          <select v-model="selectedStoreId" aria-label="Mağaza seç">
+          <a v-if="liveStorefrontUrl" class="storefront-link" :href="liveStorefrontUrl" target="_blank" rel="noopener">View store</a>
+          <select v-model="selectedStoreId" aria-label="Select store">
             <option v-for="store in stores" :key="store.id" :value="store.id">{{ store.name }}</option>
           </select>
         </div>
@@ -317,37 +317,37 @@ onMounted(loadSelectedStore)
 
       <form v-if="selectedStore" class="editor" @submit.prevent="saveDesign">
         <fieldset class="settings-panel" :disabled="!canEditDesign">
-          <h2>Marka</h2>
+          <h2>Brand</h2>
           <p v-if="!canEditDesign" class="permission-notice">
-            Rolün tasarım ayarlarını görüntülemeye izin veriyor; değiştirme yetkisi owner veya admin rolündedir.
+            Your role can view design settings; only owners and admins can change them.
           </p>
-          <label>Mağaza adı<input v-model.trim="form.name" maxlength="120" required></label>
+          <label>Store name<input v-model.trim="form.name" maxlength="120" required></label>
           <label class="logo-upload">
-            Logo dosyası <small>PNG, JPG veya WEBP · 64×32–2400×1200 px · en fazla 2 MB</small>
+            Logo file <small>PNG, JPG, or WEBP · 64×32–2400×1200 px · up to 2 MB</small>
             <input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingLogo" @change="uploadLogo">
           </label>
-          <p v-if="uploadingLogo" class="uploading">Logo yükleniyor…</p>
-          <label class="logo-size">Logo boyutu: {{ form.logoSize }} px<input v-model="form.logoSize" type="range" min="80" max="320" step="10"></label>
-          <button v-if="form.logoUrl" class="remove-logo" type="button" :disabled="uploadingLogo" @click="removeLogo">Logoyu kaldır</button>
+          <p v-if="uploadingLogo" class="uploading">Uploading logo…</p>
+          <label class="logo-size">Logo size: {{ form.logoSize }} px<input v-model="form.logoSize" type="range" min="80" max="320" step="10"></label>
+          <button v-if="form.logoUrl" class="remove-logo" type="button" :disabled="uploadingLogo" @click="removeLogo">Remove logo</button>
           <div class="colors">
-            <label>Ana renk<input v-model="form.primary" type="color"></label>
-            <label>İkincil renk<input v-model="form.secondary" type="color"></label>
+            <label>Primary color<input v-model="form.primary" type="color"></label>
+            <label>Secondary color<input v-model="form.secondary" type="color"></label>
           </div>
           <div class="announcement-settings">
-            <h2>Duyuru bandı</h2>
-            <label class="toggle-label"><input v-model="form.announcementEnabled" type="checkbox"> Duyuru bandını göster</label>
-            <label>Duyuru metni<textarea v-model.trim="form.announcementText" maxlength="240" rows="3" :required="form.announcementEnabled"></textarea></label>
-            <small>{{ form.announcementText.length }}/240 karakter</small>
+            <h2>Announcement bar</h2>
+            <label class="toggle-label"><input v-model="form.announcementEnabled" type="checkbox"> Show announcement bar</label>
+            <label>Announcement text<textarea v-model.trim="form.announcementText" maxlength="240" rows="3" :required="form.announcementEnabled"></textarea></label>
+            <small>{{ form.announcementText.length }}/240 characters</small>
           </div>
           <div class="workflow-status" :class="{ pending: hasLocalChanges || hasUnpublishedChanges }">
             <strong>{{ versionStatus }}</strong>
-            <small>Taslak kaydetmek canlı mağazayı değiştirmez.</small>
+            <small>Saving a draft does not change the live store.</small>
           </div>
           <p v-if="message" class="success">{{ message }}</p>
           <p v-if="error" class="error">{{ error }}</p>
           <div class="workflow-actions">
             <button :disabled="saving || publishing || loading || uploadingLogo || !canEditDesign">
-              {{ canEditDesign ? (saving ? 'Kaydediliyor…' : 'Taslağı kaydet') : 'Salt okunur' }}
+              {{ canEditDesign ? (saving ? 'Saving…' : 'Save draft') : 'Read only' }}
             </button>
             <button
               class="publish-button"
@@ -355,24 +355,24 @@ onMounted(loadSelectedStore)
               :disabled="publishing || saving || loading || uploadingLogo || hasLocalChanges || !hasUnpublishedChanges || !canEditDesign"
               @click="publishDesign"
             >
-              {{ publishing ? 'Yayınlanıyor…' : 'Taslağı canlıda yayınla' }}
+              {{ publishing ? 'Publishing…' : 'Publish draft to live store' }}
             </button>
           </div>
         </fieldset>
         <section class="preview storefront-preview">
           <div class="preview-title">
-            <div><p>Gerçek mağaza önizlemesi</p><small>Değişiklikler kaydetmeden burada görünür.</small></div>
-            <label class="preview-page-select">Gösterilen sayfa
+            <div><p>Live store preview</p><small>Changes appear here before you save.</small></div>
+            <label class="preview-page-select">Displayed page
               <select v-model="previewPage">
                 <option v-for="page in previewPages" :key="page.path" :value="page.path">{{ page.label }}</option>
               </select>
             </label>
           </div>
-          <iframe v-if="previewUrl" ref="previewFrame" :src="previewUrl" title="Mağaza tasarım önizlemesi" referrerpolicy="no-referrer" @load="sendPreview"></iframe>
-          <p v-else class="preview-unavailable">Bu mağazanın önizlemesi için önce Domain ayarları bölümünden Shopify domainlerini güncelle.</p>
+          <iframe v-if="previewUrl" ref="previewFrame" :src="previewUrl" title="Store design preview" referrerpolicy="no-referrer" @load="sendPreview"></iframe>
+          <p v-else class="preview-unavailable">To preview this store, first update its Shopify domains from Domain settings.</p>
         </section>
       </form>
-      <p v-else>Önce bir Shopify mağazası bağlamalısın.</p>
+      <p v-else>Connect a Shopify store first.</p>
     </main>
   </div>
 </template>

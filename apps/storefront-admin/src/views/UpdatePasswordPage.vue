@@ -14,11 +14,11 @@ async function submit() {
   errorMessage.value = ''
   const validationError = validateNewPassword(password.value, confirmation.value)
   if (validationError === 'password_too_short') {
-    errorMessage.value = 'Yeni şifre en az 8 karakter olmalı.'
+    errorMessage.value = 'The new password must be at least 8 characters.'
     return
   }
   if (validationError === 'password_confirmation_mismatch') {
-    errorMessage.value = 'Şifreler birbiriyle eşleşmiyor.'
+    errorMessage.value = 'The passwords do not match.'
     return
   }
 
@@ -28,7 +28,7 @@ async function submit() {
     confirmation.value = ''
     completed.value = true
   } catch {
-    errorMessage.value = 'Şifre güncellenemedi. Bağlantının süresi dolmuş olabilir; yeniden sıfırlama bağlantısı iste.'
+    errorMessage.value = 'The password could not be updated. The link may have expired; request a new reset link.'
   }
 }
 </script>
@@ -40,28 +40,28 @@ async function submit() {
         <span class="wordmark">YourProStore.ai</span>
         <span class="wordmark-subtitle">storefront admin</span>
       </div>
-      <h1 id="update-password-title">Yeni şifre belirle</h1>
+      <h1 id="update-password-title">Set a new password</h1>
 
       <div v-if="completed" class="notice success" role="status">
-        Şifren güncellendi. Kurtarma oturumunla mağaza yönetimine devam edebilirsin.
+        Your password was updated. You can continue to storefront management.
       </div>
       <div v-else-if="!hasRecoverySession" class="notice error" role="alert">
-        Geçerli bir kurtarma oturumu bulunamadı. Bağlantı kullanılmış veya süresi dolmuş olabilir.
+        No valid recovery session was found. The link may have been used or expired.
       </div>
       <div v-if="errorMessage" class="notice error" role="alert">{{ errorMessage }}</div>
 
       <form v-if="hasRecoverySession && !completed" @submit.prevent="submit">
-        <label for="new-password">Yeni şifre</label>
+        <label for="new-password">New password</label>
         <input id="new-password" v-model="password" type="password" autocomplete="new-password" minlength="8" required>
-        <label for="new-password-confirmation">Yeni şifreyi tekrar yaz</label>
+        <label for="new-password-confirmation">Confirm new password</label>
         <input id="new-password-confirmation" v-model="confirmation" type="password" autocomplete="new-password" minlength="8" required>
-        <small>En az 8 karakter kullan.</small>
-        <button :disabled="authStore.loading">{{ authStore.loading ? 'Güncelleniyor…' : 'Şifreyi güncelle' }}</button>
+        <small>Use at least 8 characters.</small>
+        <button :disabled="authStore.loading">{{ authStore.loading ? 'Updating…' : 'Update password' }}</button>
       </form>
 
-      <RouterLink v-if="completed" class="primary-link" to="/dashboard">Yönetim paneline devam et</RouterLink>
-      <RouterLink v-else-if="!hasRecoverySession" class="primary-link" to="/forgot-password">Yeni bağlantı iste</RouterLink>
-      <RouterLink class="back-link" to="/login">Giriş ekranına dön</RouterLink>
+      <RouterLink v-if="completed" class="primary-link" to="/dashboard">Continue to management</RouterLink>
+      <RouterLink v-else-if="!hasRecoverySession" class="primary-link" to="/forgot-password">Request a new link</RouterLink>
+      <RouterLink class="back-link" to="/login">Back to login</RouterLink>
     </section>
   </main>
 </template>

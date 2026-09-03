@@ -6,7 +6,7 @@
         <span class="wordmark-subtitle">commerce platform</span>
       </div>
 
-      <div class="auth-tabs" role="tablist" aria-label="Hesap işlemleri">
+      <div class="auth-tabs" role="tablist" aria-label="Account actions">
         <button
           type="button"
           role="tab"
@@ -14,7 +14,7 @@
           :class="{ active: mode === 'login' }"
           @click="setMode('login')"
         >
-          Giriş yap
+          Sign in
         </button>
         <button
           type="button"
@@ -23,21 +23,21 @@
           :class="{ active: mode === 'register' }"
           @click="setMode('register')"
         >
-          Hesap oluştur
+          Create account
         </button>
       </div>
 
       <h1 id="auth-title">
-        {{ mode === 'login' ? 'Mağaza yönetimine giriş' : 'Platform hesabını oluştur' }}
+        {{ mode === 'login' ? 'Sign in to store management' : 'Create your platform account' }}
       </h1>
       <p class="auth-description">
         {{ mode === 'login'
-          ? 'E-posta adresin ve şifrenle devam et.'
-          : 'Hesabın için bir çalışma alanı otomatik oluşturulacak.' }}
+          ? 'Continue with your email address and password.'
+          : 'A workspace will be created automatically for your account.' }}
       </p>
 
       <div v-if="!authStore.isConfigured" class="notice notice--error" role="alert">
-        Supabase Auth henüz yapılandırılmadı.
+        Supabase Auth has not been configured yet.
       </div>
       <div v-else-if="successMessage" class="notice notice--success" role="status">
         {{ successMessage }}
@@ -48,7 +48,7 @@
 
       <form @submit.prevent="handleSubmit">
         <div v-if="mode === 'register'" class="form-group">
-          <label for="business-name">Mağaza veya işletme adı</label>
+          <label for="business-name">Store or business name</label>
           <input
             id="business-name"
             v-model.trim="businessName"
@@ -60,7 +60,7 @@
         </div>
 
         <div class="form-group">
-          <label for="email">E-posta adresi</label>
+          <label for="email">Email address</label>
           <input
             id="email"
             v-model.trim="email"
@@ -72,7 +72,7 @@
         </div>
 
         <div class="form-group">
-          <label for="password">Şifre</label>
+          <label for="password">Password</label>
           <input
             id="password"
             v-model="password"
@@ -81,9 +81,9 @@
             minlength="8"
             required
           >
-          <small v-if="mode === 'register'">En az 8 karakter kullan.</small>
+          <small v-if="mode === 'register'">Use at least 8 characters.</small>
           <RouterLink v-if="mode === 'login'" class="forgot-link" to="/forgot-password">
-            Şifremi unuttum
+            Forgot password
           </RouterLink>
         </div>
 
@@ -103,7 +103,7 @@
         :disabled="authStore.loading"
         @click="resendConfirmation"
       >
-        Doğrulama e-postasını tekrar gönder
+        Resend verification email
       </button>
     </section>
   </main>
@@ -125,33 +125,33 @@ const password = ref('')
 const errorMessage = ref('')
 const successMessage = ref(
   route.query.confirmed === '1'
-    ? 'E-posta adresin doğrulandı. Giriş yapabilirsin.'
+    ? 'Your email address has been verified. You can sign in.'
     : ''
 )
 const awaitingConfirmation = ref(false)
 
 const submitLabel = computed(() => {
-  if (authStore.loading) return 'Lütfen bekle...'
-  return mode.value === 'login' ? 'Giriş yap' : 'Hesap oluştur'
+  if (authStore.loading) return 'Please wait...'
+  return mode.value === 'login' ? 'Sign in' : 'Create account'
 })
 
 function readableAuthError(error) {
   const message = error?.message?.toLowerCase() || ''
 
   if (message.includes('invalid login credentials')) {
-    return 'E-posta adresi veya şifre hatalı.'
+    return 'The email address or password is incorrect.'
   }
   if (message.includes('email not confirmed')) {
     awaitingConfirmation.value = true
-    return 'Önce e-posta adresini doğrulamalısın.'
+    return 'You must verify your email address first.'
   }
   if (message.includes('user already registered')) {
-    return 'Bu e-posta adresiyle zaten bir hesap bulunuyor.'
+    return 'An account already exists with this email address.'
   }
   if (message.includes('password')) {
-    return 'Şifre güvenlik koşullarını karşılamıyor.'
+    return 'The password does not meet the security requirements.'
   }
-  return 'İşlem tamamlanamadı. Lütfen tekrar dene.'
+  return 'The action could not be completed. Please try again.'
 }
 
 function setMode(nextMode) {
@@ -188,7 +188,7 @@ async function handleSubmit() {
 
     awaitingConfirmation.value = true
     password.value = ''
-    successMessage.value = 'Hesabın oluşturuldu. E-postandaki doğrulama bağlantısına tıkla.'
+    successMessage.value = 'Your account was created. Click the verification link in your email.'
   } catch (error) {
     errorMessage.value = readableAuthError(error)
   }
@@ -200,7 +200,7 @@ async function resendConfirmation() {
 
   try {
     await authStore.resendConfirmation(email.value)
-    successMessage.value = 'Doğrulama e-postası yeniden gönderildi.'
+    successMessage.value = 'The verification email was sent again.'
   } catch (error) {
     errorMessage.value = readableAuthError(error)
   }

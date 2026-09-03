@@ -15,11 +15,11 @@ async function submit() {
   error.value = ''
   const validationError = validateNewPassword(password.value, confirmation.value)
   if (validationError === 'password_too_short') {
-    error.value = 'Yeni şifre en az 8 karakter olmalı.'
+    error.value = 'The new password must be at least 8 characters.'
     return
   }
   if (validationError === 'password_confirmation_mismatch') {
-    error.value = 'Şifreler birbiriyle eşleşmiyor.'
+    error.value = 'The passwords do not match.'
     return
   }
 
@@ -30,7 +30,7 @@ async function submit() {
     confirmation.value = ''
     completed.value = true
   } catch {
-    error.value = 'Şifre güncellenemedi. Bağlantının süresi dolmuş olabilir; yeniden sıfırlama bağlantısı iste.'
+    error.value = 'We could not update the password. The link may have expired; request a new reset link.'
   } finally {
     loading.value = false
   }
@@ -41,23 +41,23 @@ async function submit() {
   <main class="auth-page">
     <section class="auth-card">
       <RouterLink class="auth-brand" to="/">YourProStore</RouterLink>
-      <h1>Yeni şifre belirle</h1>
-      <p v-if="completed" class="notice success">Şifren güncellendi. Hesabına devam edebilirsin.</p>
+      <h1>Set a new password</h1>
+      <p v-if="completed" class="notice success">Your password was updated. You can continue to your account.</p>
       <p v-else-if="!hasRecoverySession" class="notice error">
-        Geçerli bir kurtarma oturumu bulunamadı. Bağlantı kullanılmış veya süresi dolmuş olabilir.
+        No valid recovery session was found. The link may have been used or expired.
       </p>
       <p v-if="error" class="notice error">{{ error }}</p>
 
       <form v-if="hasRecoverySession && !completed" class="recovery-form" @submit.prevent="submit">
-        <label>Yeni şifre<input v-model="password" type="password" autocomplete="new-password" minlength="8" required></label>
-        <label>Yeni şifreyi tekrar yaz<input v-model="confirmation" type="password" autocomplete="new-password" minlength="8" required></label>
-        <small class="muted">En az 8 karakter kullan.</small>
-        <button :disabled="loading">{{ loading ? 'Güncelleniyor…' : 'Şifreyi güncelle' }}</button>
+        <label>New password<input v-model="password" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label>Confirm new password<input v-model="confirmation" type="password" autocomplete="new-password" minlength="8" required></label>
+        <small class="muted">Use at least 8 characters.</small>
+        <button :disabled="loading">{{ loading ? 'Updating…' : 'Update password' }}</button>
       </form>
 
-      <RouterLink v-if="completed" class="continue-link" to="/stores">Mağazalarıma devam et</RouterLink>
-      <RouterLink v-else-if="!hasRecoverySession" class="continue-link" to="/forgot-password">Yeni bağlantı iste</RouterLink>
-      <RouterLink class="text-link centered" to="/login">Giriş ekranına dön</RouterLink>
+      <RouterLink v-if="completed" class="continue-link" to="/stores">Continue to my stores</RouterLink>
+      <RouterLink v-else-if="!hasRecoverySession" class="continue-link" to="/forgot-password">Request a new link</RouterLink>
+      <RouterLink class="text-link centered" to="/login">Back to login</RouterLink>
     </section>
   </main>
 </template>

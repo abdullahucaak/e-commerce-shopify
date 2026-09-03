@@ -23,10 +23,10 @@ test('turns server-side asset validation errors into actionable messages', () =>
   }
   assert.equal(
     storefrontAssetErrorMessage(dimensionError, 'Banner'),
-    'Banner ölçüsü 1200×400 ile 4096×4096 piksel arasında olmalı.'
+    'Banner dimensions must be between 1200×400 and 4096×4096 pixels.'
   )
   assert.equal(
     storefrontAssetErrorMessage(new Error('storefront_asset_quota_exceeded')),
-    'Bu mağazanın 25 MB görsel kotası doldu.'
+    'This store has reached its 25 MB image quota.'
   )
 })

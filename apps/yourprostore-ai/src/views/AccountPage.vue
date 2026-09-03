@@ -20,15 +20,15 @@ async function signOut() {
 
 <template>
   <div class="shell">
-    <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">Mağazalarım</RouterLink><RouterLink to="/subscriptions">Abonelikler</RouterLink><RouterLink to="/account">Hesabım</RouterLink></nav></aside>
+    <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">My stores</RouterLink><RouterLink to="/subscriptions">Subscriptions</RouterLink><RouterLink to="/account">My account</RouterLink></nav></aside>
     <main>
-      <header><div><p class="eyebrow">Müşteri hesabı</p><h1>Hesabım</h1></div></header>
+      <header><div><p class="eyebrow">Merchant account</p><h1>My account</h1></div></header>
       <section class="card account-details">
-        <div><span>E-posta</span><strong>{{ account.user?.email || '—' }}</strong></div>
-        <div><span>Çalışma alanı</span><strong>{{ account.workspace?.name || '—' }}</strong></div>
-        <div><span>Yetki</span><strong>{{ account.workspace?.role || '—' }}</strong></div>
-        <div><span>Bağlı mağaza</span><strong>{{ account.workspace?.stores?.length || 0 }}</strong></div>
-        <button :disabled="signingOut" @click="signOut">{{ signingOut ? 'Çıkış yapılıyor…' : 'Çıkış yap' }}</button>
+        <div><span>Email</span><strong>{{ account.user?.email || '—' }}</strong></div>
+        <div><span>Workspace</span><strong>{{ account.workspace?.name || '—' }}</strong></div>
+        <div><span>Role</span><strong>{{ account.workspace?.role || '—' }}</strong></div>
+        <div><span>Connected stores</span><strong>{{ account.workspace?.stores?.length || 0 }}</strong></div>
+        <button :disabled="signingOut" @click="signOut">{{ signingOut ? 'Logging out…' : 'Log out' }}</button>
       </section>
     </main>
   </div>

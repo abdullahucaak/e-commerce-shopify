@@ -5,15 +5,15 @@ import { getStorefrontAssetPath, logoUploadErrorMessage } from './storefrontAsse
 test('shows actionable onboarding logo validation messages', () => {
   assert.equal(
     logoUploadErrorMessage(new Error('invalid_asset_type')),
-    'Yalnızca gerçek JPEG, PNG veya WEBP dosyaları yüklenebilir.'
+    'Only valid JPEG, PNG, or WEBP files can be uploaded.'
   )
   assert.equal(
     logoUploadErrorMessage(new Error('invalid_asset_dimensions')),
-    'Logo ölçüsü 64×32 ile 2400×1200 piksel arasında olmalı.'
+    'Logo dimensions must be between 64×32 and 2400×1200 pixels.'
   )
   assert.equal(
     logoUploadErrorMessage(new Error('storefront_asset_quota_exceeded')),
-    'Bu mağazanın 25 MB görsel kotası doldu.'
+    'This store has reached its 25 MB image quota.'
   )
 })
 

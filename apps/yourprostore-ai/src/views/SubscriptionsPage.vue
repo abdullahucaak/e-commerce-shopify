@@ -17,25 +17,25 @@ const totalMonthlyAmount = computed(() => subscriptions.value.reduce((total, ite
 }, 0))
 
 function formatMoney(unitAmount, currencyCode = 'USD') {
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currencyCode })
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode })
     .format(Number(unitAmount || 0) / 100)
 }
 </script>
 
 <template>
   <div class="shell">
-    <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">Mağazalarım</RouterLink><RouterLink to="/subscriptions">Abonelikler</RouterLink><RouterLink to="/account">Hesabım</RouterLink></nav></aside>
+    <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">My stores</RouterLink><RouterLink to="/subscriptions">Subscriptions</RouterLink><RouterLink to="/account">My account</RouterLink></nav></aside>
     <main>
-      <header><div><p class="eyebrow">Müşteri hesabı</p><h1>Abonelikler</h1></div><strong class="monthly-total">Aylık toplam: {{ formatMoney(totalMonthlyAmount) }}</strong></header>
+      <header><div><p class="eyebrow">Merchant account</p><h1>Subscriptions</h1></div><strong class="monthly-total">Monthly total: {{ formatMoney(totalMonthlyAmount) }}</strong></header>
       <section class="store-grid">
         <article v-for="item in subscriptions" :key="item.store.id" class="card subscription-card">
           <div><h2>{{ item.store.name }}</h2><p class="muted">{{ item.store.myshopifyDomain }}</p><span class="status-badge">{{ item.presentation.statusLabel }}</span></div>
           <div class="subscription-price">
-            <strong>{{ formatMoney(item.subscription?.unitAmount, item.subscription?.currencyCode) }} / ay</strong>
+            <strong>{{ formatMoney(item.subscription?.unitAmount, item.subscription?.currencyCode) }} / month</strong>
             <RouterLink v-if="item.store.storefront && item.presentation.action === 'setup'" :to="`/setup/${item.store.storefront.id}`">{{ item.presentation.label }}</RouterLink>
           </div>
         </article>
-        <article v-if="!subscriptions.length" class="card empty"><h2>Henüz aboneliğin yok</h2><p class="muted">Önce bir Shopify mağazası bağlamalısın.</p></article>
+        <article v-if="!subscriptions.length" class="card empty"><h2>You do not have a subscription yet</h2><p class="muted">Connect a Shopify store first.</p></article>
       </section>
     </main>
   </div>

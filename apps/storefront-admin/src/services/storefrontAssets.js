@@ -71,16 +71,16 @@ export async function uploadStorefrontAsset({ accessToken, storefrontId, purpose
   return `${payload.asset.publicUrl}?v=${Date.now()}`
 }
 
-export function storefrontAssetErrorMessage(error, label = 'Görsel') {
-  if (error?.message === 'asset_too_large') return `${label} dosyası izin verilen boyuttan büyük.`
-  if (error?.message === 'invalid_asset_type') return 'Yalnızca gerçek JPEG, PNG veya WEBP dosyaları yüklenebilir.'
+export function storefrontAssetErrorMessage(error, label = 'Image') {
+  if (error?.message === 'asset_too_large') return `${label} file exceeds the allowed size.`
+  if (error?.message === 'invalid_asset_type') return 'Only valid JPEG, PNG, or WEBP files can be uploaded.'
   if (error?.message === 'invalid_asset_dimensions') {
     const limits = error.details || {}
-    return `${label} ölçüsü ${limits.minWidth}×${limits.minHeight} ile ${limits.maxWidth}×${limits.maxHeight} piksel arasında olmalı.`
+    return `${label} dimensions must be between ${limits.minWidth}×${limits.minHeight} and ${limits.maxWidth}×${limits.maxHeight} pixels.`
   }
   if (error?.message === 'storefront_asset_quota_exceeded') {
-    return 'Bu mağazanın 25 MB görsel kotası doldu.'
+    return 'This store has reached its 25 MB image quota.'
   }
-  if (error?.message === 'storefront_write_denied') return 'Bu dosyayı değiştirmek için yetkin yok.'
-  return `${label} yüklenemedi. Lütfen tekrar dene.`
+  if (error?.message === 'storefront_write_denied') return 'You do not have permission to change this file.'
+  return `${label} could not be uploaded. Please try again.`
 }

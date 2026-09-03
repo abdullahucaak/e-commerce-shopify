@@ -11,8 +11,8 @@ const businessName = ref('')
 const email = ref('')
 const password = ref('')
 const error = ref('')
-const success = ref(route.query.confirmed === '1' ? 'E-posta adresin doğrulandı. Şimdi giriş yapabilirsin.' : '')
-const title = computed(() => mode.value === 'register' ? 'Mağazanı kurmaya başla' : 'Hesabına giriş yap')
+const success = ref(route.query.confirmed === '1' ? 'Your email address is verified. You can now log in.' : '')
+const title = computed(() => mode.value === 'register' ? 'Start building your store' : 'Log in to your account')
 
 function setMode(nextMode) {
   mode.value = nextMode
@@ -28,7 +28,7 @@ async function submit() {
       const data = await account.signUp(businessName.value.trim(), email.value.trim(), password.value)
       if (data.session) return router.replace('/stores')
       password.value = ''
-      success.value = 'Hesabın oluşturuldu. E-postandaki doğrulama bağlantısına tıkla.'
+      success.value = 'Your account was created. Click the verification link in your email.'
       return
     }
     await account.signIn(email.value.trim(), password.value)
@@ -36,10 +36,10 @@ async function submit() {
   } catch (caught) {
     const message = caught?.message?.toLowerCase() || ''
     error.value = message.includes('already registered')
-      ? 'Bu e-posta adresiyle zaten bir hesap var.'
+      ? 'An account already exists with this email address.'
       : mode.value === 'register'
-        ? 'Hesap oluşturulamadı. Bilgilerini kontrol edip tekrar dene.'
-        : 'E-posta adresi veya şifre hatalı.'
+        ? 'We could not create your account. Check your details and try again.'
+        : 'The email address or password is incorrect.'
   }
 }
 </script>
@@ -49,19 +49,19 @@ async function submit() {
     <form class="auth-card" @submit.prevent="submit">
       <RouterLink class="auth-brand" to="/">YourProStore</RouterLink>
       <div class="auth-tabs">
-        <button type="button" :class="{ active: mode === 'login' }" @click="setMode('login')">Giriş yap</button>
-        <button type="button" :class="{ active: mode === 'register' }" @click="setMode('register')">Hesap oluştur</button>
+        <button type="button" :class="{ active: mode === 'login' }" @click="setMode('login')">Log in</button>
+        <button type="button" :class="{ active: mode === 'register' }" @click="setMode('register')">Create account</button>
       </div>
       <h1>{{ title }}</h1>
-      <p class="muted">{{ mode === 'register' ? 'Önce hesabını oluştur; ardından Shopify mağazanı birlikte bağlayalım.' : 'Mağazalarını kurmak ve aboneliklerini yönetmek için devam et.' }}</p>
+      <p class="muted">{{ mode === 'register' ? 'Create your account first, then connect your Shopify store.' : 'Continue to set up your stores and manage subscriptions.' }}</p>
       <p v-if="error" class="notice error">{{ error }}</p>
       <p v-if="success" class="notice success">{{ success }}</p>
-      <label v-if="mode === 'register'">İşletme veya marka adı<input v-model="businessName" type="text" maxlength="120" required></label>
-      <label>E-posta adresi<input v-model="email" type="email" required></label>
-      <label>Şifre<input v-model="password" type="password" minlength="8" required></label>
-      <RouterLink v-if="mode === 'login'" class="text-link forgot-link" to="/forgot-password">Şifremi unuttum</RouterLink>
-      <small v-if="mode === 'register'" class="muted">En az 8 karakter kullan.</small>
-      <button>{{ mode === 'register' ? 'Hesabımı oluştur ve devam et' : 'Giriş yap' }}</button>
+      <label v-if="mode === 'register'">Business or brand name<input v-model="businessName" type="text" maxlength="120" required></label>
+      <label>Email address<input v-model="email" type="email" required></label>
+      <label>Password<input v-model="password" type="password" minlength="8" required></label>
+      <RouterLink v-if="mode === 'login'" class="text-link forgot-link" to="/forgot-password">Forgot password?</RouterLink>
+      <small v-if="mode === 'register'" class="muted">Use at least 8 characters.</small>
+      <button>{{ mode === 'register' ? 'Create my account and continue' : 'Log in' }}</button>
     </form>
   </main>
 </template>

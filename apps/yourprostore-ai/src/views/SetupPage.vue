@@ -90,7 +90,7 @@ async function manageStorefront() {
       page: 'design'
     })
   } catch {
-    error.value = 'Storefront yönetimi açılamadı. Lütfen tekrar giriş yapıp yeniden dene.'
+    error.value = 'Storefront management could not be opened. Please log in again and retry.'
     openingStorefrontAdmin.value = false
   }
 }
@@ -105,7 +105,7 @@ async function request(path, options = {}) {
 }
 async function load() {
   const response = await request(`/api/storefronts/${route.params.storefrontId}/onboarding`)
-  if (!response.ok) { error.value = 'Kurulum bilgileri yüklenemedi.'; return }
+  if (!response.ok) { error.value = 'Setup information could not be loaded.'; return }
   data.value = await response.json()
   nicheId.value = data.value.storefront.nicheId || ''
   bannerPresetId.value = data.value.storefront.bannerPresetId || ''
@@ -135,21 +135,21 @@ async function saveBanner() {
   const response = await request(`/api/storefronts/${route.params.storefrontId}/onboarding/banner`, {
     method: 'PATCH', body: JSON.stringify({ bannerPresetId: bannerPresetId.value })
   })
-  if (!response.ok) { error.value = 'Banner seçimi kaydedilemedi.'; return }
-  await load(); message.value = 'Banner seçildi. Sıradaki adımda marka bilgilerini hazırlayacağız.'
+  if (!response.ok) { error.value = 'The banner selection could not be saved.'; return }
+  await load(); message.value = 'Banner selected. Next, we will prepare your brand details.'
 }
 async function save() {
   error.value = ''; message.value = ''
   const response = await request(`/api/storefronts/${route.params.storefrontId}/onboarding/niche`, { method: 'PATCH', body: JSON.stringify({ nicheId: nicheId.value }) })
-  if (!response.ok) { error.value = 'Sektör kaydedilemedi.'; return }
-  await load(); message.value = 'Sektör kaydedildi. Sıradaki adımda bannerını seçeceksin.'
+  if (!response.ok) { error.value = 'The industry could not be saved.'; return }
+  await load(); message.value = 'Industry saved. You will choose your banner next.'
 }
 async function chooseLogo(event) {
   const file = event.target.files?.[0]
   if (!file) return
   error.value = ''; message.value = ''
   if (file.size > 2 * 1024 * 1024 || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-    error.value = 'PNG, JPG veya WEBP biçiminde, en fazla 2 MB logo seç.'
+    error.value = 'Choose a PNG, JPG, or WEBP logo up to 2 MB.'
     return
   }
   uploadingLogo.value = true
@@ -167,7 +167,7 @@ async function chooseLogo(event) {
         publicUrl: previousDraftUrl
       }).catch(() => {})
     }
-    message.value = 'Logo yüklendi. Marka bilgilerini kaydettiğinde mağazana uygulanacak.'
+    message.value = 'Logo uploaded. It will be applied when you save your brand details.'
   } catch (uploadError) { error.value = logoUploadErrorMessage(uploadError) }
   finally { uploadingLogo.value = false; event.target.value = '' }
 }
@@ -188,12 +188,12 @@ async function saveBrand() {
     await load()
     savedLogoUrl.value = brand.logoUrl
     brandResult.value = { completed: true }
-    message.value = 'Marka bilgilerin mağazana uygulandı.'
+    message.value = 'Your brand details were applied to your store.'
     await nextTick()
     document.querySelector('#brand-complete')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   } catch (cause) {
     console.error('Brand setup failed', cause)
-    error.value = 'Marka bilgileri kaydedilemedi. Lütfen tekrar dene.'
+    error.value = 'Your brand details could not be saved. Please try again.'
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   finally { savingBrand.value = false }
@@ -221,13 +221,13 @@ async function syncDomains(silent = false) {
     if (payload.domainSetup?.completed) {
       const step = data.value?.steps?.find(item => item.step_key === 'domain_setup')
       if (step) step.status = 'completed'
-      if (!silent) message.value = 'Alan adın Shopify’dan doğrulandı.'
+      if (!silent) message.value = 'Your domain was verified through Shopify.'
     } else if (!silent) {
-      message.value = 'Henüz aktif bir özel alan adı bulunamadı.'
+      message.value = 'No active custom domain was found yet.'
     }
   } catch (cause) {
     console.error('Domain check failed', cause)
-    if (!silent) error.value = 'Alan adı Shopify’dan kontrol edilemedi. Lütfen tekrar dene.'
+    if (!silent) error.value = 'The domain could not be checked through Shopify. Please try again.'
   } finally {
     checkingDomains.value = false
   }
@@ -243,11 +243,11 @@ async function checkProducts() {
     if (!response.ok) throw new Error(payload.error || 'product_readiness_failed')
     await load()
     message.value = payload.ready
-      ? 'Shopify ürünün bulundu. Ürün kontrolü tamamlandı.'
-      : 'Henüz Storefront satış kanalında yayınlanmış ürün bulunamadı.'
+      ? 'A Shopify product was found. The product check is complete.'
+      : 'No product published to the Storefront sales channel was found yet.'
   } catch (cause) {
     console.error('Product readiness check failed', cause)
-    error.value = 'Shopify ürünleri kontrol edilemedi. Lütfen tekrar dene.'
+    error.value = 'Shopify products could not be checked. Please try again.'
   } finally {
     checkingProducts.value = false
   }
@@ -262,10 +262,10 @@ async function skipDomain() {
     const payload = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(payload.error || 'domain_skip_failed')
     await load()
-    message.value = 'Özel alan adını şimdilik atladın. Daha sonra storefront yönetiminden bağlayabilirsin.'
+    message.value = 'You skipped the custom domain for now. You can connect it later from storefront management.'
   } catch (cause) {
     console.error('Domain setup skip failed', cause)
-    error.value = 'Alan adı adımı atlanamadı. Lütfen tekrar dene.'
+    error.value = 'The domain step could not be skipped. Please try again.'
   } finally {
     skippingDomain.value = false
   }
@@ -300,11 +300,11 @@ async function savePlan() {
   } catch (cause) {
     console.error('Store plan selection failed', cause)
     if (billingIsMock.value) {
-      error.value = 'Test ödemesi tamamlanamadı. Lütfen tekrar dene.'
+      error.value = 'The test payment could not be completed. Please try again.'
     } else if (cause.message === 'store_subscription_requires_management') {
-      error.value = 'Bu aboneliğin ödeme bilgilerini Stripe müşteri portalından güncellemen gerekiyor.'
+      error.value = 'Update this subscription’s payment details from the Stripe customer portal.'
     } else {
-      error.value = 'Güvenli ödeme sayfası açılamadı. Lütfen tekrar dene.'
+      error.value = 'The secure payment page could not be opened. Please try again.'
     }
   } finally { savingPlan.value = false }
 }
@@ -319,20 +319,20 @@ async function simulateMockBilling(action, { fromPlanSelection = false } = {}) {
     if (!response.ok) throw new Error(payload.error || 'mock_billing_failed')
     await load()
     const messages = {
-      activate: 'Test ödemesi tamamlandı. Bu mağazanın aboneliği aktif edildi.',
-      reactivate: 'Test aboneliği yeniden etkinleştirildi.',
-      payment_failed: 'Başarısız ödeme durumu bu mağaza için simüle edildi.',
-      cancel: 'Test aboneliği bu mağaza için iptal edildi.',
-      pause: 'Test aboneliği bu mağaza için duraklatıldı.'
+      activate: 'Test payment completed. This store subscription is now active.',
+      reactivate: 'The test subscription was reactivated.',
+      payment_failed: 'A failed payment was simulated for this store.',
+      cancel: 'The test subscription was canceled for this store.',
+      pause: 'The test subscription was paused for this store.'
     }
-    message.value = messages[action] || 'Test abonelik durumu güncellendi.'
+    message.value = messages[action] || 'The test subscription status was updated.'
     if (fromPlanSelection || ['activate', 'reactivate'].includes(action)) {
       await nextTick()
       document.querySelector('#setup-complete')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   } catch (cause) {
     console.error('Mock billing simulation failed', cause)
-    error.value = 'Test abonelik durumu güncellenemedi. Lütfen tekrar dene.'
+    error.value = 'The test subscription status could not be updated. Please try again.'
     if (fromPlanSelection) throw cause
   } finally {
     simulatingBilling.value = false
@@ -350,22 +350,22 @@ async function openBillingPortal() {
     window.location.assign(payload.portalUrl)
   } catch (cause) {
     console.error('Stripe billing portal failed', cause)
-    error.value = 'Abonelik yönetimi açılamadı. Lütfen tekrar dene.'
+    error.value = 'Subscription management could not be opened. Please try again.'
   } finally { openingPortal.value = false }
 }
 async function waitForPaymentConfirmation() {
-  message.value = 'Ödeme tamamlandı. Stripe onayı bekleniyor…'
+  message.value = 'Payment completed. Waiting for Stripe confirmation…'
   for (let attempt = 0; attempt < 8; attempt += 1) {
     await load()
     if (subscriptionActive.value) {
-      message.value = 'Ödemen onaylandı. Artık mağaza kurulumunu tamamlayabilirsin.'
+      message.value = 'Your payment was confirmed. You can now finish setting up your store.'
       await nextTick()
       document.querySelector('#setup-complete')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
     await new Promise(resolve => window.setTimeout(resolve, 1250))
   }
-  message.value = 'Ödeme alındı; abonelik onayı işleniyor. Biraz sonra sayfayı yenileyebilirsin.'
+  message.value = 'Payment received; subscription confirmation is processing. Refresh the page shortly.'
 }
 async function completeSetup() {
   completingSetup.value = true
@@ -376,37 +376,37 @@ async function completeSetup() {
     })
     const payload = await response.json().catch(() => ({}))
     if (!response.ok) {
-      if (payload.error === 'onboarding_incomplete') throw new Error('Kurulumu tamamlamadan önce eksik adımları bitir.')
-      throw new Error('Kurulum tamamlanamadı. Lütfen tekrar dene.')
+      if (payload.error === 'onboarding_incomplete') throw new Error('Complete the missing steps before finishing setup.')
+      throw new Error('Setup could not be completed. Please try again.')
     }
     await load()
-    message.value = 'Mağaza kurulumu tamamlandı.'
+    message.value = 'Store setup is complete.'
     await nextTick()
     document.querySelector('#setup-complete')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   } catch (cause) {
     console.error('Setup completion failed', cause)
-    error.value = cause.message || 'Kurulum tamamlanamadı. Lütfen tekrar dene.'
+    error.value = cause.message || 'Setup could not be completed. Please try again.'
   } finally { completingSetup.value = false }
 }
 onMounted(async () => {
   await load()
   if (route.query.billing === 'success') await waitForPaymentConfirmation()
-  if (route.query.billing === 'cancelled') message.value = 'Ödeme işlemi iptal edildi; mağazan henüz aktif değil.'
-  if (route.query.billing === 'portal_return') message.value = 'Abonelik durumun Stripe’dan güncelleniyor.'
+  if (route.query.billing === 'cancelled') message.value = 'The payment was canceled; your store is not active yet.'
+  if (route.query.billing === 'portal_return') message.value = 'Your subscription status is being updated from Stripe.'
 })
 </script>
 
 <template>
-  <div class="shell"><aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">Mağazalarım</RouterLink><RouterLink to="/subscriptions">Abonelikler</RouterLink><RouterLink to="/account">Hesabım</RouterLink></nav></aside><main>
-    <header><div><p class="eyebrow">Mağaza başlangıç sihirbazı</p><h1>{{ data?.storefront.name || 'Mağaza kurulumu' }}</h1></div><strong>%{{ progress }}</strong></header>
+  <div class="shell"><aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">My stores</RouterLink><RouterLink to="/subscriptions">Subscriptions</RouterLink><RouterLink to="/account">My account</RouterLink></nav></aside><main>
+    <header><div><p class="eyebrow">Store setup wizard</p><h1>{{ data?.storefront.name || 'Store setup' }}</h1></div><strong>{{ progress }}%</strong></header>
     <p v-if="error" class="notice error">{{ error }}</p><p v-if="message" class="notice success">{{ message }}</p>
-    <section v-if="data" class="card"><p class="eyebrow">Adım 2</p><h2>Ne tür ürünler satacaksın?</h2><p class="muted">Bu seçim mağaza tasarımını değiştirmez; sana uygun banner örneklerini belirler.</p>
+    <section v-if="data" class="card"><p class="eyebrow">Step 2</p><h2>What type of products will you sell?</h2><p class="muted">This choice does not change the storefront layout; it selects suitable banner examples.</p>
       <div class="choices"><label v-for="niche in data.niches" :key="niche.id" :class="{ selected: nicheId === niche.id }"><input v-model="nicheId" type="radio" :value="niche.id">{{ niche.name }}</label></div>
-      <button :disabled="!nicheId" @click="save">Kaydet ve devam et</button>
+      <button :disabled="!nicheId" @click="save">Save and continue</button>
     </section>
     <section v-if="data?.storefront.nicheId" class="card wizard-section">
-      <p class="eyebrow">Adım 3</p><h2>Ana sayfa bannerını seç</h2>
-      <p class="muted">Mağaza yapısı aynı kalır; yalnızca sektörüne uygun başlangıç görseli ve metni uygulanır.</p>
+      <p class="eyebrow">Step 3</p><h2>Choose your homepage banner</h2>
+      <p class="muted">The storefront structure stays the same; only the starting image and copy for your industry are applied.</p>
       <div v-if="bannerPresets.length" class="banner-choices">
         <label v-for="preset in bannerPresets" :key="preset.id" :class="['banner-choice', { selected: bannerPresetId === preset.id }]">
           <input v-model="bannerPresetId" type="radio" :value="preset.id">
@@ -414,102 +414,102 @@ onMounted(async () => {
           <span><strong>{{ preset.name }}</strong><small>{{ preset.title }}</small></span>
         </label>
       </div>
-      <p v-else class="notice">Bu sektör için banner örnekleri hazırlanıyor.</p>
-      <button :disabled="!bannerPresetId" @click="saveBanner">Bannerı seç ve devam et</button>
+      <p v-else class="notice">Banner examples for this industry are being prepared.</p>
+      <button :disabled="!bannerPresetId" @click="saveBanner">Choose banner and continue</button>
     </section>
     <section v-if="data?.storefront.bannerPresetId" class="card wizard-section">
-      <p class="eyebrow">Adım 4</p><h2>Markanı hazırla</h2>
-      <p class="muted">Bu bilgileri daha sonra mağaza yönetim panelinden değiştirebilirsin.</p>
+      <p class="eyebrow">Step 4</p><h2>Set up your brand</h2>
+      <p class="muted">You can change these details later from storefront management.</p>
       <div class="brand-editor">
         <div class="brand-fields">
-          <label>Mağaza adı<input v-model.trim="brand.name" maxlength="120" required></label>
-          <label>Logo<input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingLogo" @change="chooseLogo"><small>PNG, JPG veya WEBP · 64×32–2400×1200 px · en fazla 2 MB</small></label>
-          <button v-if="brand.logoUrl" class="secondary-button" type="button" @click="brand.logoUrl = ''">Logoyu kaldır</button>
-          <label>Logo boyutu: {{ brand.logoSize }} px<input v-model="brand.logoSize" class="range" type="range" min="80" max="320" step="10"></label>
-          <div class="color-fields"><label>Ana renk<input v-model="brand.primary" type="color"></label><label>İkincil renk<input v-model="brand.secondary" type="color"></label></div>
-          <button :disabled="savingBrand || uploadingLogo || !brand.name" @click="saveBrand">Markayı kaydet ve devam et</button>
+          <label>Store name<input v-model.trim="brand.name" maxlength="120" required></label>
+          <label>Logo<input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingLogo" @change="chooseLogo"><small>PNG, JPG, or WEBP · 64×32–2400×1200 px · up to 2 MB</small></label>
+          <button v-if="brand.logoUrl" class="secondary-button" type="button" @click="brand.logoUrl = ''">Remove logo</button>
+          <label>Logo size: {{ brand.logoSize }} px<input v-model="brand.logoSize" class="range" type="range" min="80" max="320" step="10"></label>
+          <div class="color-fields"><label>Primary color<input v-model="brand.primary" type="color"></label><label>Secondary color<input v-model="brand.secondary" type="color"></label></div>
+          <button :disabled="savingBrand || uploadingLogo || !brand.name" @click="saveBrand">Save brand and continue</button>
         </div>
         <div class="brand-preview" :style="{ '--primary': brand.primary, '--secondary': brand.secondary }">
-          <img v-if="brand.logoUrl" :src="brand.logoUrl" :alt="brand.name" :style="{ width: `${brand.logoSize}px` }"><strong v-else>{{ brand.name || 'Mağazan' }}</strong>
-          <span>Örnek ürün <b>Sepete ekle</b></span>
+          <img v-if="brand.logoUrl" :src="brand.logoUrl" :alt="brand.name" :style="{ width: `${brand.logoSize}px` }"><strong v-else>{{ brand.name || 'Your store' }}</strong>
+          <span>Sample product <b>Add to cart</b></span>
         </div>
       </div>
     </section>
     <section v-if="brandCompleted || brandResult?.completed" id="brand-complete" class="card wizard-section completion-card">
-      <p class="eyebrow">Adım 4 tamamlandı</p>
-      <h2>Markan mağazana uygulandı</h2>
-      <p class="muted">Logo, mağaza adı ve marka renklerin başarıyla kaydedildi.</p>
-      <p class="success-text">Hazırız. Mağaza kurulumunun sonraki aşamalarına geçebiliriz.</p>
+      <p class="eyebrow">Step 4 complete</p>
+      <h2>Your brand was applied to your store</h2>
+      <p class="muted">Your logo, store name, and brand colors were saved.</p>
+      <p class="success-text">Ready. You can continue with the next setup steps.</p>
     </section>
     <section v-if="brandCompleted || brandResult?.completed" class="card wizard-section">
-      <p class="eyebrow">Adım 5</p>
-      <h2>Shopify ürünlerini kontrol et</h2>
-      <p class="muted">Ürünleri veritabanımıza kopyalamıyoruz. Shopify Storefront API üzerinden yalnızca satışa hazır en az bir ürün olup olmadığını kontrol ediyoruz.</p>
+      <p class="eyebrow">Step 5</p>
+      <h2>Check Shopify products</h2>
+      <p class="muted">We do not copy products into our database. We only check through the Shopify Storefront API whether at least one product is ready for sale.</p>
       <div v-if="productReady" class="subscription-summary">
-        <p class="success-text"><strong>Ürün hazır.</strong> Mağazanda gösterilebilecek en az bir Shopify ürünü bulundu.</p>
+        <p class="success-text"><strong>Product ready.</strong> At least one Shopify product can be displayed in your store.</p>
       </div>
       <div v-else>
-        <p v-if="productReadinessStep?.status === 'in_progress'" class="notice">Henüz Storefront satış kanalında yayınlanmış ürün bulunamadı.</p>
+        <p v-if="productReadinessStep?.status === 'in_progress'" class="notice">No product published to the Storefront sales channel was found yet.</p>
         <div class="wizard-actions">
-          <a class="secondary-link" :href="shopifyProductsUrl" target="_blank" rel="noopener">Shopify’da ilk ürününü ekle</a>
+          <a class="secondary-link" :href="shopifyProductsUrl" target="_blank" rel="noopener">Add your first product in Shopify</a>
           <button :disabled="checkingProducts" @click="checkProducts">
-            {{ checkingProducts ? 'Ürünler kontrol ediliyor…' : 'Shopify ürünlerini kontrol et' }}
+            {{ checkingProducts ? 'Checking products…' : 'Check Shopify products' }}
           </button>
         </div>
       </div>
     </section>
     <section v-if="productReady" class="card wizard-section">
-      <p class="eyebrow">Adım 6</p>
-      <h2>Mağazanı önizle</h2>
-      <p class="muted">Kaydettiğin marka ve banner ayarlarını gerçek vitrinde kontrol et.</p>
-      <p class="muted">Shopify ürünlerini burada yönetmiyoruz veya veritabanımıza kopyalamıyoruz.</p>
+      <p class="eyebrow">Step 6</p>
+      <h2>Preview your store</h2>
+      <p class="muted">Review your saved brand and banner settings in the real storefront.</p>
+      <p class="muted">We do not manage Shopify products here or copy them into our database.</p>
       <div class="wizard-actions">
-        <a :href="storefrontPreviewUrl" target="_blank" rel="noopener" @click="markPreviewOpened">Mağazayı önizle</a>
-        <button class="secondary-button" :disabled="openingStorefrontAdmin" @click="manageStorefront">{{ openingStorefrontAdmin ? 'Yönetim açılıyor…' : 'Storefront yönetimine git' }}</button>
+        <a :href="storefrontPreviewUrl" target="_blank" rel="noopener" @click="markPreviewOpened">Preview store</a>
+        <button class="secondary-button" :disabled="openingStorefrontAdmin" @click="manageStorefront">{{ openingStorefrontAdmin ? 'Opening management…' : 'Go to storefront management' }}</button>
       </div>
-      <p v-if="previewCompleted" class="success-text">Vitrin önizlemesi açıldı. Bu adım tamamlandı.</p>
+      <p v-if="previewCompleted" class="success-text">The storefront preview was opened. This step is complete.</p>
     </section>
     <section v-if="previewCompleted" class="card wizard-section">
-      <p class="eyebrow">Adım 7</p>
-      <h2>Alan adını kontrol et</h2>
-      <p class="muted">Bu adım opsiyoneldir. Alan adını şimdi bağlayabilir veya kurulumu tamamlayıp daha sonra storefront yönetiminden ekleyebilirsin.</p>
+      <p class="eyebrow">Step 7</p>
+      <h2>Check your domain</h2>
+      <p class="muted">This step is optional. Connect a domain now, or finish setup and add one later from storefront management.</p>
 
       <div v-if="activeCustomDomain" class="domain-summary">
         <p><strong>{{ activeCustomDomain.hostname }}</strong></p>
-        <p class="success-text">Özel alan adın aktif. Bu adım tamamlandı.</p>
+        <p class="success-text">Your custom domain is active. This step is complete.</p>
       </div>
       <div v-else class="domain-summary">
-        <p class="muted">Aktif bir özel alan adı henüz görünmüyor.</p>
-        <a class="secondary-link" :href="shopifyDomainsUrl" target="_blank" rel="noopener">Shopify alan adı ayarlarını aç</a>
+        <p class="muted">No active custom domain is visible yet.</p>
+        <a class="secondary-link" :href="shopifyDomainsUrl" target="_blank" rel="noopener">Open Shopify domain settings</a>
       </div>
 
-      <p v-if="myshopifyDomain" class="muted">Shopify yedek adresin: <strong>{{ myshopifyDomain }}</strong></p>
+      <p v-if="myshopifyDomain" class="muted">Your Shopify fallback address: <strong>{{ myshopifyDomain }}</strong></p>
       <button :disabled="checkingDomains" @click="syncDomains(false)">
-        {{ checkingDomains ? 'Shopify’dan kontrol ediliyor…' : 'Shopify’dan tekrar kontrol et' }}
+        {{ checkingDomains ? 'Checking through Shopify…' : 'Check again through Shopify' }}
       </button>
       <button v-if="!domainCompleted" class="secondary-button" :disabled="skippingDomain" @click="skipDomain">
-        {{ skippingDomain ? 'Adım atlanıyor…' : 'Şimdilik atla' }}
+        {{ skippingDomain ? 'Skipping step…' : 'Skip for now' }}
       </button>
-      <p v-if="domainSkipped" class="success-text">Alan adı şimdilik atlandı. Daha sonra ekleyebilirsin.</p>
-      <p v-else-if="domainCompleted && !activeCustomDomain" class="success-text">Alan adı adımı daha önce tamamlandı.</p>
+      <p v-if="domainSkipped" class="success-text">The domain was skipped for now. You can add one later.</p>
+      <p v-else-if="domainCompleted && !activeCustomDomain" class="success-text">The domain step was completed earlier.</p>
     </section>
     <section v-if="domainCompleted" class="card wizard-section">
-      <p class="eyebrow">Adım 8</p>
-      <h2>Mağazan için planını seç</h2>
-      <p v-if="billingIsMock" class="notice">Geliştirme modu: gerçek ücret alınmaz. Test işlemi yalnızca bu mağazanın abonelik durumunu değiştirir.</p>
-      <p v-else class="muted">Her Shopify mağazası ayrı abonelik gerektirir. Ödeme Stripe’ın güvenli ödeme sayfasında alınır ve yalnızca bu mağazayı etkinleştirir.</p>
+      <p class="eyebrow">Step 8</p>
+      <h2>Choose a plan for your store</h2>
+      <p v-if="billingIsMock" class="notice">Development mode: no real charge is made. The test action changes only this store’s subscription status.</p>
+      <p v-else class="muted">Each Shopify store requires a separate subscription. Payment is collected on Stripe’s secure payment page and activates only this store.</p>
       <div v-if="subscriptionActive" class="subscription-summary">
-        <p class="success-text"><strong>Abonelik aktif.</strong> {{ billingIsMock ? 'Bu mağaza için test ödemesi tamamlandı.' : 'Bu mağaza için ödeme doğrulandı.' }}</p>
-        <p v-if="data?.subscription?.cancel_at_period_end" class="muted">Abonelik dönem sonunda sona erecek.</p>
+        <p class="success-text"><strong>Subscription active.</strong> {{ billingIsMock ? 'The test payment for this store is complete.' : 'Payment for this store was verified.' }}</p>
+        <p v-if="data?.subscription?.cancel_at_period_end" class="muted">The subscription will end after the current billing period.</p>
         <button v-if="canManageBilling && !billingIsMock" class="secondary-button" :disabled="openingPortal" @click="openBillingPortal">
-          {{ openingPortal ? 'Stripe açılıyor…' : 'Aboneliği yönet' }}
+          {{ openingPortal ? 'Opening Stripe…' : 'Manage subscription' }}
         </button>
         <details v-if="billingIsMock" class="mock-controls">
-          <summary>Test abonelik durumlarını simüle et</summary>
+          <summary>Simulate test subscription states</summary>
           <div class="wizard-actions">
-            <button class="secondary-button" :disabled="simulatingBilling" @click="simulateMockBilling('payment_failed')">Başarısız ödeme</button>
-            <button class="secondary-button" :disabled="simulatingBilling" @click="simulateMockBilling('pause')">Duraklat</button>
-            <button class="secondary-button" :disabled="simulatingBilling" @click="simulateMockBilling('cancel')">İptal et</button>
+            <button class="secondary-button" :disabled="simulatingBilling" @click="simulateMockBilling('payment_failed')">Failed payment</button>
+            <button class="secondary-button" :disabled="simulatingBilling" @click="simulateMockBilling('pause')">Pause</button>
+            <button class="secondary-button" :disabled="simulatingBilling" @click="simulateMockBilling('cancel')">Cancel</button>
           </div>
         </details>
       </div>
@@ -517,38 +517,38 @@ onMounted(async () => {
         <label v-for="plan in data?.plans || []" :key="plan.key" :class="['plan-choice', { selected: selectedPlanKey === plan.key }]">
           <input v-model="selectedPlanKey" type="radio" :value="plan.key">
           <span><strong>{{ plan.name }}</strong><small>{{ plan.description }}</small></span>
-          <b>{{ formatPlanPrice(plan) }} <small>/ ay</small></b>
+          <b>{{ formatPlanPrice(plan) }} <small>/ month</small></b>
         </label>
       </div>
       <template v-if="!subscriptionActive">
-        <p v-if="subscriptionNeedsAttention" class="notice error">Ödeme güncellenmeli; bu mağazanın yayını ödeme düzelene kadar durduruldu.</p>
+        <p v-if="subscriptionNeedsAttention" class="notice error">Payment must be updated; this store is suspended until payment is fixed.</p>
         <button v-if="billingIsMock && subscriptionNeedsAttention" :disabled="simulatingBilling" @click="simulateMockBilling('reactivate')">
-          {{ simulatingBilling ? 'Test aboneliği güncelleniyor…' : 'Test aboneliğini yeniden etkinleştir' }}
+          {{ simulatingBilling ? 'Updating test subscription…' : 'Reactivate test subscription' }}
         </button>
         <button v-else-if="subscriptionNeedsAttention && canManageBilling" :disabled="openingPortal" @click="openBillingPortal">
-          {{ openingPortal ? 'Stripe açılıyor…' : 'Ödeme bilgilerini güncelle' }}
+          {{ openingPortal ? 'Opening Stripe…' : 'Update payment details' }}
         </button>
         <button v-else :disabled="savingPlan || !selectedPlanKey" @click="savePlan">
-          {{ savingPlan ? (billingIsMock ? 'Test ödemesi tamamlanıyor…' : 'Güvenli ödeme hazırlanıyor…') : (billingIsMock ? 'Planı seç ve test ödemesini tamamla' : 'Planı seç ve güvenli ödemeye geç') }}
+          {{ savingPlan ? (billingIsMock ? 'Completing test payment…' : 'Preparing secure payment…') : (billingIsMock ? 'Choose plan and complete test payment' : 'Choose plan and continue to secure payment') }}
         </button>
-        <p v-if="planCompleted" id="plan-complete" class="muted">Plan seçildi; kurulumu tamamlamak için {{ billingIsMock ? 'test aboneliğinin etkinleştirilmesi' : 'ödemenin onaylanması' }} gerekiyor.</p>
+        <p v-if="planCompleted" id="plan-complete" class="muted">Plan selected; {{ billingIsMock ? 'activate the test subscription' : 'confirm the payment' }} to finish setup.</p>
       </template>
     </section>
     <section v-if="subscriptionActive" id="setup-complete" class="card wizard-section completion-card">
-      <p class="eyebrow">Adım 9</p>
+      <p class="eyebrow">Step 9</p>
       <template v-if="publishCompleted">
-        <h2>Kurulum tamamlandı</h2>
-        <p class="success-text">Mağazan aktif ve kullanıma hazır.</p>
+        <h2>Setup complete</h2>
+        <p class="success-text">Your store is active and ready to use.</p>
         <div class="wizard-actions">
-          <a :href="storefrontPreviewUrl" target="_blank" rel="noopener">Mağazayı görüntüle</a>
-          <button class="secondary-button" :disabled="openingStorefrontAdmin" @click="manageStorefront">{{ openingStorefrontAdmin ? 'Yönetim açılıyor…' : 'Storefront yönetimine git' }}</button>
+          <a :href="storefrontPreviewUrl" target="_blank" rel="noopener">View store</a>
+          <button class="secondary-button" :disabled="openingStorefrontAdmin" @click="manageStorefront">{{ openingStorefrontAdmin ? 'Opening management…' : 'Go to storefront management' }}</button>
         </div>
       </template>
       <template v-else>
-        <h2>Kurulumu tamamla</h2>
-        <p class="muted">Seçimlerin kaydedildi. Mağazanı aktif hale getirmek için kurulumu tamamla.</p>
+        <h2>Finish setup</h2>
+        <p class="muted">Your choices are saved. Finish setup to activate your store.</p>
         <button :disabled="completingSetup || !requiredSetupCompleted" @click="completeSetup">
-          {{ completingSetup ? 'Kurulum tamamlanıyor…' : 'Kurulumu tamamla' }}
+          {{ completingSetup ? 'Finishing setup…' : 'Finish setup' }}
         </button>
       </template>
     </section>

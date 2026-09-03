@@ -58,10 +58,10 @@ export async function removeLogo({ accessToken, storefrontId, publicUrl }) {
 
 export function logoUploadErrorMessage(error) {
   if (error?.message === 'asset_too_large') return 'Logo en fazla 2 MB olabilir.'
-  if (error?.message === 'invalid_asset_type') return 'Yalnızca gerçek JPEG, PNG veya WEBP dosyaları yüklenebilir.'
+  if (error?.message === 'invalid_asset_type') return 'Only valid JPEG, PNG, or WEBP files can be uploaded.'
   if (error?.message === 'invalid_asset_dimensions') {
-    return 'Logo ölçüsü 64×32 ile 2400×1200 piksel arasında olmalı.'
+    return 'Logo dimensions must be between 64×32 and 2400×1200 pixels.'
   }
-  if (error?.message === 'storefront_asset_quota_exceeded') return 'Bu mağazanın 25 MB görsel kotası doldu.'
-  return 'Logo yüklenemedi. Lütfen tekrar dene.'
+  if (error?.message === 'storefront_asset_quota_exceeded') return 'This store has reached its 25 MB image quota.'
+  return 'The logo could not be uploaded. Please try again.'
 }

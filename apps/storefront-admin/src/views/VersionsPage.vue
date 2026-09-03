@@ -35,7 +35,7 @@ async function loadVersions() {
     if (!response.ok) throw new Error(payload.error)
     versions.value = payload.versions || []
   } catch {
-    error.value = 'Sürüm geçmişi yüklenemedi.'
+    error.value = 'Version history could not be loaded.'
   } finally {
     loading.value = false
   }
@@ -43,7 +43,7 @@ async function loadVersions() {
 
 async function restoreVersion(version) {
   if (!authStore.canRestoreConfig) return
-  if (!window.confirm(`Sürüm ${version} yeni taslak olarak hazırlansın mı? Canlı mağaza değişmeyecek.`)) return
+  if (!window.confirm(`Prepare version ${version} as a new draft? The live store will not change.`)) return
   restoring.value = version
   message.value = ''
   error.value = ''
@@ -56,19 +56,19 @@ async function restoreVersion(version) {
     const payload = await response.json()
     if (!response.ok) throw new Error(payload.error)
     const successMessage = payload.hasUnpublishedChanges
-      ? `Sürüm ${version}, taslak sürüm ${payload.draftVersion} olarak hazırlandı. Canlı mağaza değişmedi.`
-      : 'Seçilen sürüm zaten canlı sürümle aynı; bekleyen taslak temizlendi.'
+      ? `Version ${version} was prepared as draft version ${payload.draftVersion}. The live store did not change.`
+      : 'The selected version already matches the live version; the pending draft was cleared.'
     await loadVersions()
     message.value = successMessage
   } catch {
-    error.value = 'Sürüm taslağa geri yüklenemedi.'
+    error.value = 'The version could not be restored as a draft.'
   } finally {
     restoring.value = null
   }
 }
 
 function formatDate(value) {
-  return value ? new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—'
+  return value ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—'
 }
 
 watch(selectedStoreId, loadVersions)
@@ -79,40 +79,40 @@ onMounted(loadVersions)
   <div class="page-shell">
     <aside>
       <p class="wordmark">YourProStore.ai</p>
-      <nav aria-label="Platform menüsü">
-        <RouterLink to="/dashboard">Genel bakış</RouterLink>
-        <RouterLink to="/design">Tasarım ayarları</RouterLink>
-        <RouterLink to="/content">İçerik ayarları</RouterLink>
-        <RouterLink to="/domains">Domain ayarları</RouterLink>
-        <RouterLink to="/versions">Sürüm geçmişi</RouterLink>
+      <nav aria-label="Platform menu">
+        <RouterLink to="/dashboard">Overview</RouterLink>
+        <RouterLink to="/design">Design settings</RouterLink>
+        <RouterLink to="/content">Content settings</RouterLink>
+        <RouterLink to="/domains">Domain settings</RouterLink>
+        <RouterLink to="/versions">Version history</RouterLink>
       </nav>
     </aside>
     <main>
       <header>
-        <div><p class="eyebrow">Güvenli geri dönüş</p><h1>Sürüm geçmişi</h1></div>
-        <select v-model="selectedStoreId" aria-label="Mağaza seç">
+        <div><p class="eyebrow">Safe rollback</p><h1>Version history</h1></div>
+        <select v-model="selectedStoreId" aria-label="Select store">
           <option v-for="store in stores" :key="store.id" :value="store.id">{{ store.name }}</option>
         </select>
       </header>
-      <p class="hint">Geri yükleme canlı mağazayı değiştirmez. Seçilen ayarlar yeni taslak olur; Tasarım ve İçerik sayfalarından ayrıca yayınlanır.</p>
+      <p class="hint">Restoring does not change the live store. The selected settings become a new draft and must be published separately from the Design or Content page.</p>
       <p v-if="message" class="success">{{ message }}</p>
       <p v-if="error" class="error">{{ error }}</p>
       <section>
-        <p v-if="loading">Sürümler yükleniyor…</p>
-        <p v-else-if="!versions.length">Henüz bir ayar sürümü yok.</p>
+        <p v-if="loading">Loading versions…</p>
+        <p v-else-if="!versions.length">No configuration versions yet.</p>
         <table v-else>
-          <thead><tr><th>Sürüm</th><th>Durum</th><th>Değiştiren</th><th>Tarih</th><th></th></tr></thead>
+          <thead><tr><th>Version</th><th>Status</th><th>Changed by</th><th>Date</th><th></th></tr></thead>
           <tbody>
             <tr v-for="item in versions" :key="item.version">
               <td><strong>#{{ item.version }}</strong></td>
               <td><span class="status" :class="item.status">{{ item.status }}</span></td>
-              <td>{{ item.createdByName || 'Bilinmiyor' }}</td>
+              <td>{{ item.createdByName || 'Unknown' }}</td>
               <td>{{ formatDate(item.publishedAt || item.updatedAt || item.createdAt) }}</td>
-              <td><button v-if="item.status !== 'draft'" :disabled="!authStore.canRestoreConfig || restoring !== null" @click="restoreVersion(item.version)">{{ restoring === item.version ? 'Hazırlanıyor…' : 'Taslağa geri yükle' }}</button></td>
+              <td><button v-if="item.status !== 'draft'" :disabled="!authStore.canRestoreConfig || restoring !== null" @click="restoreVersion(item.version)">{{ restoring === item.version ? 'Preparing…' : 'Restore as draft' }}</button></td>
             </tr>
           </tbody>
         </table>
-        <p v-if="!authStore.canRestoreConfig" class="permission">Sürümü yalnız workspace sahibi veya yöneticisi geri yükleyebilir.</p>
+        <p v-if="!authStore.canRestoreConfig" class="permission">Only workspace owners and admins can restore a version.</p>
       </section>
     </main>
   </div>

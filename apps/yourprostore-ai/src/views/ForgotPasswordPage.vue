@@ -15,7 +15,7 @@ async function submit() {
     await account.requestPasswordReset(email.value)
     submitted.value = true
   } catch {
-    error.value = 'Sıfırlama e-postası gönderilemedi. Biraz sonra tekrar dene.'
+    error.value = 'We could not send the reset email. Please try again shortly.'
   } finally {
     loading.value = false
   }
@@ -26,17 +26,17 @@ async function submit() {
   <main class="auth-page">
     <section class="auth-card">
       <RouterLink class="auth-brand" to="/">YourProStore</RouterLink>
-      <h1>Şifreni sıfırla</h1>
-      <p class="muted">Hesabındaki e-posta adresini gir. Yeni şifre belirleyebileceğin güvenli bağlantıyı göndereceğiz.</p>
+      <h1>Reset your password</h1>
+      <p class="muted">Enter your account email address. We will send a secure link for setting a new password.</p>
       <p v-if="submitted" class="notice success">
-        Hesap bu e-posta adresiyle eşleşiyorsa sıfırlama bağlantısı gönderildi. Gelen kutunu ve spam klasörünü kontrol et.
+        If an account matches this email address, a reset link has been sent. Check your inbox and spam folder.
       </p>
       <p v-if="error" class="notice error">{{ error }}</p>
       <form v-if="!submitted" class="recovery-form" @submit.prevent="submit">
-        <label>E-posta adresi<input v-model.trim="email" type="email" autocomplete="email" required></label>
-        <button :disabled="loading">{{ loading ? 'Gönderiliyor…' : 'Sıfırlama bağlantısı gönder' }}</button>
+        <label>Email address<input v-model.trim="email" type="email" autocomplete="email" required></label>
+        <button :disabled="loading">{{ loading ? 'Sending…' : 'Send reset link' }}</button>
       </form>
-      <RouterLink class="text-link centered" to="/login">Giriş ekranına dön</RouterLink>
+      <RouterLink class="text-link centered" to="/login">Back to login</RouterLink>
     </section>
   </main>
 </template>

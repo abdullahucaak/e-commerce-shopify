@@ -39,7 +39,7 @@ async function loadDomains() {
     if (!response.ok) throw new Error(payload.error)
     domainInfo.value = payload
   } catch {
-    error.value = 'Domain bilgileri yüklenemedi.'
+    error.value = 'Domain information could not be loaded.'
   } finally {
     loading.value = false
   }
@@ -58,14 +58,14 @@ async function syncDomains() {
     const payload = await response.json()
     if (!response.ok) throw new Error(payload.error)
     domainInfo.value = payload
-    message.value = 'Domain bilgileri Shopify’dan güncellendi.'
+    message.value = 'Domain information was updated from Shopify.'
   } catch (syncError) {
     if (syncError.message === 'domain_already_claimed') {
-      error.value = 'Bu domain başka bir vitrine bağlı.'
+      error.value = 'This domain is connected to another storefront.'
     } else if (syncError.message === 'shopify_reconnect_required') {
-      error.value = 'Bu mağazanın eski bağlantısı yenilenmeli. Genel bakıştan Shopify mağazasını tekrar bağla.'
+      error.value = 'This store connection must be renewed. Reconnect the Shopify store from Overview.'
     } else {
-      error.value = 'Domain Shopify’dan doğrulanamadı. Shopify Admin → Settings → Domains bölümünü kontrol et.'
+      error.value = 'The domain could not be verified with Shopify. Check Shopify Admin → Settings → Domains.'
     }
   } finally {
     syncing.value = false
@@ -81,18 +81,18 @@ onMounted(loadDomains)
     <aside>
       <div><p class="wordmark">YourProStore.ai</p><p class="wordmark-subtitle">storefront admin</p></div>
       <nav>
-        <RouterLink to="/dashboard">Genel bakış</RouterLink>
-        <RouterLink to="/design">Tasarım ayarları</RouterLink>
-        <RouterLink to="/content">İçerik ayarları</RouterLink>
-        <RouterLink to="/domains">Domain ayarları</RouterLink>
-        <RouterLink to="/versions">Sürüm geçmişi</RouterLink>
+        <RouterLink to="/dashboard">Overview</RouterLink>
+        <RouterLink to="/design">Design settings</RouterLink>
+        <RouterLink to="/content">Content settings</RouterLink>
+        <RouterLink to="/domains">Domain settings</RouterLink>
+        <RouterLink to="/versions">Version history</RouterLink>
       </nav>
     </aside>
 
     <main>
       <header>
-        <div><p class="eyebrow">Mağaza bağlantısı</p><h1>Domain ayarları</h1></div>
-        <select v-model="selectedStoreId" aria-label="Mağaza seç">
+        <div><p class="eyebrow">Store connection</p><h1>Domain settings</h1></div>
+        <select v-model="selectedStoreId" aria-label="Select store">
           <option v-for="store in stores" :key="store.id" :value="store.id">{{ store.name }}</option>
         </select>
       </header>
@@ -100,16 +100,16 @@ onMounted(loadDomains)
       <section v-if="selectedStore" class="domain-panel">
         <div class="intro">
           <div>
-            <h2>Shopify domainleri</h2>
-            <p>Domain satın alma ve DNS işlemlerini Shopify üzerinden yönetmeye devam edeceksin.</p>
+            <h2>Shopify domains</h2>
+            <p>Continue managing domain purchases and DNS settings through Shopify.</p>
           </div>
           <button :disabled="syncing || loading || !canManageDomains" @click="syncDomains">
-            {{ canManageDomains ? (syncing ? 'Kontrol ediliyor…' : 'Shopify’dan güncelle') : 'Salt okunur' }}
+            {{ canManageDomains ? (syncing ? 'Checking…' : 'Update from Shopify') : 'Read only' }}
           </button>
         </div>
 
         <p v-if="!canManageDomains" class="permission-notice">
-          Rolün domainleri görüntülemeye izin veriyor; güncelleme yetkisi owner veya admin rolündedir.
+          Your role can view domains; only owners and admins can update them.
         </p>
 
         <p v-if="message" class="success">{{ message }}</p>
@@ -119,21 +119,21 @@ onMounted(loadDomains)
           <article v-for="domain in domainInfo.domains" :key="domain.id">
             <div>
               <strong>{{ domain.hostname }}</strong>
-              <small>{{ domain.kind === 'custom' ? 'Özel domain' : 'Shopify yedek adresi' }}</small>
+              <small>{{ domain.kind === 'custom' ? 'Custom domain' : 'Shopify fallback address' }}</small>
             </div>
             <div class="badges">
-              <span v-if="domain.isPrimary" class="primary">Birincil</span>
+              <span v-if="domain.isPrimary" class="primary">Primary</span>
               <span :class="domain.status === 'active' ? 'active' : 'inactive'">
-                {{ domain.status === 'active' ? 'Aktif' : domain.status }}
+                {{ domain.status === 'active' ? 'Active' : domain.status }}
               </span>
             </div>
           </article>
           <div v-if="!domainInfo.domains.length" class="empty">
-            Henüz eşleştirilmiş domain yok. Shopify’dan güncelle butonuna bas.
+            No mapped domains yet. Select Update from Shopify.
           </div>
         </div>
       </section>
-      <p v-else>Önce bir Shopify mağazası bağlamalısın.</p>
+      <p v-else>Connect a Shopify store first.</p>
     </main>
   </div>
 </template>

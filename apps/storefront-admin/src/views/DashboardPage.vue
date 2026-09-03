@@ -28,42 +28,42 @@ async function signOut() {
         <p class="wordmark-subtitle">storefront admin</p>
       </div>
 
-      <nav aria-label="Platform menüsü">
-        <RouterLink to="/dashboard" class="nav-link">Genel bakış</RouterLink>
-        <RouterLink to="/design" class="nav-link">Tasarım ayarları</RouterLink>
-        <RouterLink to="/content" class="nav-link">İçerik ayarları</RouterLink>
-        <RouterLink to="/domains" class="nav-link">Domain ayarları</RouterLink>
-        <RouterLink to="/versions" class="nav-link">Sürüm geçmişi</RouterLink>
+      <nav aria-label="Platform menu">
+        <RouterLink to="/dashboard" class="nav-link">Overview</RouterLink>
+        <RouterLink to="/design" class="nav-link">Design settings</RouterLink>
+        <RouterLink to="/content" class="nav-link">Content settings</RouterLink>
+        <RouterLink to="/domains" class="nav-link">Domain settings</RouterLink>
+        <RouterLink to="/versions" class="nav-link">Version history</RouterLink>
       </nav>
 
       <button class="sign-out" type="button" :disabled="signingOut" @click="signOut">
-        {{ signingOut ? 'Çıkış yapılıyor…' : 'Çıkış yap' }}
+        {{ signingOut ? 'Signing out…' : 'Sign out' }}
       </button>
     </aside>
 
     <main class="dashboard">
       <header class="dashboard-header">
         <div>
-          <p class="eyebrow">Çalışma alanı</p>
-          <h1>{{ authStore.workspace?.name || 'Mağaza yönetimi' }}</h1>
+          <p class="eyebrow">Workspace</p>
+          <h1>{{ authStore.workspace?.name || 'Store management' }}</h1>
         </div>
         <div class="account">
-          <strong>{{ authStore.membershipRole === 'owner' ? 'Sahip' : authStore.membershipRole }}</strong>
+          <strong>{{ authStore.membershipRole === 'owner' ? 'Owner' : authStore.membershipRole }}</strong>
           <span>{{ authStore.user?.email }}</span>
         </div>
       </header>
 
-      <section class="summary-grid" aria-label="Hesap özeti">
+      <section class="summary-grid" aria-label="Account summary">
         <article class="summary-card">
-          <span>Bağlı mağaza</span>
+          <span>Connected stores</span>
           <strong>{{ stores.length }}</strong>
         </article>
         <article class="summary-card">
-          <span>Vitrin uygulaması</span>
+          <span>Storefront application</span>
           <strong>Vue storefront</strong>
         </article>
         <article class="summary-card">
-          <span>Ürün kaynağı</span>
+          <span>Product source</span>
           <strong>Shopify</strong>
         </article>
       </section>
@@ -71,8 +71,8 @@ async function signOut() {
       <section class="stores-panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Shopify bağlantıları</p>
-            <h2>Mağazalarım</h2>
+            <p class="eyebrow">Shopify connections</p>
+            <h2>My stores</h2>
           </div>
         </div>
 
@@ -82,19 +82,19 @@ async function signOut() {
             <div class="store-details">
               <div class="store-title">
                 <h3>{{ store.name }}</h3>
-                <span class="status">{{ store.status === 'active' ? 'Bağlı' : store.status }}</span>
+                <span class="status">{{ store.status === 'active' ? 'Connected' : store.status }}</span>
               </div>
               <p>{{ store.myshopifyDomain }}</p>
               <small>
-                Vitrin: {{ store.storefront?.status === 'active' ? 'aktif' : 'hazırlanıyor' }}
+                Storefront: {{ store.storefront?.status === 'active' ? 'active' : 'preparing' }}
               </small>
             </div>
           </article>
         </div>
 
         <div v-else class="empty-state">
-          <h3>Henüz bağlı Shopify mağazası yok</h3>
-          <p>Shopify’a giriş yaparak mevcut mağazanı seçebilir veya yeni bir mağaza oluşturabilirsin.</p>
+          <h3>No Shopify store connected yet</h3>
+          <p>Sign in to Shopify to choose an existing store or create a new one.</p>
         </div>
       </section>
     </main>

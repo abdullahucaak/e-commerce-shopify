@@ -13,7 +13,7 @@ async function submit() {
     await authStore.requestPasswordReset(email.value)
     submitted.value = true
   } catch {
-    errorMessage.value = 'Sıfırlama e-postası gönderilemedi. Biraz sonra tekrar dene.'
+    errorMessage.value = 'The reset email could not be sent. Please try again shortly.'
   }
 }
 </script>
@@ -25,23 +25,23 @@ async function submit() {
         <span class="wordmark">YourProStore.ai</span>
         <span class="wordmark-subtitle">storefront admin</span>
       </div>
-      <h1 id="forgot-password-title">Şifreni sıfırla</h1>
-      <p class="description">Hesabındaki e-posta adresini gir. Yeni şifre belirleyebileceğin güvenli bağlantıyı göndereceğiz.</p>
+      <h1 id="forgot-password-title">Reset your password</h1>
+      <p class="description">Enter your account email address. We will send a secure link for setting a new password.</p>
 
-      <div v-if="!authStore.isConfigured" class="notice error" role="alert">Supabase Auth henüz yapılandırılmadı.</div>
+      <div v-if="!authStore.isConfigured" class="notice error" role="alert">Supabase Auth is not configured yet.</div>
       <div v-else-if="submitted" class="notice success" role="status">
-        Hesap bu e-posta adresiyle eşleşiyorsa sıfırlama bağlantısı gönderildi. Gelen kutunu ve spam klasörünü kontrol et.
+        If an account matches this email address, a reset link has been sent. Check your inbox and spam folder.
       </div>
       <div v-if="errorMessage" class="notice error" role="alert">{{ errorMessage }}</div>
 
       <form v-if="!submitted" @submit.prevent="submit">
-        <label for="recovery-email">E-posta adresi</label>
+        <label for="recovery-email">Email address</label>
         <input id="recovery-email" v-model.trim="email" type="email" autocomplete="email" required>
         <button :disabled="authStore.loading || !authStore.isConfigured">
-          {{ authStore.loading ? 'Gönderiliyor…' : 'Sıfırlama bağlantısı gönder' }}
+          {{ authStore.loading ? 'Sending…' : 'Send reset link' }}
         </button>
       </form>
-      <RouterLink class="back-link" to="/login">Giriş ekranına dön</RouterLink>
+      <RouterLink class="back-link" to="/login">Back to login</RouterLink>
     </section>
   </main>
 </template>

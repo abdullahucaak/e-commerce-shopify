@@ -23,7 +23,7 @@ const previewHostname = ref('')
 const previewToken = ref('')
 const previewPage = ref('/')
 const previewPages = [
-  { label: 'Ana sayfa', path: '/' },
+  { label: 'Home', path: '/' },
   { label: 'Shop', path: '/shop' },
   { label: 'About Us', path: '/about-us' }
 ]
@@ -91,13 +91,13 @@ const hasLocalChanges = computed(() => (
   Boolean(savedSnapshot.value) && contentSnapshot() !== savedSnapshot.value
 ))
 const versionStatus = computed(() => {
-  if (hasLocalChanges.value) return 'Kaydedilmemiş değişiklikler var.'
+  if (hasLocalChanges.value) return 'You have unsaved changes.'
   if (hasUnpublishedChanges.value) {
-    return `Taslak sürüm ${draftVersion.value} hazır · canlı sürüm ${publishedVersion.value || 'yok'}.`
+    return `Draft version ${draftVersion.value} is ready · live version ${publishedVersion.value || 'none'}.`
   }
   return publishedVersion.value
-    ? `Canlı sürüm ${publishedVersion.value} ile eşit.`
-    : 'Henüz canlı bir sürüm yok.'
+    ? `Matches live version ${publishedVersion.value}.`
+    : 'There is no live version yet.'
 })
 
 function sendPreview() {
@@ -154,7 +154,7 @@ async function loadContent() {
     hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
     savedSnapshot.value = contentSnapshot()
   } catch {
-    error.value = 'İçerik ayarları yüklenemedi.'
+    error.value = 'Content settings could not be loaded.'
   } finally {
     loading.value = false
   }
@@ -204,11 +204,11 @@ async function uploadAboutImage(event) {
   error.value = ''
   message.value = ''
   if (file.size > 5 * 1024 * 1024) {
-    error.value = 'About Us görseli en fazla 5 MB olabilir.'
+    error.value = 'The About Us image can be up to 5 MB.'
     return
   }
   if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-    error.value = 'JPG, PNG veya WEBP görsel seç.'
+    error.value = 'Choose a JPG, PNG, or WEBP image.'
     return
   }
   uploading.value = true
@@ -228,9 +228,9 @@ async function uploadAboutImage(event) {
         publicUrl: previousDraftUrl
       }).catch(() => {})
     }
-    message.value = 'Görsel seçildi. Önce içerik taslağını kaydet, ardından yayınla.'
+    message.value = 'Image selected. Save the content draft, then publish it.'
   } catch (uploadError) {
-    error.value = storefrontAssetErrorMessage(uploadError, 'About Us görseli')
+    error.value = storefrontAssetErrorMessage(uploadError, 'About Us image')
   } finally {
     uploading.value = false
   }
@@ -243,11 +243,11 @@ async function uploadHeroImage(event) {
   error.value = ''
   message.value = ''
   if (file.size > 8 * 1024 * 1024) {
-    error.value = 'Banner görseli en fazla 8 MB olabilir.'
+    error.value = 'The banner image can be up to 8 MB.'
     return
   }
   if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-    error.value = 'Banner için JPG, PNG veya WEBP görsel seç.'
+    error.value = 'Choose a JPG, PNG, or WEBP banner image.'
     return
   }
   uploadingHero.value = true
@@ -267,7 +267,7 @@ async function uploadHeroImage(event) {
         publicUrl: previousDraftUrl
       }).catch(() => {})
     }
-    message.value = 'Banner görseli seçildi. Önce içerik taslağını kaydet, ardından yayınla.'
+    message.value = 'Banner image selected. Save the content draft, then publish it.'
   } catch (uploadError) {
     error.value = storefrontAssetErrorMessage(uploadError, 'Banner')
   } finally {
@@ -294,10 +294,10 @@ async function saveContent() {
     hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
     savedSnapshot.value = contentSnapshot()
     message.value = hasUnpublishedChanges.value
-      ? `İçerik taslağı kaydedildi (taslak sürüm ${draftVersion.value}). Canlı mağaza değişmedi.`
-      : 'İçerik canlı sürümle eşitlendi; bekleyen taslak kalmadı.'
+      ? `Content draft saved (draft version ${draftVersion.value}). The live store did not change.`
+      : 'The content now matches the live version; there is no pending draft.'
   } catch {
-    error.value = 'İçerikler kaydedilemedi. Alanları ve bağlantıları kontrol et.'
+    error.value = 'Content could not be saved. Check the fields and links.'
   } finally {
     saving.value = false
   }
@@ -319,11 +319,11 @@ async function publishContent() {
     draftVersion.value = payload.draftVersion
     hasUnpublishedChanges.value = payload.hasUnpublishedChanges === true
     savedSnapshot.value = contentSnapshot()
-    message.value = `İçerik canlıda yayınlandı (sürüm ${publishedVersion.value}).`
+    message.value = `Content published to the live store (version ${publishedVersion.value}).`
   } catch (publishError) {
     error.value = publishError.message === 'storefront_no_draft_changes'
-      ? 'Yayınlanacak kayıtlı bir içerik taslağı yok.'
-      : 'İçerik yayınlanamadı. Lütfen tekrar dene.'
+      ? 'There is no saved content draft to publish.'
+      : 'The content could not be published. Please try again.'
   } finally {
     publishing.value = false
   }
@@ -339,19 +339,19 @@ onMounted(loadSelectedStore)
     <aside>
       <div><p class="wordmark">YourProStore.ai</p><p class="wordmark-subtitle">storefront admin</p></div>
       <nav>
-        <RouterLink to="/dashboard">Genel bakış</RouterLink>
-        <RouterLink to="/design">Tasarım ayarları</RouterLink>
-        <RouterLink to="/content">İçerik ayarları</RouterLink>
-        <RouterLink to="/domains">Domain ayarları</RouterLink>
-        <RouterLink to="/versions">Sürüm geçmişi</RouterLink>
+        <RouterLink to="/dashboard">Overview</RouterLink>
+        <RouterLink to="/design">Design settings</RouterLink>
+        <RouterLink to="/content">Content settings</RouterLink>
+        <RouterLink to="/domains">Domain settings</RouterLink>
+        <RouterLink to="/versions">Version history</RouterLink>
       </nav>
     </aside>
     <main>
       <header>
-        <div><p class="eyebrow">Mağaza vitrini</p><h1>İçerik ayarları</h1></div>
+        <div><p class="eyebrow">Storefront</p><h1>Content settings</h1></div>
         <div class="header-actions">
-          <a v-if="liveStorefrontUrl" class="storefront-link" :href="liveStorefrontUrl" target="_blank" rel="noopener">Mağazayı görüntüle</a>
-          <select v-model="selectedStoreId" aria-label="Mağaza seç">
+          <a v-if="liveStorefrontUrl" class="storefront-link" :href="liveStorefrontUrl" target="_blank" rel="noopener">View store</a>
+          <select v-model="selectedStoreId" aria-label="Select store">
             <option v-for="store in stores" :key="store.id" :value="store.id">{{ store.name }}</option>
           </select>
         </div>
@@ -359,62 +359,62 @@ onMounted(loadSelectedStore)
 
       <form v-if="selectedStore" @submit.prevent="saveContent">
         <p v-if="!canEditContent" class="permission-notice">
-          Rolün içerikleri görüntülemeye izin veriyor; düzenleme yetkisi owner, admin veya editor rolündedir.
+          Your role can view content; owners, admins, and editors can make changes.
         </p>
         <section class="storefront-preview">
           <div class="preview-title">
-            <div><p>Gerçek mağaza önizlemesi</p><small>Değişiklikler kaydetmeden burada görünür.</small></div>
-            <label class="preview-page-select">Gösterilen sayfa
+            <div><p>Live store preview</p><small>Changes appear here before you save.</small></div>
+            <label class="preview-page-select">Displayed page
               <select v-model="previewPage">
                 <option v-for="page in previewPages" :key="page.path" :value="page.path">{{ page.label }}</option>
               </select>
             </label>
           </div>
-          <iframe v-if="previewUrl" ref="previewFrame" :src="previewUrl" title="Mağaza içerik önizlemesi" referrerpolicy="no-referrer" @load="sendPreview"></iframe>
-          <p v-else class="preview-unavailable">Bu mağazanın önizlemesi için önce Domain ayarları bölümünden Shopify domainlerini güncelle.</p>
+          <iframe v-if="previewUrl" ref="previewFrame" :src="previewUrl" title="Store content preview" referrerpolicy="no-referrer" @load="sendPreview"></iframe>
+          <p v-else class="preview-unavailable">To preview this store, first update its Shopify domains from Domain settings.</p>
         </section>
         <section>
-          <h2>Ana sayfa</h2>
-          <label>Banner başlığı <small>{{ form.home.heroTitle.length }}/32</small><input v-model.trim="form.home.heroTitle" maxlength="32" required :disabled="!canEditContent"></label>
-          <label>Banner alt başlığı <small>{{ form.home.heroSubtitle.length }}/80</small><textarea v-model.trim="form.home.heroSubtitle" maxlength="80" rows="2" required :disabled="!canEditContent"></textarea></label>
-          <label>Banner görseli <small>JPG, PNG veya WEBP · 1200×400–4096×4096 px · en fazla 8 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingHero || !canEditContent" @change="uploadHeroImage"></label>
-          <img v-if="form.home.heroImageUrl" class="hero-preview" :src="form.home.heroImageUrl" alt="Banner önizlemesi">
-          <button v-if="form.home.heroImageUrl" class="remove-image" type="button" :disabled="!canEditContent" @click="form.home.heroImageUrl = ''">Banner görselini kaldır</button>
-          <label>Tanıtım cümlesi <small>{{ form.home.statement.length }}/120</small><textarea v-model.trim="form.home.statement" maxlength="120" rows="3" required :disabled="!canEditContent"></textarea></label>
+          <h2>Home page</h2>
+          <label>Banner title <small>{{ form.home.heroTitle.length }}/32</small><input v-model.trim="form.home.heroTitle" maxlength="32" required :disabled="!canEditContent"></label>
+          <label>Banner subtitle <small>{{ form.home.heroSubtitle.length }}/80</small><textarea v-model.trim="form.home.heroSubtitle" maxlength="80" rows="2" required :disabled="!canEditContent"></textarea></label>
+          <label>Banner image <small>JPG, PNG, or WEBP · 1200×400–4096×4096 px · up to 8 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploadingHero || !canEditContent" @change="uploadHeroImage"></label>
+          <img v-if="form.home.heroImageUrl" class="hero-preview" :src="form.home.heroImageUrl" alt="Banner preview">
+          <button v-if="form.home.heroImageUrl" class="remove-image" type="button" :disabled="!canEditContent" @click="form.home.heroImageUrl = ''">Remove banner image</button>
+          <label>Introductory statement <small>{{ form.home.statement.length }}/120</small><textarea v-model.trim="form.home.statement" maxlength="120" rows="3" required :disabled="!canEditContent"></textarea></label>
         </section>
 
         <section>
-          <h2>Shop sayfası</h2>
-          <label>Açıklama <small>{{ form.shop.description.length }}/450</small><textarea v-model.trim="form.shop.description" maxlength="450" rows="7" required :disabled="!canEditContent"></textarea></label>
+          <h2>Shop page</h2>
+          <label>Description <small>{{ form.shop.description.length }}/450</small><textarea v-model.trim="form.shop.description" maxlength="450" rows="7" required :disabled="!canEditContent"></textarea></label>
         </section>
 
         <section>
           <h2>About Us</h2>
-          <label>Başlık <small>{{ form.about.title.length }}/40</small><input v-model.trim="form.about.title" maxlength="40" required :disabled="!canEditContent"></label>
-          <label>Görsel <small>JPG, PNG veya WEBP · 400×400–3000×3000 px · en fazla 5 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploading || !canEditContent" @change="uploadAboutImage"></label>
+          <label>Title <small>{{ form.about.title.length }}/40</small><input v-model.trim="form.about.title" maxlength="40" required :disabled="!canEditContent"></label>
+          <label>Image <small>JPG, PNG, or WEBP · 400×400–3000×3000 px · up to 5 MB</small><input type="file" accept="image/png,image/jpeg,image/webp" :disabled="uploading || !canEditContent" @change="uploadAboutImage"></label>
           <img v-if="form.about.imageUrl" class="image-preview" :src="form.about.imageUrl" :alt="form.about.imageAlt">
-          <label>Görsel açıklaması<input v-model.trim="form.about.imageAlt" maxlength="120" required :disabled="!canEditContent"></label>
-          <label>Metin <small>{{ form.about.body.length }}/4000</small><textarea v-model.trim="form.about.body" maxlength="4000" rows="16" required :disabled="!canEditContent"></textarea></label>
+          <label>Image description<input v-model.trim="form.about.imageAlt" maxlength="120" required :disabled="!canEditContent"></label>
+          <label>Text <small>{{ form.about.body.length }}/4000</small><textarea v-model.trim="form.about.body" maxlength="4000" rows="16" required :disabled="!canEditContent"></textarea></label>
         </section>
 
         <section>
-          <h2>Footer ve sosyal medya</h2>
-          <p class="hint">En fazla üç iletişim e-postası girebilirsin.</p>
-          <label v-for="(_, index) in form.footer.emails" :key="index">E-posta {{ index + 1 }}<input v-model.trim="form.footer.emails[index]" type="email" maxlength="254" :disabled="!canEditContent"></label>
-          <label>Facebook profil adresi<input v-model.trim="form.footer.social.facebookUrl" type="url" placeholder="https://facebook.com/markan" :disabled="!canEditContent"></label>
-          <label>Instagram profil adresi<input v-model.trim="form.footer.social.instagramUrl" type="url" placeholder="https://instagram.com/markan" :disabled="!canEditContent"></label>
+          <h2>Footer and social media</h2>
+          <p class="hint">You can enter up to three contact email addresses.</p>
+          <label v-for="(_, index) in form.footer.emails" :key="index">Email {{ index + 1 }}<input v-model.trim="form.footer.emails[index]" type="email" maxlength="254" :disabled="!canEditContent"></label>
+          <label>Facebook profile URL<input v-model.trim="form.footer.social.facebookUrl" type="url" placeholder="https://facebook.com/yourbrand" :disabled="!canEditContent"></label>
+          <label>Instagram profile URL<input v-model.trim="form.footer.social.instagramUrl" type="url" placeholder="https://instagram.com/yourbrand" :disabled="!canEditContent"></label>
         </section>
 
         <div class="save-bar">
           <div class="workflow-copy">
             <strong>{{ versionStatus }}</strong>
-            <small>Taslak kaydetmek canlı mağazayı değiştirmez.</small>
+            <small>Saving a draft does not change the live store.</small>
             <p v-if="message" class="success">{{ message }}</p>
             <p v-if="error" class="error">{{ error }}</p>
           </div>
           <div class="workflow-actions">
             <button :disabled="saving || publishing || loading || uploading || uploadingHero || !canEditContent">
-              {{ canEditContent ? (saving ? 'Kaydediliyor…' : 'Taslağı kaydet') : 'Salt okunur' }}
+              {{ canEditContent ? (saving ? 'Saving…' : 'Save draft') : 'Read only' }}
             </button>
             <button
               class="publish-button"
@@ -422,12 +422,12 @@ onMounted(loadSelectedStore)
               :disabled="publishing || saving || loading || uploading || uploadingHero || hasLocalChanges || !hasUnpublishedChanges || !canEditContent"
               @click="publishContent"
             >
-              {{ publishing ? 'Yayınlanıyor…' : 'Taslağı canlıda yayınla' }}
+              {{ publishing ? 'Publishing…' : 'Publish draft to live store' }}
             </button>
           </div>
         </div>
       </form>
-      <p v-else>Önce bir Shopify mağazası bağlamalısın.</p>
+      <p v-else>Connect a Shopify store first.</p>
     </main>
   </div>
 </template>
