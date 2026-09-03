@@ -225,7 +225,7 @@ production pilotundan önce tamamlanır.
 - [x] Production uygulama URL'si, OAuth callback'i ve API izinlerini yapılandır
 - [x] Public distribution, App Store kaydı, İngilizce ana dil ve uygulama ikonunu tamamla
 - [x] Acil geliştirici iletişim bilgilerini kaydet
-- [x] Platform admin için ayrı şifremi unuttum ve yeni şifre belirleme ekranlarını ekle
+- [x] Platform admin için ayrı şifremi unuttum, recovery oturumunda zorunlu TOTP doğrulama ve yeni şifre belirleme ekranlarını ekle
 - [x] `https://admin.yourprostore.ai/update-password` adresini Supabase Auth redirect allowlist'ine ekle
 - [ ] Admin şifre kurtarma akışını production'da yeni tek kullanımlık bağlantıyla doğrula
 

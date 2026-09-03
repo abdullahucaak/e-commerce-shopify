@@ -146,7 +146,9 @@ Production ortamında aynı listenin `https://manage.yourprostore.ai/update-pass
 ve `https://yourprostore.ai/update-password` adreslerinin yanında
 `https://admin.yourprostore.ai/update-password` adresini de içermesi gerekir. Admin
 akışı başarılı güncellemeden sonra recovery oturumunu kapatır; kullanıcı yeni şifresiyle
-yeniden giriş yapar ve mevcut TOTP faktörüyle `aal2` doğrulamasını tamamlar.
+yeniden giriş yapar ve mevcut TOTP faktörüyle `aal2` doğrulamasını tamamlar. Supabase,
+MFA etkin hesaplarda şifre güncellemesi için de `aal2` istediğinden admin recovery ekranı
+yeni şifre formundan önce 6 haneli TOTP kodunu doğrular.
 
 ## Shopify App Pricing mağaza abonelikleri
 

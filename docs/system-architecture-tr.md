@@ -282,8 +282,10 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
   uygulama tarafından okunmaz; sabit ve allowlist'teki `/update-password` adresine
   dönen kullanıcı yalnız kendi recovery oturumuyla yeni parola belirleyebilir. Platform
   yöneticisi bu işlemi `admin.yourprostore.ai` üzerindeki ayrı kurtarma ekranından yapar;
-  şifre değişikliği admin yetkisini veya TOTP faktörünü kaldırmaz ve sonraki giriş yine
-  `private.platform_admins` ile `aal2` kontrolünden geçer.
+  Supabase MFA etkin hesaplarda şifre güncellemesini de `aal2` ile sınırladığı için
+  recovery bağlantısından sonra mevcut TOTP faktörü doğrulanır. Şifre değişikliği admin
+  yetkisini veya TOTP faktörünü kaldırmaz ve sonraki giriş yine `private.platform_admins`
+  ile `aal2` kontrolünden geçer.
 - `yourprostore-ai-admin` için müşteri workspace rollerinden ayrı platform yetkisi kullanılacaktır.
 - Admin API yetkisi `private.platform_admins` içindeki aktif rol ile Supabase tarafından
   kriptografik olarak doğrulanmış JWT `aal2` claim'inin birlikte bulunmasını gerektirir.

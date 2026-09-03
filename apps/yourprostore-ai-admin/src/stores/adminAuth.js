@@ -89,6 +89,10 @@ export const useAdminAuthStore = defineStore('adminAuth', {
       return data
     },
     async verifyTotp(code) {
+      await this.verifyRecoveryTotp(code)
+      await this.loadAdminSession()
+    },
+    async verifyRecoveryTotp(code) {
       const factorId = this.enrollment?.id || this.factors[0]?.id
       if (!factorId || !/^\d{6}$/.test(String(code))) throw new Error('invalid_mfa_code')
       const client = getSupabaseClient()
@@ -101,7 +105,6 @@ export const useAdminAuthStore = defineStore('adminAuth', {
       this.user = sessionData.session.user
       this.enrollment = null
       await this.refreshAssurance()
-      await this.loadAdminSession()
     },
     async loadAdminSession() {
       this.admin = await fetchAdminSession({
