@@ -1,5 +1,13 @@
 # YourProStore.ai sistem mimarisi
 
+## Değişiklik disiplini
+
+Daha önce çalışan veya bilinçli olarak tasarlanmış bir akış, görünen bir deployment
+hatasını geçici olarak aşmak amacıyla değiştirilemez. Önce mevcut kod, Git geçmişi,
+yerel ortam değişkenleri, hosting kayıtları ve ilgili dış servis ayarları birlikte
+incelenerek kök neden belirlenir. Mimari veya kullanıcı deneyimi değişecekse gerekçe,
+etki ve geri dönüş yolu kullanıcıya açıklanır ve önceden açık onay alınır.
+
 ## Kesin uygulama sınırları
 
 Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
@@ -96,42 +104,18 @@ planın gerçekten aktif olduğunu doğrulamadan yerel aboneliği aktif saymaz. 
 stok ve storefront checkout ödemeleri yine ilgili Shopify mağazasının sorumluluğundadır;
 Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğini tahsil eder.
 
-## Online test ve ortam ayrımı
+## Yayın öncesi test düzeni
 
-Mağaza sahibinin terminal çalıştırmadan bütün ürünü test edebilmesi için internette
-çalışan ayrı bir staging ortamı kurulacaktır. Staging, production'ın kopyası gibi çalışır
-ancak gerçek müşterilerden, production veritabanından ve gerçek uygulama aboneliklerinden
-ayrılır.
+Ürün henüz gerçek kullanıcı kabul etmediği ve Shopify App Store'da yayımlanmadığı için
+geliştirmeler yerelde otomatik test edilip mevcut production adreslerine deploy edilir.
+Manuel uçtan uca testler production üzerinde yalnız test hesapları ve Shopify geliştirme
+mağazasıyla yapılır. Gerçek müşteri verisi kullanılmaz.
 
-```mermaid
-flowchart LR
-    TESTER["Yetkili test kullanıcısı"] --> STAGING["Giriş korumalı online staging"]
-    STAGING --> STAGING_API["Staging API"]
-    STAGING_API --> STAGING_DB["Ayrı staging Supabase"]
-    STAGING_API --> MOCK["Mock billing durum makinesi"]
-    STAGING --> DEV_SHOP["Ayrı Shopify geliştirme mağazası"]
-
-    MERCHANT["Gerçek mağaza sahibi"] --> PROD["Production"]
-    PROD --> PROD_API["Production API"]
-    PROD_API --> PROD_DB["Production Supabase"]
-    PROD_API --> APP_PRICING2["Shopify App Pricing"]
-```
-
-Staging kuralları:
-
-- Sabit online adresler kullanır; test kullanıcısı yalnız tarayıcıyla çalışır.
-- Erişim yetkili hesaplarla sınırlandırılır ve ortam arama motorlarına kapatılır.
-- Supabase veritabanı, Auth, Storage secret'ları ve Shopify geliştirme mağazası production'dan ayrıdır.
-- `NODE_ENV=production` build optimizasyonu için kalabilir; uygulama ortamı ayrıca
-  `APP_ENV=staging` ile belirlenir.
-- Mock billing ancak `APP_ENV=staging`, açık bir sunucu tarafı izin anahtarı ve yetkili
-  workspace owner/admin kontrolü birlikte sağlandığında açılır.
-- Production'da mock endpoint'i kapalı kalır ve Shopify aboneliği Partner API ile doğrulanır.
-- Mock ortamda aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumları denenir.
-- Mock testler tamamlanınca gerçek para alınmadan ayrı Shopify geliştirme mağazasında
-  App Pricing plan seçimi/onayı test edilir.
-- Shopify App Pricing'in genel etkinleştirilmesi ve App Store incelemesine gönderim
-  birbirinden ayrı, açık kullanıcı onayları gerektirir.
+Mock billing yalnız yerel development/test ortamında çalışır ve production'da reddedilir.
+Shopify App Pricing, geliştirme mağazasında gerçek ücret alınmadan doğrulanır. Gerçek
+kullanıcı kabulünden önce staging/release ortamı gerekirse yeniden ve ayrı bir mimari
+karar olarak tasarlanır. Shopify App Pricing'in genel etkinleştirilmesi ile App Store
+incelemesine gönderim birbirinden ayrı açık kullanıcı onayları gerektirir.
 
 | Veri | Ana kaynak |
 | --- | --- |
@@ -333,7 +317,7 @@ admin panelini beklemez; panel daha sonra bu mevcut operasyon verilerini görün
 3. Çoklu mağaza, iki hesap, RLS ve uçtan uca testler
 4. `yourprostore-ai-admin` dahili operasyon paneli
 5. Production güvenliği, deployment ve pilot yayın
-6. Giriş korumalı online staging'de mock ödeme ve uçtan uca manuel testler
+6. Production adreslerinde test hesaplarıyla uçtan uca manuel testler
 7. Shopify geliştirme mağazasında ücretsiz App Pricing testi
 8. Açık kullanıcı onayıyla Shopify App Pricing etkinleştirme ve daha sonra ayrı onayla App Store gönderimi
 

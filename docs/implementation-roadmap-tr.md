@@ -11,12 +11,20 @@ promptu tutulmamalıdır.
 - Kullanıcıyla Türkçe konuş; güvenli ve kapsam içindeki sıradaki işi yalnızca
   raporlamak yerine uygula.
 - Working tree'deki kullanıcı değişikliklerini geri alma, resetleme veya üzerine yazma.
-- Commit ve push işlemini yalnızca kullanıcı açıkça istediğinde yap.
+- Daha önce planlanmış, uygulanmış veya çalıştığı doğrulanmış bir kullanıcı akışını
+  değiştirmeden önce güncel kodu, Git geçmişindeki ilk tasarım kararını, yerel `.env`
+  değişken adlarını, hosting ayarlarını ve ilgili dış servis yapılandırmasını birlikte
+  doğrula. Bu doğrulama yapılmadan mevcut davranışı geçici bir alternatifle değiştirme.
+- Deployment veya secret/config eksikliğini ürün davranışını değiştirerek örtme. Mevcut
+  tasarım hâlâ geçerliyse yalnız yapılandırmayı düzelt; mimari veya kullanıcı deneyimi
+  değişecekse sebebi, etkisi ve geri dönüş planını açıklayıp önceden onay al.
+- Kullanıcının bu proje için verdiği sürekli onay gereği, tamamlanıp test edilen kapsam içi
+  değişiklikleri ayrıca sormadan commit ve push et; ilgisiz kullanıcı değişikliklerini dahil etme.
 - Secret değerleri mesaja veya Git'e yazma; yalnızca Git tarafından yok sayılan
   `.env` dosyalarında veya hosting secret manager içinde tut.
 - Public App Store aboneliklerinde Shopify App Pricing tek gerçek ödeme yöntemidir;
-  Stripe live mode açılmayacaktır. Mock billing yalnız erişimi sınırlandırılmış online
-  staging/test ortamında kullanılmalı, gerçek production ortamında reddedilmelidir.
+  Stripe live mode açılmayacaktır. Mock billing yalnız yerel development/test ortamında
+  kullanılmalı, production ortamında reddedilmelidir.
 - Shopify incelemesine nihai gönderim, ödeme veya benzeri geri dönüşü zor işlemleri
   açık kullanıcı onayı olmadan yapma.
 
@@ -53,15 +61,16 @@ Production altyapısının ilk kurulumu tamamlandı:
 
 **Kaldığımız kesin nokta:** Shopify App Pricing kodu ve production bağlantısı hazır,
 ancak Shopify tarafındaki geri dönüşü zor etkinleştirme işlemi yapılmadı. Ürün henüz
-online staging ortamı, tarayıcıdan yürütülecek mock ve uçtan uca manuel testler,
-Sales Channel sınıflandırması, production app config eşleştirmesi, yasal/destek
+uçtan uca manuel testler, Sales Channel sınıflandırması, production app config
+eşleştirmesi, yasal/destek
 sayfaları, listing görselleri ve inceleme materyalleri bakımından gönderime hazır değildir.
 
-**Bir sonraki işlem:** App Store formuna ve gerçek Shopify abonelik aktivasyonuna devam
-etmeden önce giriş korumalı online staging ortamını kurmak. Mock ödeme durumları dahil
-ürünün tamamı bu ortamda terminal gerektirmeden tarayıcıdan test edilecek. Sonrasında
-ücretsiz geliştirme mağazası Shopify App Pricing testi yapılacak. App Pricing'i
-etkinleştirme ve “Submit for review” işlemleri ayrı açık kullanıcı onayları gerektirir.
+**Bir sonraki işlem:** Staging denemesini tamamen geri aldıktan sonra mevcut production
+Shopify otomatik mağaza seçim akışını eksik deployment yapılandırmasını tamamlayarak
+yeniden doğrulamak. Ürün henüz gerçek kullanıcıya ve App Store'a açılmadığı için manuel
+testler production adreslerinde test hesapları ve Shopify geliştirme mağazasıyla yapılacak;
+mock billing yalnız yerelde kalacak. App Pricing'i etkinleştirme ve “Submit for review”
+işlemleri ayrı açık kullanıcı onayları gerektirir.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -206,12 +215,10 @@ production pilotundan önce tamamlanır.
 
 ## Faz 8 — Üretim güvenliği ve operasyon
 
-- [ ] Development, online staging ve production ortamlarını veri, secret ve domain düzeyinde ayır
-- [ ] Online staging için sabit platform, API, CMS ve storefront adreslerini oluştur
-- [ ] Staging erişimini yalnız yetkili test kullanıcılarıyla sınırla; arama motorlarından gizle
-- [ ] Staging'e ayrı Supabase proje/veritabanı, Storage alanı ve ayrı Shopify geliştirme mağazası bağla
-- [ ] `APP_ENV=staging` ve açık güvenlik anahtarıyla mock billing'i yalnız staging'de etkinleştir; production korumasını kaldırma
-- [ ] Mock ödeme senaryolarını tarayıcı arayüzünden aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
+- [x] Başarısız staging denemesinin Vercel ve Supabase kaynaklarını production'a
+  dokunmadan kaldır; mevcut durum için kurtarma dalını koru (`92552b0`)
+- [ ] Gerçek kullanıcı kabulünden önce gerekiyorsa staging/release ortamını yeniden tasarla
+- [ ] Mock ödeme senaryolarını yerel testlerde aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
 - [x] API rate limit ve kötüye kullanım koruması ekle
 - [ ] Hata izleme ve uptime alarmı ekle
@@ -231,8 +238,8 @@ production pilotundan önce tamamlanır.
 
 ### Faz 9A — Formdan önce zorunlu ürün hazırlığı
 
-- [ ] Faz 8'deki giriş korumalı online staging ortamını tamamla
-- [ ] Kayıt, giriş, parola kurtarma, Shopify bağlantısı, onboarding, mağazalar, mock abonelikler ve CMS akışlarını yalnız tarayıcıdan uçtan uca test et
+- [ ] Kayıt, giriş, parola kurtarma, Shopify bağlantısı, onboarding, mağazalar,
+  abonelikler ve CMS akışlarını production adreslerinde test hesaplarıyla uçtan uca test et
 - [x] Mağaza sahibinin kullandığı `yourprostore-ai` arayüzünü eksiksiz İngilizceleştir
 - [x] Mağaza sahibinin kullandığı `storefront-admin` arayüzünü eksiksiz İngilizceleştir
 - [ ] İngilizce arayüzü kayıt, giriş, onboarding, mağazalar, abonelikler ve CMS akışlarında test et
@@ -241,7 +248,7 @@ production pilotundan önce tamamlanır.
 - [x] Partner API Active Subscription sorgusunu ve Shopify plan dönüş URL'sini uygulamaya bağla
 - [x] Yalnız `Manage apps` yetkili Partner API istemcisini oluştur ve gerekli Shopify App Pricing değişkenlerini Vercel production ortamına gizli olarak kaydet
 - [x] `0019_shopify_app_pricing.sql` migration'ını production veritabanına uygula ve yeni API sürümünü deploy et (`c39575f`, Vercel `Ready`, `/api/health` `ok`)
-- [ ] Mock ödeme hata/durum senaryolarını staging'de doğruladıktan sonra Shopify App Pricing'i geliştirme mağazasında ücretsiz seçim, onay, aktif ve iptal akışlarıyla doğrula
+- [ ] Yerel mock ödeme testlerinden sonra Shopify App Pricing'i geliştirme mağazasında ücretsiz seçim, onay, aktif ve iptal akışlarıyla doğrula
 - [ ] Bütün ürün ve ödeme testleri bitene kadar Shopify App Pricing'i etkinleştirme
 - [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
 - [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula
@@ -268,7 +275,7 @@ production pilotundan önce tamamlanır.
 ## Sonraki özellikler
 
 - [ ] AI banner üretimini kuyruklu ve kota kontrollü ekle
-- [ ] Online staging ve ücretsiz geliştirme mağazası testleri bittikten sonra açık kullanıcı onayıyla Shopify App Pricing'i etkinleştir
+- [ ] Production test hesapları ve ücretsiz geliştirme mağazası testleri bittikten sonra açık kullanıcı onayıyla Shopify App Pricing'i etkinleştir
 - [ ] Ekip daveti ve gelişmiş roller ekle
 - [ ] Analitik ve mağaza sağlık kontrolleri ekle
 
