@@ -4,6 +4,7 @@ import { useAccountStore } from '../stores/account.js'
 import { storeCardState } from '../services/storePresentation.js'
 import { openStorefrontAdmin } from '../services/adminHandoff.js'
 import { selectedShopFromSearch, shopifyConnectPayload } from '../services/shopifyConnection.js'
+import { apiUrl } from '../services/apiUrl.js'
 
 const account = useAccountStore()
 const stores = computed(() => account.workspace?.stores || [])
@@ -26,7 +27,7 @@ async function connectShopify(shop = null) {
   connecting.value = true
   error.value = ''
   try {
-    const response = await fetch('/api/shopify/connect', {
+    const response = await fetch(apiUrl('/api/shopify/connect'), {
       method: 'POST',
       headers: { 'content-type': 'application/json', Authorization: `Bearer ${account.session.access_token}` },
       body: JSON.stringify(shopifyConnectPayload(account.workspace.id, shop))

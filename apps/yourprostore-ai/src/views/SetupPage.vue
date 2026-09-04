@@ -10,6 +10,7 @@ import {
 } from '../services/storefrontAssets.js'
 import { calculateSetupProgress, SETUP_STEP_KEYS } from '../services/onboardingPresentation.js'
 import { openStorefrontAdmin } from '../services/adminHandoff.js'
+import { apiUrl } from '../services/apiUrl.js'
 
 const REQUIRED_SETUP_STEP_KEYS = SETUP_STEP_KEYS.filter(stepKey => stepKey !== 'publish')
 
@@ -101,7 +102,7 @@ async function request(path, options = {}) {
     ...(options.body !== undefined ? { 'content-type': 'application/json' } : {}),
     ...(options.headers || {})
   }
-  return fetch(path, { ...options, headers })
+  return fetch(apiUrl(path), { ...options, headers })
 }
 async function load() {
   const response = await request(`/api/storefronts/${route.params.storefrontId}/onboarding`)
