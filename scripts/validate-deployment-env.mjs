@@ -2,11 +2,10 @@ import { pathToFileURL } from 'node:url'
 
 export const deploymentContracts = Object.freeze({
   api: [
-    'APP_ENV', 'API_HOST', 'DATABASE_URL', 'VITE_SUPABASE_URL',
-    'VITE_SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY',
+    'API_HOST', 'DATABASE_URL', 'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_PUBLISHABLE_KEY',
     'SHOPIFY_CLIENT_ID', 'SHOPIFY_CLIENT_SECRET', 'SHOPIFY_APP_URL',
     'PLATFORM_APP_URL', 'STOREFRONT_ADMIN_APP_URL',
-    'AUTH_HANDOFF_ENCRYPTION_KEY', 'STOREFRONT_PREVIEW_SIGNING_KEY',
     'BILLING_PROVIDER'
   ],
   platform: [
@@ -43,15 +42,17 @@ export function validateDeploymentEnvironment(target, env = process.env) {
   }
 
   if (target === 'api') {
-    if (!['staging', 'production'].includes(env.APP_ENV)) {
+    const appEnvironment = env.APP_ENV?.trim().toLowerCase() ||
+      (env.VERCEL === '1' ? 'production' : '')
+    if (!['staging', 'production'].includes(appEnvironment)) {
       failures.push('APP_ENV must be staging or production in an online deployment')
     }
     if (env.API_HOST !== '0.0.0.0') failures.push('API_HOST must be 0.0.0.0')
-    if (env.APP_ENV === 'staging') {
+    if (appEnvironment === 'staging') {
       if (env.BILLING_PROVIDER !== 'mock') failures.push('staging must use mock billing')
       if (env.ALLOW_MOCK_BILLING !== 'true') failures.push('staging mock billing must be explicitly enabled')
     }
-    if (env.APP_ENV === 'production' && env.BILLING_PROVIDER === 'mock') {
+    if (appEnvironment === 'production' && env.BILLING_PROVIDER === 'mock') {
       failures.push('mock billing is forbidden in production')
     }
   }

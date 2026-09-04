@@ -48,3 +48,11 @@ test('allows the draft app to use direct shop OAuth before an App Store URL exis
   assert.equal(env.SHOPIFY_INSTALL_URL, undefined)
   assert.deepEqual(validateDeploymentEnvironment('api', env), [])
 })
+
+test('uses Vercel production as the safe API environment default', () => {
+  const env = validEnvironment('api')
+  delete env.APP_ENV
+  env.VERCEL = '1'
+  env.BILLING_PROVIDER = 'shopify_app_pricing'
+  assert.deepEqual(validateDeploymentEnvironment('api', env), [])
+})

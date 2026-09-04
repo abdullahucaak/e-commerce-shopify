@@ -88,8 +88,9 @@ platform, Shopify mağaza adını isteyip mevcut güvenli doğrudan OAuth akış
 olarak tekrar kullanılabilir.
 
 Vercel build'lerine uygulama bazlı ortam sözleşmesi eklendi. API ve dört frontend yalnız
-kendi ihtiyaç duyduğu değişkenleri doğrular; staging mock billing şartları ile production
-mock yasağı build sırasında fail-closed kontrol edilir. Production platform projesindeki
+çalışmak için zorunlu değişkenleri doğrular; opsiyonel güvenlik/operasyon anahtarları
+uygulamanın belgelenmiş güvenli geri dönüşlerini kullanabilir. Staging mock billing şartları
+ile production mock yasağı build sırasında fail-closed kontrol edilir. Production platform projesindeki
 eksik public `VITE_API_URL` değeri tamamlandı. Storefront production projesi kurulana kadar
 preview URL'si platform/CMS build'lerini durduran zorunlu bir değişken değildir.
 

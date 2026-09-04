@@ -150,7 +150,9 @@ uygulaması bütün ortamlarda zaten `noindex,nofollow` olarak işaretlidir.
 
 Vercel build'leri her uygulama için ayrı ortam sözleşmesi çalıştırır. Böylece staging ve
 production aynı kodu kullanırken yanlış API/Supabase bağlantısı veya yanlış billing modu
-yayın aşamasında durdurulur. Production ortak storefront projesi henüz kurulmadığı için
+yayın aşamasında durdurulur. Sözleşme yalnız uygulamanın çalışması için zorunlu değerleri
+bloklar; service-role ve ayrı imza/şifreleme anahtarları gibi belirli operasyonlara ait
+opsiyonel değerler mevcut güvenli çalışma kurallarını değiştirmez. Production ortak storefront projesi henüz kurulmadığı için
 storefront preview URL'si platform ve CMS build'lerinde geçici olarak zorunlu değildir;
 production storefront kurulurken bu eşleşme ayrıca tamamlanacaktır.
 - Mock testler tamamlanınca gerçek para alınmadan ayrı Shopify geliştirme mağazasında
