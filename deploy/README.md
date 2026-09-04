@@ -29,8 +29,8 @@ docker build -f deploy/Dockerfile.api -t yourprostore-api .
 ```
 
 API secret'ları image'a yazılmaz; deployment platformunun secret manager'ından runtime
-environment olarak bağlanır. `deploy/staging.env.example` ve
-`deploy/production.env.example` yalnız secret olmayan domain/policy değerlerini gösterir.
+environment olarak bağlanır. `deploy/production.env.example` yalnız secret olmayan
+domain/policy değerlerini gösterir.
 Deploy öncesinde aynı ortam değişkenleriyle şu kontrol zorunludur:
 
 ```sh
@@ -39,8 +39,9 @@ npm run validate:deploy-env
 
 Doğrulayıcı HTTPS, production Node modu, proxy güveni, kapalı host override, ayrı ve
 yeterli uzunluktaki kriptografik anahtarlar, service-role anahtarı ve mock billing
-yasağını kontrol eder. Production'da Stripe açılana kadar `BILLING_PROVIDER=disabled`
-kalır.
+yasağını kontrol eder. Public uygulama aboneliklerinde `BILLING_PROVIDER` yalnız
+Shopify App Pricing yapılandırması tamamlandıktan sonra `shopify_app_pricing` olur;
+Stripe live mode kullanılmaz.
 
 Static image `/healthz`, API image `/api/health` health check'ini içerir. TLS ve HTTP'den
 HTTPS'e yönlendirme edge/load balancer katmanında yapılır. Müşteri custom domain ve TLS

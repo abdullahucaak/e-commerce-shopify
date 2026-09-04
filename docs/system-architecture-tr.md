@@ -104,6 +104,11 @@ planın gerçekten aktif olduğunu doğrulamadan yerel aboneliği aktif saymaz. 
 stok ve storefront checkout ödemeleri yine ilgili Shopify mağazasının sorumluluğundadır;
 Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğini tahsil eder.
 
+Bu hedef mimarinin production yapılandırması henüz eksiksiz değildir. Özellikle otomatik
+Shopify mağaza seçimi için install URL'si, etkin sürümde webhook abonelikleri ve auth
+handoff/preview/veri silme işlemlerinin birbirinden ayrı secret'ları tamamlanıp uçtan uca
+doğrulanmalıdır. Kod içindeki fallback'ler production güvenlik sözleşmesinin yerine geçmez.
+
 ## Yayın öncesi test düzeni
 
 Ürün henüz gerçek kullanıcı kabul etmediği ve Shopify App Store'da yayımlanmadığı için
@@ -307,6 +312,10 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
   platform Shopify müşterisi veya siparişi tutmaz. `shop/redact` önce service-role ile
   Storage objelerini, ardından transaction içinde mağaza ve bağlı tenant verilerini siler.
 - Ürün ve siparişler gereksiz yere platform veritabanına alınmaz.
+
+Production veritabanında şu anda migration ledger tablosu yoktur. Migration SQL dosyaları
+doğrudan çalıştırıldığı için release otomasyonu kurulana kadar her değişikliğin şema
+göstergesi salt okunur sorguyla doğrulanmalı ve aynı dosya varsayımla yeniden uygulanmamalıdır.
 
 ## Uygulama geliştirme sırası
 

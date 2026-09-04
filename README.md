@@ -10,7 +10,7 @@ yayınlanabilir.
 | --- | --- | --- | --- |
 | `apps/yourprostore-ai` | Mağaza sahibi | YourProStore.ai sitesi, hesap, Shopify bağlantısı, mağazalar, kurulum sihirbazı ve abonelikler | Aktif |
 | `apps/yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteri, mağaza, abonelik, kurulum ve sistem operasyonları | Genel durum, workspace ve mağaza operasyon listeleri aktif; geliştirme sürüyor |
-| `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Aktif |
+| `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Kod hazır; production hosting ve domain otomasyonu bekliyor |
 | `apps/storefront-admin` | Mağaza sahibi | Kendi storefront'unun tasarım, içerik ve domain yönetimi | Aktif |
 | `apps/api` | Uygulamaların tamamı | Supabase, Shopify App Pricing, OAuth, webhook ve public runtime API | Aktif |
 
@@ -123,8 +123,9 @@ başarısızlıktan sonra operasyon incelemesi için dead-letter durumunda tutul
 `SUPABASE_SERVICE_ROLE_KEY` değerini gerektirir; platform Shopify müşterisi veya
 siparişi tutmadığı için customer privacy payload'ları event ledger'a kopyalanmaz.
 
-`0017_shopify_webhook_resilience.sql` canlı Supabase'e uygulanmıştır. Yeni handler
-backend'e dağıtıldıktan sonra Shopify app config ayrıca deploy edilmelidir.
+`0017_shopify_webhook_resilience.sql` canlı Supabase'e uygulanmıştır. Handler backend'de
+bulunur; ancak etkin Shopify sürümünde webhook abonelikleri henüz görünmediği için repo
+app config'i doğru uygulamayla eşitlenip ayrıca deploy edilmelidir.
 
 ## Parola kurtarma
 

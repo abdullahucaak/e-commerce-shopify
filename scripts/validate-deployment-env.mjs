@@ -2,7 +2,7 @@ const env=process.env,fail=[]
 const required=['DEPLOYMENT_ENV','NODE_ENV','API_HOST','VITE_API_URL','YOURPROSTORE_AI_APP_URL','STOREFRONT_ADMIN_APP_URL','SHOPIFY_APP_URL','DATABASE_URL','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','SUPABASE_SERVICE_ROLE_KEY','SHOPIFY_CLIENT_ID','SHOPIFY_CLIENT_SECRET','AUTH_HANDOFF_ENCRYPTION_KEY','STOREFRONT_PREVIEW_SIGNING_KEY']
 for(const name of required)if(!env[name]?.trim())fail.push(`${name} is required`)
 for(const name of ['VITE_API_URL','YOURPROSTORE_AI_APP_URL','STOREFRONT_ADMIN_APP_URL','SHOPIFY_APP_URL'])if(env[name]&&!/^https:\/\//.test(env[name]))fail.push(`${name} must use HTTPS`)
-if(!['staging','production'].includes(env.DEPLOYMENT_ENV))fail.push('DEPLOYMENT_ENV must be staging or production')
+if(env.DEPLOYMENT_ENV!=='production')fail.push('DEPLOYMENT_ENV must be production')
 if(env.NODE_ENV!=='production')fail.push('NODE_ENV must be production')
 if(env.API_HOST!=='0.0.0.0')fail.push('API_HOST must be 0.0.0.0')
 if(env.BILLING_PROVIDER==='mock')fail.push('mock billing is forbidden')
