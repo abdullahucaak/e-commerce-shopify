@@ -124,8 +124,8 @@ başarısızlıktan sonra operasyon incelemesi için dead-letter durumunda tutul
 siparişi tutmadığı için customer privacy payload'ları event ledger'a kopyalanmaz.
 
 `0017_shopify_webhook_resilience.sql` canlı Supabase'e uygulanmıştır. Handler backend'de
-bulunur; ancak etkin Shopify sürümünde webhook abonelikleri henüz görünmediği için repo
-app config'i doğru uygulamayla eşitlenip ayrıca deploy edilmelidir.
+bulunur ve repo app config'iyle yayımlanan `yourprostore-ai-3` etkin Shopify sürümünde beş
+uygulama webhook aboneliği ile üç zorunlu gizlilik webhook adresi doğrulanmıştır.
 
 ## Parola kurtarma
 

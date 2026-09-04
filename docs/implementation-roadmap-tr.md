@@ -64,20 +64,18 @@ Production altyapısının ilk kurulumu tamamlandı:
   testleri production adreslerinde yalnız test hesapları ve Shopify geliştirme mağazasıyla
   yürütülecektir.
 
-**Kaldığımız kesin nokta:** Shopify App Pricing ve otomatik mağaza seçim kodu deploy
-edilmiş olsa da production bağlantı yapılandırması tamamlanmış değildir. Vercel API
-projesinde `SHOPIFY_INSTALL_URL` yoktur; repo `shopify.app.toml` dosyası eski uygulama
-kimliği ve localhost URL'leri taşır; etkin Shopify sürümünde webhook abonelikleri
-görünmemektedir. Ürün ayrıca uçtan uca manuel testler, Sales Channel sınıflandırması,
-yasal/destek sayfaları, listing görselleri ve inceleme materyalleri bakımından gönderime
-hazır değildir.
+**Kaldığımız kesin nokta:** Production otomatik Shopify mağaza seçim bağlantısı,
+repo app config eşleştirmesi ve webhook deployment'ı tamamlandı. Ürün hâlâ ayrı
+production güvenlik secret'ları, kullanıcı hesabıyla uçtan uca manuel testler, Sales
+Channel sınıflandırması, yasal/destek sayfaları, listing görselleri ve inceleme
+materyalleri bakımından gönderime hazır değildir.
 
-**Bir sonraki işlem:** Mevcut production Shopify otomatik mağaza seçim akışının kodunu,
-Git geçmişindeki tasarımını, yerel değişken adlarını, Shopify uygulama ayarlarını ve Vercel
-deployment yapılandırmasını birlikte karşılaştır; kullanıcı akışını değiştirmeden yalnız
-eksik veya yanlış production yapılandırmasını düzelt ve uçtan uca doğrula. Mock billing
-yalnız yerelde kalacaktır. App Pricing'i etkinleştirme ve “Submit for review” işlemleri
-ayrı açık kullanıcı onayları gerektirir.
+**Bir sonraki işlem:** Production auth handoff ve storefront preview için birbirinden ayrı
+kriptografik anahtarları tanımla; `shop/redact` Storage temizliği için Supabase service-role
+anahtarını güvenli biçimde ekle. Ardından production otomatik Shopify mağaza seçimini test
+kullanıcısı ve geliştirme mağazasıyla uçtan uca doğrula. Mock billing yalnız yerelde
+kalacaktır. App Pricing'i etkinleştirme ve “Submit for review” işlemleri ayrı açık kullanıcı
+onayları gerektirir.
 
 ### 4 Eylül 2026 durum denetimi
 
@@ -93,12 +91,9 @@ Kanıtlananlar:
 
 Açık yanlışlar ve eksikler:
 
-- Vercel API projesinde `SHOPIFY_INSTALL_URL` yoktur; bu nedenle kodun otomatik Shopify
-  hesap/mağaza seçim başlangıcı production'da 503 verir.
-- Yerel `.env` ve repo `shopify.app.toml`, güncel `YourProStore.ai` uygulaması yerine eski
-  GlowField uygulamasına bağlıdır. Secret değerleri değiştirilmeden önce hedef kimlikler
-  birlikte doğrulanmalıdır.
-- Etkin Shopify sürümünde zorunlu ve uygulama webhook abonelikleri görünmemektedir.
+- Yerel `.env` hâlâ eski GlowField geliştirme uygulamasına bağlıdır; production
+  YourProStore.ai kimlikleriyle karıştırılmamalı ve yerel geliştirme düzeni ayrıca
+  kesinleştirilmelidir.
 - Vercel API projesinde ayrı `AUTH_HANDOFF_ENCRYPTION_KEY`,
   `STOREFRONT_PREVIEW_SIGNING_KEY` ve `SUPABASE_SERVICE_ROLE_KEY` kayıtları yoktur.
   İlk ikisi mevcut kodda Shopify secret'ına geri düşer; sonuncusu olmadan `shop/redact`
@@ -110,6 +105,16 @@ Açık yanlışlar ve eksikler:
 - `apps/storefront` içinde router'da kullanılmayan eski checkout/order ekranları ve
   localhost JSON-server çağrıları bulunur. Aktif sepet Shopify `checkoutUrl` kullanır,
   fakat bu ölü kod ileride yanlışlıkla yeniden bağlanmaması için temizlenmelidir.
+
+Denetim sonrasında giderilenler:
+
+- Vercel Production'a güncel `SHOPIFY_INSTALL_URL` eklendi ve yeni API deployment'ı
+  `Ready` olarak doğrulandı.
+- Repo `shopify.app.toml` dosyası güncel YourProStore.ai client kimliği, production App
+  URL ve callback'iyle eşitlendi; development komutunun production URL'lerini otomatik
+  değiştirmesi kapatıldı (`0fe4bce`).
+- `yourprostore-ai-3` Shopify sürümü etkinleştirildi; beş uygulama webhook aboneliği ve
+  üç zorunlu gizlilik webhook adresi production endpoint'inde doğrulandı.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -186,13 +191,13 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] Mağazayı `Shop.id` ile oluştur veya güncelle
 - [x] İlk, güncel ve eski `myshopify.com` alias kayıtlarını yönet
 - [x] `app/uninstalled`, `shop/update` ve zorunlu gizlilik webhook handler'larını koda ekle
-- [ ] Webhook aboneliklerini etkin production Shopify sürümüne deploy edip doğrula
+- [x] Webhook aboneliklerini etkin production Shopify sürümüne deploy edip doğrula (`yourprostore-ai-3`)
 
 ## Faz 3 — `yourprostore-ai` kurulum sihirbazı
 
 - [x] Hesap ve workspace oluşturma akışını ekle
 - [x] Shopify ile devam et ve otomatik mağaza seçme kod akışını ekle
-- [ ] Production `SHOPIFY_INSTALL_URL` yapılandırmasını güncel uygulamanın install URL'siyle tamamla
+- [x] Production `SHOPIFY_INSTALL_URL` yapılandırmasını güncel uygulamanın install URL'siyle tamamla
 - [x] Sektör, banner, marka, önizleme, domain ve paket adımlarını kalıcı olarak kaydet
 - [x] Shopify ürün hazır olma kontrolünü ve ürünsüz mağaza yönlendirmesini ekle
 - [x] Domain adımını opsiyonel yap ve daha sonra bağlamak üzere atlama desteği ekle
@@ -293,7 +298,7 @@ production pilotundan önce tamamlanır.
 - [ ] Bütün ürün ve ödeme testleri bitene kadar Shopify App Pricing'i etkinleştirme
 - [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
 - [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula
-- [ ] Repo `shopify.app.toml` dosyasını etkin production Shopify sürümüyle eşitle
+- [x] Repo `shopify.app.toml` dosyasını etkin production Shopify sürümüyle eşitle (`0fe4bce`, `yourprostore-ai-3`)
 - [ ] Production install → OAuth → uygulama arayüzüne yönlendirme akışını yeniden test et
 - [ ] `yourprostore.ai/privacy` gizlilik politikası sayfasını oluştur ve production'da yayınla
 - [ ] `yourprostore.ai/support` destek sayfasını oluştur ve production'da yayınla

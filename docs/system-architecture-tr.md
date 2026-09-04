@@ -104,10 +104,10 @@ planın gerçekten aktif olduğunu doğrulamadan yerel aboneliği aktif saymaz. 
 stok ve storefront checkout ödemeleri yine ilgili Shopify mağazasının sorumluluğundadır;
 Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğini tahsil eder.
 
-Bu hedef mimarinin production yapılandırması henüz eksiksiz değildir. Özellikle otomatik
-Shopify mağaza seçimi için install URL'si, etkin sürümde webhook abonelikleri ve auth
-handoff/preview/veri silme işlemlerinin birbirinden ayrı secret'ları tamamlanıp uçtan uca
-doğrulanmalıdır. Kod içindeki fallback'ler production güvenlik sözleşmesinin yerine geçmez.
+Production otomatik Shopify mağaza seçimi için install URL'si ve etkin sürümde webhook
+abonelikleri yapılandırılmıştır. Auth handoff, preview ve veri silme işlemlerinin
+birbirinden ayrı secret'ları ise henüz tamamlanıp uçtan uca doğrulanmamıştır. Kod içindeki
+fallback'ler production güvenlik sözleşmesinin yerine geçmez.
 
 ## Yayın öncesi test düzeni
 
