@@ -76,6 +76,9 @@ oluşturma, yeni kayıtları kapatma ve ayrı Shopify geliştirme mağazası ba�
 İnternet kesintisi sonrası yapılan tekrar kontrolde staging web projesindeki eksik
 `VITE_API_URL` değeri tamamlandı, proje yeniden deploy edildi ve `/login` ekranı
 tarayıcıda konsol hatası olmadan doğrulandı.
+Platformdaki bütün API istekleri staging'de mutlak staging API adresini kullanacak
+şekilde düzeltildi; süresi dolmuş recovery oturumu artık uygulamayı durdurmak yerine
+geçersiz bağlantı açıklamasını gösteriyor (`7249f41`, 14/14 test ve canlı tarayıcı testi).
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
