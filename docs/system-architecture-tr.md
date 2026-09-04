@@ -111,17 +111,16 @@ geliştirmeler yerelde otomatik test edilip mevcut production adreslerine deploy
 Manuel uçtan uca testler production üzerinde yalnız test hesapları ve Shopify geliştirme
 mağazasıyla yapılır. Gerçek müşteri verisi kullanılmaz.
 
-4 Eylül 2026 itibarıyla aktif bir staging altyapısı yoktur. Başarısız staging denemesine
-ait beş Vercel projesi, alan adı bağlantıları ve Supabase projesi production'a dokunulmadan
-silinmiştir; production API ve üç frontend adresi yeniden doğrulanmıştır.
-`codex/staging-rollback-backup-20260904` yalnız geri alım öncesi kodu koruyan bir Git
-dalıdır; çalışan bir ortam veya yeniden kullanılacak bir deployment kaynağı değildir.
+4 Eylül 2026 itibarıyla ayrı bir test altyapısı yoktur ve kurulması planlanmamaktadır.
+Geçici ikinci ortam denemesine ait Vercel projeleri, alan adı bağlantıları ve Supabase
+projesi production'a dokunulmadan silinmiş; production API ve üç frontend adresi yeniden
+doğrulanmıştır.
 
 Mock billing yalnız yerel development/test ortamında çalışır ve production'da reddedilir.
-Shopify App Pricing, geliştirme mağazasında gerçek ücret alınmadan doğrulanır. Gerçek
-kullanıcı kabulünden önce staging/release ortamı gerekirse yeniden ve ayrı bir mimari
-karar olarak tasarlanır. Shopify App Pricing'in genel etkinleştirilmesi ile App Store
-incelemesine gönderim birbirinden ayrı açık kullanıcı onayları gerektirir.
+Shopify App Pricing, geliştirme mağazasında gerçek ücret alınmadan doğrulanır. Production
+değişiklikleri önce yerel otomatik testlerden geçirilir, ardından production'da test
+hesaplarıyla manuel kabul testi yapılır. Shopify App Pricing'in genel etkinleştirilmesi ile
+App Store incelemesine gönderim birbirinden ayrı açık kullanıcı onayları gerektirir.
 
 | Veri | Ana kaynak |
 | --- | --- |

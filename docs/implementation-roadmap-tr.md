@@ -58,11 +58,11 @@ Production altyapısının ilk kurulumu tamamlandı:
 - Shopify uygulama URL'si, OAuth callback'i, gerekli Storefront API izinleri,
   istemci bilgileri, dağıtım tipi, İngilizce ana dil ve uygulama ikonu yapılandırıldı.
 - Shopify App Store kayıt ücreti tamamlandı ve acil geliştirici iletişim bilgileri kaydedildi.
-- Başarısız staging denemesi tamamen geri alındı. İlgili beş Vercel projesi ve
-  Supabase staging projesi silindi; production servisleri yeniden sağlık kontrolünden geçti.
-- Şu anda aktif bir staging ortamı yoktur. Ürün gerçek kullanıcıya açılana kadar manuel
-  kabul testleri production adreslerinde yalnız test hesapları ve Shopify geliştirme
-  mağazasıyla yürütülecektir.
+- Geçici ikinci ortam denemesi tamamen geri alındı; bu denemeye ait Vercel ve Supabase
+  kaynakları silindi, production servisleri yeniden sağlık kontrolünden geçti.
+- Ayrı bir test ortamı kurulmayacaktır. Ürün gerçek kullanıcıya açılana kadar manuel kabul
+  testleri production adreslerinde yalnız test hesapları ve Shopify geliştirme mağazasıyla
+  yürütülecektir.
 
 **Kaldığımız kesin nokta:** Shopify App Pricing kodu ve production bağlantısı hazır,
 ancak Shopify tarafındaki geri dönüşü zor etkinleştirme işlemi yapılmadı. Ürün henüz
@@ -107,7 +107,7 @@ entegrasyonu tamamlandıktan sonra yapılacaktır.
   maskeleme ve webhook retry/dead-letter modeli mevcuttur.
 - Production ortam değişkenleri Vercel'dedir; yerel `.env` ve secret dosyalarının
   Git'e eklenmemesi bilinçli ve gereklidir.
-- Staging geri alımından sonraki son kapsamlı yerel doğrulamada 153 uygulama testi,
+- İkinci ortam geri alımından sonraki son kapsamlı yerel doğrulamada 153 uygulama testi,
   33 Shopify tema dosyası ve dört Vue production build'i başarılıydı. Canlı
   `api.yourprostore.ai/api/health` yanıtı `ok`; üç production frontend adresi HTTP 200
   olarak doğrulandı.
@@ -221,12 +221,6 @@ production pilotundan önce tamamlanır.
 
 ## Faz 8 — Üretim güvenliği ve operasyon
 
-- [x] Başarısız staging denemesinin beş Vercel projesini ve Supabase projesini
-  production'a dokunmadan kaldır; silinmeyi ve production sağlığını doğrula
-  (`92552b0`, `0b6969c`)
-- [x] Geri alım öncesi kod durumunu yalnız güvenlik amacıyla
-  `codex/staging-rollback-backup-20260904` dalında koru; bu dal aktif ortam değildir
-- [ ] Gerçek kullanıcı kabulünden önce gerekiyorsa staging/release ortamını yeniden tasarla
 - [ ] Mock ödeme senaryolarını yerel testlerde aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
 - [x] API rate limit ve kötüye kullanım koruması ekle
