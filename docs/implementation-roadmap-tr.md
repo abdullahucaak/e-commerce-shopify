@@ -44,7 +44,7 @@ Shopify ürün, varyant, fiyat ve stok için tek kaynaktır. Müşteri workspace
 platform yöneticisi yetkisi vermez. Kalıcı mağaza kimliği Shopify shop ID ve
 `myshopify.com` alan adıdır; custom domain tenant anahtarı değildir.
 
-## Güncel durum — 3 Eylül 2026
+## Güncel durum — 4 Eylül 2026
 
 Production altyapısının ilk kurulumu tamamlandı:
 
@@ -58,19 +58,24 @@ Production altyapısının ilk kurulumu tamamlandı:
 - Shopify uygulama URL'si, OAuth callback'i, gerekli Storefront API izinleri,
   istemci bilgileri, dağıtım tipi, İngilizce ana dil ve uygulama ikonu yapılandırıldı.
 - Shopify App Store kayıt ücreti tamamlandı ve acil geliştirici iletişim bilgileri kaydedildi.
+- Başarısız staging denemesi tamamen geri alındı. İlgili beş Vercel projesi ve
+  Supabase staging projesi silindi; production servisleri yeniden sağlık kontrolünden geçti.
+- Şu anda aktif bir staging ortamı yoktur. Ürün gerçek kullanıcıya açılana kadar manuel
+  kabul testleri production adreslerinde yalnız test hesapları ve Shopify geliştirme
+  mağazasıyla yürütülecektir.
 
 **Kaldığımız kesin nokta:** Shopify App Pricing kodu ve production bağlantısı hazır,
 ancak Shopify tarafındaki geri dönüşü zor etkinleştirme işlemi yapılmadı. Ürün henüz
 uçtan uca manuel testler, Sales Channel sınıflandırması, production app config
-eşleştirmesi, yasal/destek
-sayfaları, listing görselleri ve inceleme materyalleri bakımından gönderime hazır değildir.
+eşleştirmesi, yasal/destek sayfaları, listing görselleri ve inceleme materyalleri
+bakımından gönderime hazır değildir.
 
-**Bir sonraki işlem:** Staging denemesini tamamen geri aldıktan sonra mevcut production
-Shopify otomatik mağaza seçim akışını eksik deployment yapılandırmasını tamamlayarak
-yeniden doğrulamak. Ürün henüz gerçek kullanıcıya ve App Store'a açılmadığı için manuel
-testler production adreslerinde test hesapları ve Shopify geliştirme mağazasıyla yapılacak;
-mock billing yalnız yerelde kalacak. App Pricing'i etkinleştirme ve “Submit for review”
-işlemleri ayrı açık kullanıcı onayları gerektirir.
+**Bir sonraki işlem:** Mevcut production Shopify otomatik mağaza seçim akışının kodunu,
+Git geçmişindeki tasarımını, yerel değişken adlarını, Shopify uygulama ayarlarını ve Vercel
+deployment yapılandırmasını birlikte karşılaştır; kullanıcı akışını değiştirmeden yalnız
+eksik veya yanlış production yapılandırmasını düzelt ve uçtan uca doğrula. Mock billing
+yalnız yerelde kalacaktır. App Pricing'i etkinleştirme ve “Submit for review” işlemleri
+ayrı açık kullanıcı onayları gerektirir.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -102,10 +107,10 @@ entegrasyonu tamamlandıktan sonra yapılacaktır.
   maskeleme ve webhook retry/dead-letter modeli mevcuttur.
 - Production ortam değişkenleri Vercel'dedir; yerel `.env` ve secret dosyalarının
   Git'e eklenmemesi bilinçli ve gereklidir.
-- Son kapsamlı yerel doğrulamada 150 uygulama testi, 33 Shopify tema dosyası ve dört
-  Vue production build'i başarılıydı. Shopify App Pricing değişikliğinden sonra API
-  testleri ayrıca 118/118 geçti; `c39575f` production deployment'ı `Ready` ve canlı
-  `/api/health` yanıtı `ok` olarak doğrulandı.
+- Staging geri alımından sonraki son kapsamlı yerel doğrulamada 153 uygulama testi,
+  33 Shopify tema dosyası ve dört Vue production build'i başarılıydı. Canlı
+  `api.yourprostore.ai/api/health` yanıtı `ok`; üç production frontend adresi HTTP 200
+  olarak doğrulandı.
 
 ## Faz 0 — Headless çoklu mağaza temeli
 
@@ -180,7 +185,8 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 
 ## Faz 5 — Domain ve hosting otomasyonu
 
-- [x] Storefront, platform, API ve yönetim uygulamalarını production hosting'e kur
+- [x] Platform, API, storefront yönetimi ve dahili admin uygulamalarını production hosting'e kur
+- [ ] Ortak `apps/storefront` vitrini için production Vercel projesini kur
 - [x] Platform domainlerini Vercel projelerine bağla ve TLS/SSL'i etkinleştir
 - [ ] Kullanıcının domain ekleme ekranını oluştur
 - [ ] DNS doğrulama kaydını üret
@@ -215,8 +221,11 @@ production pilotundan önce tamamlanır.
 
 ## Faz 8 — Üretim güvenliği ve operasyon
 
-- [x] Başarısız staging denemesinin Vercel ve Supabase kaynaklarını production'a
-  dokunmadan kaldır; mevcut durum için kurtarma dalını koru (`92552b0`)
+- [x] Başarısız staging denemesinin beş Vercel projesini ve Supabase projesini
+  production'a dokunmadan kaldır; silinmeyi ve production sağlığını doğrula
+  (`92552b0`, `0b6969c`)
+- [x] Geri alım öncesi kod durumunu yalnız güvenlik amacıyla
+  `codex/staging-rollback-backup-20260904` dalında koru; bu dal aktif ortam değildir
 - [ ] Gerçek kullanıcı kabulünden önce gerekiyorsa staging/release ortamını yeniden tasarla
 - [ ] Mock ödeme senaryolarını yerel testlerde aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle

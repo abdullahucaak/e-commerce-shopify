@@ -16,7 +16,7 @@ Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
 | --- | --- | --- | --- | --- |
 | 1 | `yourprostore-ai` | Mağaza sahibi | Tanıtım, hesap, Shopify bağlantısı, mağazalar, sihirbaz ve abonelikler | Aktif |
 | 2 | `yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteriler, mağazalar, üyelikler, abonelikler, kurulumlar, hata ve işlem kayıtları | Temel oturum ve genel durum aktif; geliştirme sürüyor |
-| 3 | `storefront` | Mağaza ziyaretçisi | Müşterinin kendi domaininde çalışan canlı mağazası | Aktif |
+| 3 | `storefront` | Mağaza ziyaretçisi | Müşterinin kendi domaininde çalışan canlı mağazası | Kod hazır; production hosting ve domain otomasyonu bekliyor |
 | 4 | `storefront-admin` | Mağaza sahibi | Kendi canlı mağazasının tasarım, içerik ve domain yönetimi | Aktif |
 | 5 | `api` | Bütün uygulamalar | Kimlik doğrulama, tenant izolasyonu ve dış servis entegrasyonları | Aktif |
 
@@ -51,7 +51,7 @@ yourprostore.ai             -> apps/yourprostore-ai
 admin.yourprostore.ai       -> apps/yourprostore-ai-admin
 manage.yourprostore.ai      -> apps/storefront-admin
 api.yourprostore.ai         -> apps/api
-müşterinin-domaini.com      -> apps/storefront
+müşterinin-domaini.com      -> apps/storefront (production hosting/domain otomasyonu henüz kurulmadı)
 ```
 
 Uygulama adı ile domain adının aynı olması zorunlu değildir. `manage.yourprostore.ai`,
@@ -110,6 +110,12 @@ Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğ
 geliştirmeler yerelde otomatik test edilip mevcut production adreslerine deploy edilir.
 Manuel uçtan uca testler production üzerinde yalnız test hesapları ve Shopify geliştirme
 mağazasıyla yapılır. Gerçek müşteri verisi kullanılmaz.
+
+4 Eylül 2026 itibarıyla aktif bir staging altyapısı yoktur. Başarısız staging denemesine
+ait beş Vercel projesi, alan adı bağlantıları ve Supabase projesi production'a dokunulmadan
+silinmiştir; production API ve üç frontend adresi yeniden doğrulanmıştır.
+`codex/staging-rollback-backup-20260904` yalnız geri alım öncesi kodu koruyan bir Git
+dalıdır; çalışan bir ortam veya yeniden kullanılacak bir deployment kaynağı değildir.
 
 Mock billing yalnız yerel development/test ortamında çalışır ve production'da reddedilir.
 Shopify App Pricing, geliştirme mağazasında gerçek ücret alınmadan doğrulanır. Gerçek
