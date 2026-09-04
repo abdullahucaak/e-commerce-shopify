@@ -1,4 +1,4 @@
-name = "GlowField Commerce API"
+name = "YourProStore.ai API"
 roles = ["frontend", "backend"]
 port = 3000
 
