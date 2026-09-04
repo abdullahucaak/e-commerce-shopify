@@ -73,6 +73,9 @@ migration'ları uygulandı. Ayrı Vercel projeleri `staging.yourprostore.ai`,
 veritabanına bağlandı; `/api/health` yanıtı `ok` olarak doğrulandı. Supabase Auth site
 ve redirect allowlist'i yalnız staging adresleriyle yapılandırıldı. Yetkili test hesabı
 oluşturma, yeni kayıtları kapatma ve ayrı Shopify geliştirme mağazası bağlantısı sıradadır.
+İnternet kesintisi sonrası yapılan tekrar kontrolde staging web projesindeki eksik
+`VITE_API_URL` değeri tamamlandı, proje yeniden deploy edildi ve `/login` ekranı
+tarayıcıda konsol hatası olmadan doğrulandı.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
