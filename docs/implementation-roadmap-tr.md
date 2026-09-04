@@ -11,6 +11,16 @@ promptu tutulmamalıdır.
 - Kullanıcıyla Türkçe konuş; güvenli ve kapsam içindeki sıradaki işi yalnızca
   raporlamak yerine uygula.
 - Working tree'deki kullanıcı değişikliklerini geri alma, resetleme veya üzerine yazma.
+- Daha önce planlanmış, uygulanmış veya çalıştığı doğrulanmış bir kullanıcı akışını
+  değiştirmeden önce güncel kodu, Git geçmişindeki ilk tasarım kararını, yerel `.env`
+  değişken adlarını, hosting ayarlarını ve ilgili dış servis yapılandırmasını birlikte
+  doğrula. Bu doğrulama yapılmadan mevcut davranışı geçici bir alternatifle değiştirme.
+- Deployment veya secret/config eksikliğini ürün davranışını değiştirerek örtme. Önce
+  kök nedeni ve eksik ortam değerini bul; mevcut tasarım hâlâ geçerliyse yalnız
+  yapılandırmayı düzelt. Mimariyi veya kullanıcı deneyimini gerçekten değiştirmek
+  gerekiyorsa sebebi, etkisi ve geri dönüş planını kullanıcıya açıklayıp önceden onay al.
+- Geçici bir çözümü kalıcı ürün kararı gibi roadmap veya architecture belgesine yazma.
+  Belgelere yalnız doğrulanmış mevcut durum ile açıkça etiketlenmiş geçici durumları geçir.
 - Kullanıcının bu proje için verdiği sürekli onay gereği, tamamlanıp test edilen kapsam içi
   değişiklikleri ayrıca sormadan commit ve push et; ilgisiz kullanıcı değişikliklerini dahil etme.
 - Secret değerleri mesaja veya Git'e yazma; yalnızca Git tarafından yok sayılan

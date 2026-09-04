@@ -1,5 +1,18 @@
 # YourProStore.ai sistem mimarisi
 
+## Değişiklik disiplini
+
+Daha önce çalışan veya bilinçli olarak tasarlanmış bir akış, yalnız görünen hatayı
+geçici olarak aşmak amacıyla değiştirilemez. Önce mevcut kod, Git geçmişi, yerel ortam
+değişkenleri, hosting secret/config kayıtları ve ilgili dış servis ayarları birlikte
+incelenerek kök neden belirlenir. Eksik deployment yapılandırması ürün arayüzü ya da
+mimari değiştirilerek gizlenmez; mevcut tasarım geçerliyse yapılandırma tamamlanır.
+
+Zorunlu bir mimari veya kullanıcı deneyimi değişikliği ortaya çıkarsa uygulamadan önce
+gerekçesi, etkilenen akışlar, staging/production etkisi ve geri dönüş yolu kullanıcıya
+açıklanır ve açık onay alınır. Geçici çözümler belgelerde açıkça “geçici” olarak
+işaretlenmeden kalıcı durum gibi kaydedilemez.
+
 ## Kesin uygulama sınırları
 
 Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
