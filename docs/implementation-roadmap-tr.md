@@ -65,14 +65,12 @@ Production altyapısının ilk kurulumu tamamlandı:
   yürütülecektir.
 
 **Kaldığımız kesin nokta:** Production otomatik Shopify mağaza seçim bağlantısı,
-repo app config eşleştirmesi ve webhook deployment'ı tamamlandı. Ürün hâlâ ayrı
-production güvenlik secret'ları, kullanıcı hesabıyla uçtan uca manuel testler, Sales
+repo app config eşleştirmesi, webhook deployment'ı ve ayrı production güvenlik
+secret'ları tamamlandı. Ürün hâlâ kullanıcı hesabıyla uçtan uca manuel testler, Sales
 Channel sınıflandırması, yasal/destek sayfaları, listing görselleri ve inceleme
 materyalleri bakımından gönderime hazır değildir.
 
-**Bir sonraki işlem:** Production auth handoff ve storefront preview için birbirinden ayrı
-kriptografik anahtarları tanımla; `shop/redact` Storage temizliği için Supabase service-role
-anahtarını güvenli biçimde ekle. Ardından production otomatik Shopify mağaza seçimini test
+**Bir sonraki işlem:** Production otomatik Shopify mağaza seçimini test
 kullanıcısı ve geliştirme mağazasıyla uçtan uca doğrula. Mock billing yalnız yerelde
 kalacaktır. App Pricing'i etkinleştirme ve “Submit for review” işlemleri ayrı açık kullanıcı
 onayları gerektirir.
@@ -94,12 +92,7 @@ Açık yanlışlar ve eksikler:
 - Yerel `.env` hâlâ eski GlowField geliştirme uygulamasına bağlıdır; production
   YourProStore.ai kimlikleriyle karıştırılmamalı ve yerel geliştirme düzeni ayrıca
   kesinleştirilmelidir.
-- Vercel API projesinde ayrı `AUTH_HANDOFF_ENCRYPTION_KEY`,
-  `STOREFRONT_PREVIEW_SIGNING_KEY` ve `SUPABASE_SERVICE_ROLE_KEY` kayıtları yoktur.
-  İlk ikisi mevcut kodda Shopify secret'ına geri düşer; sonuncusu olmadan `shop/redact`
-  Storage temizliği tamamlanamaz.
-- Deployment doğrulama scripti production deployment zincirine bağlı değildir ve Vercel
-  projesindeki mevcut değişken kümesi bu sözleşmeyi eksiksiz karşılamamaktadır.
+- Deployment doğrulama scripti production deployment zincirine henüz bağlı değildir.
 - Migration ledger yoktur; migration scriptleri SQL dosyasını doğrudan çalıştırır. Şema
   göstergeleri doğrulanmış olsa da uygulanma geçmişi güvenilir bir ledger ile izlenmez.
 - `apps/storefront` içinde router'da kullanılmayan eski checkout/order ekranları ve
@@ -110,6 +103,9 @@ Denetim sonrasında giderilenler:
 
 - Vercel Production'a güncel `SHOPIFY_INSTALL_URL` eklendi ve yeni API deployment'ı
   `Ready` olarak doğrulandı.
+- Vercel API Production'a birbirinden farklı `AUTH_HANDOFF_ENCRYPTION_KEY` ve
+  `STOREFRONT_PREVIEW_SIGNING_KEY` ile mevcut Supabase production
+  `SUPABASE_SERVICE_ROLE_KEY` güvenli secret olarak eklendi; değerler Git'e alınmadı.
 - Repo `shopify.app.toml` dosyası güncel YourProStore.ai client kimliği, production App
   URL ve callback'iyle eşitlendi; development komutunun production URL'lerini otomatik
   değiştirmesi kapatıldı (`0fe4bce`).
@@ -264,7 +260,7 @@ production pilotundan önce tamamlanır.
 
 - [ ] Mock ödeme senaryolarını yerel testlerde aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
-- [ ] Production auth handoff, storefront preview ve veri silme işlemleri için ayrı
+- [x] Production auth handoff, storefront preview ve veri silme işlemleri için ayrı
   kriptografik/service-role secret'ları tanımla ve fallback kullanılmadığını doğrula
 - [x] API rate limit ve kötüye kullanım koruması ekle
 - [ ] Hata izleme ve uptime alarmı ekle

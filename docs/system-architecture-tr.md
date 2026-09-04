@@ -105,9 +105,10 @@ stok ve storefront checkout ödemeleri yine ilgili Shopify mağazasının soruml
 Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğini tahsil eder.
 
 Production otomatik Shopify mağaza seçimi için install URL'si ve etkin sürümde webhook
-abonelikleri yapılandırılmıştır. Auth handoff, preview ve veri silme işlemlerinin
-birbirinden ayrı secret'ları ise henüz tamamlanıp uçtan uca doğrulanmamıştır. Kod içindeki
-fallback'ler production güvenlik sözleşmesinin yerine geçmez.
+abonelikleri yapılandırılmıştır. Auth handoff, preview ve veri silme işlemleri için
+birbirinden ayrı production secret'ları Vercel API projesinde tanımlıdır; değerler yalnız
+secret manager'da tutulur ve Git'e alınmaz. Kod içindeki fallback'ler yerel geliştirme
+uyumluluğu içindir, production güvenlik sözleşmesinin yerine geçmez.
 
 ## Yayın öncesi test düzeni
 
