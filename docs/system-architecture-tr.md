@@ -1,18 +1,5 @@
 # YourProStore.ai sistem mimarisi
 
-## Değişiklik disiplini
-
-Daha önce çalışan veya bilinçli olarak tasarlanmış bir akış, yalnız görünen hatayı
-geçici olarak aşmak amacıyla değiştirilemez. Önce mevcut kod, Git geçmişi, yerel ortam
-değişkenleri, hosting secret/config kayıtları ve ilgili dış servis ayarları birlikte
-incelenerek kök neden belirlenir. Eksik deployment yapılandırması ürün arayüzü ya da
-mimari değiştirilerek gizlenmez; mevcut tasarım geçerliyse yapılandırma tamamlanır.
-
-Zorunlu bir mimari veya kullanıcı deneyimi değişikliği ortaya çıkarsa uygulamadan önce
-gerekçesi, etkilenen akışlar, staging/production etkisi ve geri dönüş yolu kullanıcıya
-açıklanır ve açık onay alınır. Geçici çözümler belgelerde açıkça “geçici” olarak
-işaretlenmeden kalıcı durum gibi kaydedilemez.
-
 ## Kesin uygulama sınırları
 
 Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
@@ -56,17 +43,7 @@ yourprostore.ai             -> apps/yourprostore-ai
 admin.yourprostore.ai       -> apps/yourprostore-ai-admin
 manage.yourprostore.ai      -> apps/storefront-admin
 api.yourprostore.ai         -> apps/api
-müşterinin-domaini.com      -> apps/storefront (production hosting/domain otomasyonu bekliyor)
-```
-
-Aktif online staging adresleri:
-
-```text
-staging.yourprostore.ai          -> apps/yourprostore-ai
-admin-staging.yourprostore.ai    -> apps/yourprostore-ai-admin
-manage-staging.yourprostore.ai   -> apps/storefront-admin
-api-staging.yourprostore.ai      -> apps/api
-store-staging.yourprostore.ai    -> apps/storefront
+müşterinin-domaini.com      -> apps/storefront
 ```
 
 Uygulama adı ile domain adının aynı olması zorunlu değildir. `manage.yourprostore.ai`,
@@ -122,7 +99,7 @@ Shopify App Pricing yalnız mağaza sahibinin YourProStore.ai uygulama aboneliğ
 ## Online test ve ortam ayrımı
 
 Mağaza sahibinin terminal çalıştırmadan bütün ürünü test edebilmesi için internette
-çalışan ayrı staging altyapısı kurulmuştur. Staging, production'ın kopyası gibi çalışır
+çalışan ayrı bir staging ortamı kurulacaktır. Staging, production'ın kopyası gibi çalışır
 ancak gerçek müşterilerden, production veritabanından ve gerçek uygulama aboneliklerinden
 ayrılır.
 
@@ -151,23 +128,6 @@ Staging kuralları:
   workspace owner/admin kontrolü birlikte sağlandığında açılır.
 - Production'da mock endpoint'i kapalı kalır ve Shopify aboneliği Partner API ile doğrulanır.
 - Mock ortamda aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumları denenir.
-
-Staging Supabase ve sabit Vercel adresleri aktiftir. Ortamın test kullanımına açılması
-için yetkili test hesabıyla giriş doğrulanmıştır; genel kayıt kapatılacak ve ayrı Shopify
-geliştirme mağazası bağlanacaktır. Taslak public uygulamanın App Store kurulum URL'si
-henüz oluşmadığından mağaza bağlantısı doğrulanmış `myshopify.com` adresiyle doğrudan
-OAuth akışını kullanır. Listing yayımlandığında Shopify'ın genel mağaza seçim bağlantısı
-opsiyonel `SHOPIFY_INSTALL_URL` üzerinden kullanılabilir. Staging hostlarında platform, CMS ve storefront
-sayfaları dinamik `noindex,nofollow,noarchive` meta etiketi kullanır; dahili admin
-uygulaması bütün ortamlarda zaten `noindex,nofollow` olarak işaretlidir.
-
-Vercel build'leri her uygulama için ayrı ortam sözleşmesi çalıştırır. Böylece staging ve
-production aynı kodu kullanırken yanlış API/Supabase bağlantısı veya yanlış billing modu
-yayın aşamasında durdurulur. Sözleşme yalnız uygulamanın çalışması için zorunlu değerleri
-bloklar; service-role ve ayrı imza/şifreleme anahtarları gibi belirli operasyonlara ait
-opsiyonel değerler mevcut güvenli çalışma kurallarını değiştirmez. Production ortak storefront projesi henüz kurulmadığı için
-storefront preview URL'si platform ve CMS build'lerinde geçici olarak zorunlu değildir;
-production storefront kurulurken bu eşleşme ayrıca tamamlanacaktır.
 - Mock testler tamamlanınca gerçek para alınmadan ayrı Shopify geliştirme mağazasında
   App Pricing plan seçimi/onayı test edilir.
 - Shopify App Pricing'in genel etkinleştirilmesi ve App Store incelemesine gönderim

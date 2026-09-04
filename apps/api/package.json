@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch-path=server --env-file=../../.env index.mjs",
-    "build": "node ../../scripts/validate-deployment-env.mjs api",
     "test": "node --test server/*.test.mjs",
     "db:migrate:oauth": "node --env-file=../../.env server/db/apply-migration.mjs 0004_shopify_oauth_states.sql",
     "db:migrate:storage": "node --env-file=../../.env server/db/apply-migration.mjs 0005_storefront_asset_storage.sql",

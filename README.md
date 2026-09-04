@@ -157,26 +157,17 @@ modu kullanılır:
 
 ```text
 NODE_ENV=development
-APP_ENV=development
 BILLING_PROVIDER=mock
 ```
 
 Mock mod yalnızca seçilen storefront aboneliğini değiştirir; aktivasyon, başarısız
 ödeme, duraklatma, iptal ve yeniden etkinleştirme senaryolarını audit log ile kaydeder.
-Online staging Vercel üzerinde optimize edilmiş bir production build'i çalıştırdığı için
-`NODE_ENV=production`, `APP_ENV=staging`, `ALLOW_MOCK_BILLING=true` ve
-`BILLING_PROVIDER=mock` birlikte kullanılır. Mock billing yalnız giriş korumalı, ayrı
-veritabanlı staging ortamında bu açık anahtarla başlar. `APP_ENV=production` ortamında
-`ALLOW_MOCK_BILLING=true` verilse bile mock provider reddedilir.
+`NODE_ENV=production` ortamında `BILLING_PROVIDER=mock` seçilirse API güvenlik amacıyla
+başlamaz.
 
 Public App Store production abonelikleri Shopify App Pricing üzerinden yürür. Shopify,
 plan seçimini ve mağaza faturasına yansıtılan tahsilatı yönetir; uygulama dönüş URL'sine
 güvenmeden Partner API Active Subscription sorgusuyla aboneliği doğrular.
-
-Taslak public uygulama için genel App Store kurulum URL'si oluşana kadar platform,
-mağazanın `myshopify.com` adresini alıp mevcut OAuth başlangıcını doğrudan çalıştırır.
-`SHOPIFY_INSTALL_URL` opsiyoneldir; listing yayımlandığında Shopify'ın barındırdığı genel
-mağaza seçim bağlantısını etkinleştirmek için backend secret manager'a eklenebilir.
 
 1. Partner Dashboard'da `Starter` / `starter-monthly` / `9 USD aylık` planını tanımla.
 2. Manage apps yetkili Partner API istemcisi oluştur ve `.env.example` içindeki
@@ -202,10 +193,8 @@ npm run test:storefront-admin
 npm run test:yourprostore-ai
 npm run test:yourprostore-ai-admin
 npm run test:theme
-npm run test:deployment-env
 npm run build
 ```
 
 `npm run build`, aktif dört Vue uygulamasını production için derler. Backend Node.js
-tarafından doğrudan çalıştırılır. Vercel build'lerinde uygulama bazlı ortam sözleşmesi
-zorunlu değişkenleri ve staging/production billing ayrımını ayrıca doğrular.
+tarafından doğrudan çalıştırılır.

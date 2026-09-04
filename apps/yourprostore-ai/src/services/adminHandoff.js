@@ -1,9 +1,7 @@
-import { apiUrl } from './apiUrl.js'
-
 export async function openStorefrontAdmin({ session, storefrontId, page = 'dashboard' }) {
   if (!session?.access_token || !session?.refresh_token) throw new Error('customer_session_unavailable')
   const returnPath = `/${page}?storefrontId=${encodeURIComponent(storefrontId)}`
-  const response = await fetch(apiUrl('/api/auth/handoff'), {
+  const response = await fetch('/api/auth/handoff', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

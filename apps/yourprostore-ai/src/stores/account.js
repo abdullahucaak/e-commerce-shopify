@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../services/supabase.js'
 import { requestPasswordRecovery } from '../services/passwordRecovery.js'
-import { apiUrl } from '../services/apiUrl.js'
 
 export const useAccountStore = defineStore('account', {
   state: () => ({ session: null, user: null, workspace: null, ready: false }),
@@ -14,28 +13,14 @@ export const useAccountStore = defineStore('account', {
       if (error) throw error
       this.session = data.session
       this.user = data.session?.user || null
-      if (this.session) {
-        try {
-          await this.loadAccount()
-        } catch (error) {
-          if (error.status !== 401) throw error
-          await supabase.auth.signOut({ scope: 'local' })
-          this.session = null
-          this.user = null
-          this.workspace = null
-        }
-      }
+      if (this.session) await this.loadAccount()
       this.ready = true
     },
     async loadAccount() {
-      const response = await fetch(apiUrl('/api/account'), {
+      const response = await fetch('/api/account', {
         headers: { Authorization: `Bearer ${this.session.access_token}` }
       })
-      if (!response.ok) {
-        const error = new Error('account_unavailable')
-        error.status = response.status
-        throw error
-      }
+      if (!response.ok) throw new Error('account_unavailable')
       const account = await response.json()
       this.workspace = account.workspaces?.[0] || null
     },

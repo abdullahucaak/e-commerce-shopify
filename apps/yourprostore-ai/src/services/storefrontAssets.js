@@ -1,5 +1,3 @@
-import { apiUrl } from './apiUrl.js'
-
 export async function optimizeLogo(file) {
   const bitmap = await createImageBitmap(file)
   const scale = Math.min(1, 1200 / bitmap.width, 600 / bitmap.height)
@@ -18,7 +16,7 @@ export async function optimizeLogo(file) {
 export async function uploadLogo({ accessToken, storefrontId, file }) {
   const form = new FormData()
   form.append('file', file)
-  const response = await fetch(apiUrl(`/api/storefronts/${storefrontId}/assets/logo`), {
+  const response = await fetch(`/api/storefronts/${storefrontId}/assets/logo`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: form
@@ -47,7 +45,7 @@ export function getStorefrontAssetPath(publicUrl) {
 export async function removeLogo({ accessToken, storefrontId, publicUrl }) {
   const path = getStorefrontAssetPath(publicUrl)
   if (!path) return
-  const response = await fetch(apiUrl(`/api/storefronts/${storefrontId}/assets`), {
+  const response = await fetch(`/api/storefronts/${storefrontId}/assets`, {
     method: 'DELETE',
     headers: {
       'content-type': 'application/json',
