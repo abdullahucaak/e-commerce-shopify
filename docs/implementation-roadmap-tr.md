@@ -37,12 +37,14 @@ Shopify ürün, varyant, fiyat ve stok için tek kaynaktır. Müşteri workspace
 platform yöneticisi yetkisi vermez. Kalıcı mağaza kimliği Shopify shop ID ve
 `myshopify.com` alan adıdır; custom domain tenant anahtarı değildir.
 
-## Güncel durum — 3 Eylül 2026
+## Güncel durum — 4 Eylül 2026
 
 Production altyapısının ilk kurulumu tamamlandı:
 
 - Vercel Pro takımı `yourprostore-ai` oluşturuldu ve GitHub deposu bağlandı.
 - API, platform, storefront yönetimi ve dahili admin ayrı Vercel projeleri olarak deploy edildi.
+  Ortak müşteri storefront build'i staging'de aktiftir; production storefront Vercel
+  projesi ve müşteri domain yönlendirmesi henüz kurulmamıştır.
 - `yourprostore.ai`, `api.yourprostore.ai`, `admin.yourprostore.ai` ve
   `manage.yourprostore.ai` adresleri ilgili projelere bağlandı; HTTPS/TLS aktif.
 - API'nin Vercel/Fastify başlangıç sorunları giderildi ve `/api/health` yanıtı doğrulandı.
@@ -79,6 +81,17 @@ tarayıcıda konsol hatası olmadan doğrulandı.
 Platformdaki bütün API istekleri staging'de mutlak staging API adresini kullanacak
 şekilde düzeltildi; süresi dolmuş recovery oturumu artık uygulamayı durdurmak yerine
 geçersiz bağlantı açıklamasını gösteriyor (`7249f41`, 14/14 test ve canlı tarayıcı testi).
+Staging test hesabıyla giriş doğrulandı. Taslak public Shopify uygulamasının henüz genel
+App Store kurulum URL'si olmadığı için bu değer iki Vercel ortamında da bulunmuyor;
+platform, Shopify mağaza adını isteyip mevcut güvenli doğrudan OAuth akışına geçecek
+şekilde düzenlendi. Listing yayımlandığında genel Shopify mağaza seçim URL'si opsiyonel
+olarak tekrar kullanılabilir.
+
+Vercel build'lerine uygulama bazlı ortam sözleşmesi eklendi. API ve dört frontend yalnız
+kendi ihtiyaç duyduğu değişkenleri doğrular; staging mock billing şartları ile production
+mock yasağı build sırasında fail-closed kontrol edilir. Production platform projesindeki
+eksik public `VITE_API_URL` değeri tamamlandı. Storefront production projesi kurulana kadar
+preview URL'si platform/CMS build'lerini durduran zorunlu bir değişken değildir.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -188,7 +201,9 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 
 ## Faz 5 — Domain ve hosting otomasyonu
 
-- [x] Storefront, platform, API ve yönetim uygulamalarını production hosting'e kur
+- [ ] Storefront, platform, API ve yönetim uygulamalarını production hosting'e kur
+  (platform, API, storefront yönetimi ve dahili admin hazır; ortak `apps/storefront`
+  production Vercel projesi henüz eksik)
 - [x] Platform domainlerini Vercel projelerine bağla ve TLS/SSL'i etkinleştir
 - [ ] Kullanıcının domain ekleme ekranını oluştur
 - [ ] DNS doğrulama kaydını üret
@@ -227,6 +242,10 @@ production pilotundan önce tamamlanır.
 - [x] Online staging için sabit platform, API, CMS ve storefront adreslerini oluştur
 - [ ] Staging erişimini yalnız yetkili test kullanıcılarıyla sınırla; arama motorlarından gizle
 - [ ] Staging'e ayrı Supabase proje/veritabanı, Storage alanı ve ayrı Shopify geliştirme mağazası bağla
+  (ayrı Supabase ve Storage hazır; yetkili test hesabıyla giriş doğrulandı; Shopify
+  geliştirme mağazası bağlantısı sırada)
+- [x] Vercel build'lerinde API ve dört frontend için uygulama bazlı zorunlu ortam
+  değişkeni sözleşmesini ve staging/production billing kilidi testlerini çalıştır
 - [x] `APP_ENV=staging` ve `ALLOW_MOCK_BILLING=true` birlikteyken mock billing'i online staging build'inde açan; `APP_ENV=production` için kesin olarak reddeden ortam kilidini ve testlerini ekle
 - [ ] Mock ödeme senaryolarını tarayıcı arayüzünden aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumlarıyla çalıştır
 - [ ] Secret manager ve token anahtar rotasyonunu ekle
@@ -263,6 +282,9 @@ production pilotundan önce tamamlanır.
 - [ ] Uygulamanın Sales Channel sayılıp sayılmadığını Shopify Partner Support'tan yazılı teyit et
 - [ ] Teyide göre uygulama yetenekleri ve kategori beyanını yeniden doğrula
 - [ ] Repo `shopify.app.toml` dosyasını etkin production Shopify sürümüyle eşitle
+- [ ] App Store listing yayımlandığında Shopify'ın genel kurulum/mağaza seçim URL'sini
+  `SHOPIFY_INSTALL_URL` olarak production ve staging API secret manager'larına ekle;
+  o zamana kadar doğrulanmış `myshopify.com` adresiyle doğrudan OAuth akışını kullan
 - [ ] Production install → OAuth → uygulama arayüzüne yönlendirme akışını yeniden test et
 - [ ] `yourprostore.ai/privacy` gizlilik politikası sayfasını oluştur ve production'da yayınla
 - [ ] `yourprostore.ai/support` destek sayfasını oluştur ve production'da yayınla

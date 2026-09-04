@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node ../../scripts/validate-deployment-env.mjs platform-admin",
     "build": "vite build",
     "test": "node --test src/services/*.test.js",
     "preview": "vite preview"

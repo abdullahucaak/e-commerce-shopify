@@ -43,7 +43,7 @@ yourprostore.ai             -> apps/yourprostore-ai
 admin.yourprostore.ai       -> apps/yourprostore-ai-admin
 manage.yourprostore.ai      -> apps/storefront-admin
 api.yourprostore.ai         -> apps/api
-müşterinin-domaini.com      -> apps/storefront
+müşterinin-domaini.com      -> apps/storefront (production hosting/domain otomasyonu bekliyor)
 ```
 
 Aktif online staging adresleri:
@@ -140,10 +140,19 @@ Staging kuralları:
 - Mock ortamda aktif, başarısız, duraklatılmış, iptal ve yeniden etkin durumları denenir.
 
 Staging Supabase ve sabit Vercel adresleri aktiftir. Ortamın test kullanımına açılması
-için yetkili test hesabı oluşturulacak, ardından genel kayıt kapatılacak ve ayrı Shopify
-geliştirme mağazası bağlanacaktır. Staging hostlarında platform, CMS ve storefront
+için yetkili test hesabıyla giriş doğrulanmıştır; genel kayıt kapatılacak ve ayrı Shopify
+geliştirme mağazası bağlanacaktır. Taslak public uygulamanın App Store kurulum URL'si
+henüz oluşmadığından mağaza bağlantısı doğrulanmış `myshopify.com` adresiyle doğrudan
+OAuth akışını kullanır. Listing yayımlandığında Shopify'ın genel mağaza seçim bağlantısı
+opsiyonel `SHOPIFY_INSTALL_URL` üzerinden kullanılabilir. Staging hostlarında platform, CMS ve storefront
 sayfaları dinamik `noindex,nofollow,noarchive` meta etiketi kullanır; dahili admin
 uygulaması bütün ortamlarda zaten `noindex,nofollow` olarak işaretlidir.
+
+Vercel build'leri her uygulama için ayrı ortam sözleşmesi çalıştırır. Böylece staging ve
+production aynı kodu kullanırken yanlış API/Supabase bağlantısı veya yanlış billing modu
+yayın aşamasında durdurulur. Production ortak storefront projesi henüz kurulmadığı için
+storefront preview URL'si platform ve CMS build'lerinde geçici olarak zorunlu değildir;
+production storefront kurulurken bu eşleşme ayrıca tamamlanacaktır.
 - Mock testler tamamlanınca gerçek para alınmadan ayrı Shopify geliştirme mağazasında
   App Pricing plan seçimi/onayı test edilir.
 - Shopify App Pricing'in genel etkinleştirilmesi ve App Store incelemesine gönderim

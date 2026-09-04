@@ -173,6 +173,11 @@ Public App Store production abonelikleri Shopify App Pricing üzerinden yürür.
 plan seçimini ve mağaza faturasına yansıtılan tahsilatı yönetir; uygulama dönüş URL'sine
 güvenmeden Partner API Active Subscription sorgusuyla aboneliği doğrular.
 
+Taslak public uygulama için genel App Store kurulum URL'si oluşana kadar platform,
+mağazanın `myshopify.com` adresini alıp mevcut OAuth başlangıcını doğrudan çalıştırır.
+`SHOPIFY_INSTALL_URL` opsiyoneldir; listing yayımlandığında Shopify'ın barındırdığı genel
+mağaza seçim bağlantısını etkinleştirmek için backend secret manager'a eklenebilir.
+
 1. Partner Dashboard'da `Starter` / `starter-monthly` / `9 USD aylık` planını tanımla.
 2. Manage apps yetkili Partner API istemcisi oluştur ve `.env.example` içindeki
    `SHOPIFY_PARTNER_*`, `SHOPIFY_APP_GID` ve `SHOPIFY_APP_HANDLE` değerlerini yalnız
@@ -197,8 +202,10 @@ npm run test:storefront-admin
 npm run test:yourprostore-ai
 npm run test:yourprostore-ai-admin
 npm run test:theme
+npm run test:deployment-env
 npm run build
 ```
 
 `npm run build`, aktif dört Vue uygulamasını production için derler. Backend Node.js
-tarafından doğrudan çalıştırılır.
+tarafından doğrudan çalıştırılır. Vercel build'lerinde uygulama bazlı ortam sözleşmesi
+zorunlu değişkenleri ve staging/production billing ayrımını ayrıca doğrular.

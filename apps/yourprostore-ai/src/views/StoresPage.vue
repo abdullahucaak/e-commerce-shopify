@@ -3,7 +3,11 @@ import { computed, onMounted, ref } from 'vue'
 import { useAccountStore } from '../stores/account.js'
 import { storeCardState } from '../services/storePresentation.js'
 import { openStorefrontAdmin } from '../services/adminHandoff.js'
-import { selectedShopFromSearch, shopifyConnectPayload } from '../services/shopifyConnection.js'
+import {
+  normalizeShopDomain,
+  selectedShopFromSearch,
+  shopifyConnectPayload
+} from '../services/shopifyConnection.js'
 import { apiUrl } from '../services/apiUrl.js'
 
 const account = useAccountStore()
@@ -11,6 +15,8 @@ const stores = computed(() => account.workspace?.stores || [])
 const connecting = ref(false)
 const error = ref('')
 const openingStorefrontId = ref('')
+const showShopInput = ref(false)
+const shopInput = ref('')
 
 async function manageStore(storefrontId) {
   openingStorefrontId.value = storefrontId
@@ -33,12 +39,26 @@ async function connectShopify(shop = null) {
       body: JSON.stringify(shopifyConnectPayload(account.workspace.id, shop))
     })
     const payload = await response.json()
+    if (payload.error === 'shopify_install_url_missing' && !shop) {
+      showShopInput.value = true
+      connecting.value = false
+      return
+    }
     if (!response.ok || !payload.authorizationUrl) throw new Error()
     window.location.assign(payload.authorizationUrl)
   } catch {
     error.value = 'The Shopify connection could not be started.'
     connecting.value = false
   }
+}
+
+function connectEnteredShop() {
+  const shop = normalizeShopDomain(shopInput.value)
+  if (!shop) {
+    error.value = 'Enter a valid Shopify store name or .myshopify.com address.'
+    return
+  }
+  connectShopify(shop)
 }
 
 onMounted(() => {
@@ -53,8 +73,19 @@ onMounted(() => {
   <div class="shell">
     <aside><p class="brand">YourProStore</p><nav><RouterLink to="/stores">My stores</RouterLink><RouterLink to="/subscriptions">Subscriptions</RouterLink><RouterLink to="/account">My account</RouterLink></nav></aside>
     <main>
-      <header><div><p class="eyebrow">Merchant platform</p><h1>My stores</h1></div><button @click="connectShopify()">{{ connecting ? 'Opening Shopify…' : 'Continue with Shopify' }}</button></header>
+      <header><div><p class="eyebrow">Merchant platform</p><h1>My stores</h1></div><button :disabled="connecting" @click="connectShopify()">{{ connecting ? 'Opening Shopify…' : 'Continue with Shopify' }}</button></header>
       <p v-if="error" class="notice error">{{ error }}</p>
+      <form v-if="showShopInput" class="shop-form card" @submit.prevent="connectEnteredShop">
+        <div>
+          <h2>Connect your Shopify store</h2>
+          <p class="muted">Enter the store name shown in your Shopify admin URL. You can use <strong>my-store</strong> or <strong>my-store.myshopify.com</strong>.</p>
+        </div>
+        <label>
+          Shopify store
+          <input v-model="shopInput" autocomplete="off" placeholder="my-store.myshopify.com">
+        </label>
+        <button type="submit" :disabled="connecting">{{ connecting ? 'Opening Shopify…' : 'Connect store' }}</button>
+      </form>
       <section class="store-grid">
         <article v-for="store in stores" :key="store.id" class="card">
           <div>
@@ -77,4 +108,10 @@ onMounted(() => {
 <style scoped>
 .store-title { display: flex; align-items: center; gap: .75rem; }
 .status-badge { padding: .35rem .6rem; border-radius: 999px; color: #42505c; background: #eef2f4; font-size: .72rem; font-weight: 600; }
+.shop-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, .7fr) auto; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }
+.shop-form h2 { margin: 0 0 .35rem; }
+.shop-form p { margin: 0; }
+.shop-form label { display: grid; gap: .45rem; font-weight: 600; }
+.shop-form input { min-height: 2.75rem; padding: 0 .8rem; border: 1px solid #ccd4da; border-radius: .45rem; font: inherit; }
+@media (max-width: 800px) { .shop-form { grid-template-columns: 1fr; } }
 </style>
