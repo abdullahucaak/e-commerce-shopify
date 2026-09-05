@@ -1,4 +1,4 @@
-import { decryptAdminToken } from './shopify-oauth.mjs'
+import { decryptAdminToken, encryptAdminToken, refreshOfflineAccessToken } from './shopify-oauth.mjs'
 import { normalizeStorefrontHostname } from './storefront-config.mjs'
 import { assertStorefrontAdminPermission } from './cms-roles.mjs'
 
@@ -27,7 +27,50 @@ async function shopifyPrimaryDomain({ shop, accessToken, apiVersion }) {
   return payload.data.shop
 }
 
-export function createShopifyDomainService({ database, apiVersion, encryptionSecret }) {
+export function createShopifyDomainService({
+  database,
+  apiVersion,
+  encryptionSecret,
+  clientId = null,
+  clientSecret = null
+}) {
+  async function currentAdminToken(row) {
+    const expiresAt = row.admin_access_token_expires_at
+      ? new Date(row.admin_access_token_expires_at).getTime()
+      : Number.POSITIVE_INFINITY
+    if (expiresAt > Date.now() + 5 * 60 * 1000) {
+      return decryptAdminToken(row.admin_access_token_ciphertext, encryptionSecret)
+    }
+    if (!clientId || !clientSecret || !row.admin_refresh_token_ciphertext) {
+      throw new Error('shopify_reauthorization_required')
+    }
+    const refreshed = await refreshOfflineAccessToken({
+      shop: row.current_myshopify_domain,
+      refreshToken: decryptAdminToken(row.admin_refresh_token_ciphertext, encryptionSecret),
+      clientId,
+      clientSecret
+    })
+    const accessExpiresAt = new Date(Date.now() + Number(refreshed.expires_in) * 1000)
+    const refreshExpiresAt = new Date(Date.now() + Number(refreshed.refresh_token_expires_in) * 1000)
+    await database.query(
+      `update private.shopify_credentials
+       set admin_access_token_ciphertext = $2,
+           admin_refresh_token_ciphertext = $3,
+           admin_access_token_expires_at = $4,
+           admin_refresh_token_expires_at = $5,
+           updated_at = now()
+       where shopify_store_id = $1`,
+      [
+        row.shopify_store_id,
+        encryptAdminToken(refreshed.access_token, encryptionSecret),
+        encryptAdminToken(refreshed.refresh_token, encryptionSecret),
+        accessExpiresAt,
+        refreshExpiresAt
+      ]
+    )
+    return refreshed.access_token
+  }
+
   async function read({ userId, storefrontId }) {
     const result = await database.query(
       `select domain.id::text, domain.hostname, domain.kind::text, domain.status::text,
@@ -61,7 +104,7 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
 
   async function syncRecord(row, { actorUserId = null, action = 'shopify.domain.synced' } = {}) {
     const storefrontId = row.storefront_id
-    const adminToken = decryptAdminToken(row.admin_access_token_ciphertext, encryptionSecret)
+    const adminToken = await currentAdminToken(row)
     const shop = await shopifyPrimaryDomain({
       shop: row.current_myshopify_domain,
       accessToken: adminToken,
@@ -165,7 +208,10 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
       `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
               store.workspace_id::text,
               store.current_myshopify_domain, membership.role::text,
-              credentials.admin_access_token_ciphertext
+              credentials.admin_access_token_ciphertext,
+              credentials.admin_refresh_token_ciphertext,
+              credentials.admin_access_token_expires_at,
+              credentials.admin_refresh_token_expires_at
        from public.storefronts storefront
        join public.shopify_stores store on store.id = storefront.shopify_store_id
        join public.workspace_memberships membership
@@ -186,7 +232,10 @@ export function createShopifyDomainService({ database, apiVersion, encryptionSec
     const result = await database.query(
       `select storefront.id::text as storefront_id, store.id::text as shopify_store_id,
               store.workspace_id::text,
-              store.current_myshopify_domain, credentials.admin_access_token_ciphertext
+              store.current_myshopify_domain, credentials.admin_access_token_ciphertext,
+              credentials.admin_refresh_token_ciphertext,
+              credentials.admin_access_token_expires_at,
+              credentials.admin_refresh_token_expires_at
        from public.storefronts storefront
        join public.shopify_stores store on store.id = storefront.shopify_store_id
        join private.shopify_credentials credentials on credentials.shopify_store_id = store.id

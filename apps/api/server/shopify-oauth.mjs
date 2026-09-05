@@ -134,23 +134,42 @@ async function shopifyAdminGraphql({ shop, accessToken, apiVersion, query, varia
   return payload.data
 }
 
-async function exchangeAuthorizationCode({ shop, code, clientId, clientSecret }) {
-  const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
+export async function exchangeAuthorizationCode({ shop, code, clientId, clientSecret, fetchImpl = fetch }) {
+  const response = await fetchImpl(`https://${shop}/admin/oauth/access_token`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      code
-    })
+    headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+    body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, code, expiring: '1' })
   })
   const payload = await response.json()
 
-  if (!response.ok || !payload.access_token) {
+  if (!response.ok || !payload.access_token || !payload.refresh_token) {
     throw new Error('shopify_token_exchange_failed')
   }
 
   return payload
+}
+
+export async function refreshOfflineAccessToken({ shop, refreshToken, clientId, clientSecret, fetchImpl = fetch }) {
+  const response = await fetchImpl(`https://${shop}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken
+    })
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || !payload.access_token || !payload.refresh_token) {
+    throw new Error('shopify_token_refresh_failed')
+  }
+  return payload
+}
+
+function tokenExpiry(seconds) {
+  const ttl = Number(seconds)
+  return Number.isFinite(ttl) && ttl > 0 ? new Date(Date.now() + ttl * 1000) : null
 }
 
 async function readShopInstallation({ shop, accessToken, apiVersion }) {
@@ -223,6 +242,9 @@ async function persistShopInstallation({
   identity,
   grantedScopes,
   adminAccessToken,
+  adminRefreshToken,
+  adminAccessTokenExpiresAt,
+  adminRefreshTokenExpiresAt,
   storefrontAccessToken,
   encryptionSecret
 }) {
@@ -304,15 +326,24 @@ async function persistShopInstallation({
       `insert into private.shopify_credentials (
          shopify_store_id,
          admin_access_token_ciphertext,
+         admin_refresh_token_ciphertext,
+         admin_access_token_expires_at,
+         admin_refresh_token_expires_at,
          storefront_public_access_token
-       ) values ($1, $2, $3)
+       ) values ($1, $2, $3, $4, $5, $6)
        on conflict (shopify_store_id) do update set
          admin_access_token_ciphertext = excluded.admin_access_token_ciphertext,
+         admin_refresh_token_ciphertext = excluded.admin_refresh_token_ciphertext,
+         admin_access_token_expires_at = excluded.admin_access_token_expires_at,
+         admin_refresh_token_expires_at = excluded.admin_refresh_token_expires_at,
          storefront_public_access_token = excluded.storefront_public_access_token,
          updated_at = now()`,
       [
         shopifyStoreId,
         encryptAdminToken(adminAccessToken, encryptionSecret),
+        encryptAdminToken(adminRefreshToken, encryptionSecret),
+        adminAccessTokenExpiresAt,
+        adminRefreshTokenExpiresAt,
         storefrontAccessToken
       ]
     )
@@ -556,6 +587,9 @@ export function createShopifyOAuthService({
         identity,
         grantedScopes,
         adminAccessToken: tokenPayload.access_token,
+        adminRefreshToken: tokenPayload.refresh_token,
+        adminAccessTokenExpiresAt: tokenExpiry(tokenPayload.expires_in),
+        adminRefreshTokenExpiresAt: tokenExpiry(tokenPayload.refresh_token_expires_in),
         storefrontAccessToken: storefrontToken.accessToken,
         encryptionSecret: tokenEncryptionSecret
       })

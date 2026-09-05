@@ -4,10 +4,40 @@ import test from 'node:test'
 import {
   decryptAdminToken,
   encryptAdminToken,
+  exchangeAuthorizationCode,
   normalizeShopDomain,
+  refreshOfflineAccessToken,
   shopifyGraphqlErrorMessage,
   verifyShopifyHmac
 } from './shopify-oauth.mjs'
+
+test('requests an expiring offline token during authorization code exchange', async () => {
+  let request
+  const payload = await exchangeAuthorizationCode({
+    shop: 'example.myshopify.com', code: 'code', clientId: 'client', clientSecret: 'secret',
+    fetchImpl: async (url, options) => {
+      request = { url, options }
+      return { ok: true, json: async () => ({ access_token: 'access', refresh_token: 'refresh' }) }
+    }
+  })
+  assert.equal(payload.access_token, 'access')
+  assert.equal(request.options.body.get('expiring'), '1')
+  assert.equal(request.options.body.get('code'), 'code')
+})
+
+test('refreshes an expiring offline token with the refresh token grant', async () => {
+  let body
+  const payload = await refreshOfflineAccessToken({
+    shop: 'example.myshopify.com', refreshToken: 'old-refresh', clientId: 'client', clientSecret: 'secret',
+    fetchImpl: async (_url, options) => {
+      body = options.body
+      return { ok: true, json: async () => ({ access_token: 'new-access', refresh_token: 'new-refresh' }) }
+    }
+  })
+  assert.equal(payload.refresh_token, 'new-refresh')
+  assert.equal(body.get('grant_type'), 'refresh_token')
+  assert.equal(body.get('refresh_token'), 'old-refresh')
+})
 
 test('normalizes Shopify GraphQL array, object, and string errors', () => {
   assert.equal(shopifyGraphqlErrorMessage([{ message: 'First' }, { message: 'Second' }]), 'First; Second')

@@ -44,7 +44,9 @@ const shopifyOAuth = createShopifyOAuthService({
 const shopifyDomains = createShopifyDomainService({
   database: pool,
   apiVersion: config.shopifyApiVersion,
-  encryptionSecret: config.shopifyTokenEncryptionSecret
+  encryptionSecret: config.shopifyTokenEncryptionSecret,
+  clientId: config.shopifyClientId,
+  clientSecret: config.shopifyClientSecret
 })
 const shopDataRedactor = createShopDataRedactor({
   database: pool,
