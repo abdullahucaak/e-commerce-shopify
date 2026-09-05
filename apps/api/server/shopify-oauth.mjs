@@ -105,6 +105,16 @@ export function decryptAdminToken(encryptedToken, encryptionSecret) {
   ]).toString('utf8')
 }
 
+export function shopifyGraphqlErrorMessage(errors) {
+  if (!errors) return ''
+  if (Array.isArray(errors)) {
+    return errors.map(error => error?.message || String(error || '')).filter(Boolean).join('; ')
+  }
+  if (typeof errors === 'string') return errors
+  if (typeof errors?.message === 'string') return errors.message
+  return 'Shopify Admin API returned an error.'
+}
+
 async function shopifyAdminGraphql({ shop, accessToken, apiVersion, query, variables }) {
   const response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
     method: 'POST',
@@ -116,8 +126,8 @@ async function shopifyAdminGraphql({ shop, accessToken, apiVersion, query, varia
   })
   const payload = await response.json()
 
-  if (!response.ok || payload.errors?.length) {
-    const message = payload.errors?.map(error => error.message).join('; ')
+  if (!response.ok || payload.errors) {
+    const message = shopifyGraphqlErrorMessage(payload.errors)
     throw new Error(message || `Shopify Admin API returned HTTP ${response.status}.`)
   }
 

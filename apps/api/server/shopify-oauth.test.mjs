@@ -5,8 +5,16 @@ import {
   decryptAdminToken,
   encryptAdminToken,
   normalizeShopDomain,
+  shopifyGraphqlErrorMessage,
   verifyShopifyHmac
 } from './shopify-oauth.mjs'
+
+test('normalizes Shopify GraphQL array, object, and string errors', () => {
+  assert.equal(shopifyGraphqlErrorMessage([{ message: 'First' }, { message: 'Second' }]), 'First; Second')
+  assert.equal(shopifyGraphqlErrorMessage({ message: 'Object error' }), 'Object error')
+  assert.equal(shopifyGraphqlErrorMessage('String error'), 'String error')
+  assert.equal(shopifyGraphqlErrorMessage({ code: 'unknown' }), 'Shopify Admin API returned an error.')
+})
 
 test('normalizes a valid myshopify domain', () => {
   assert.equal(
