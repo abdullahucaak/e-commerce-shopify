@@ -111,6 +111,14 @@ birbirinden ayrı production secret'ları Vercel API projesinde tanımlıdır; d
 secret manager'da tutulur ve Git'e alınmaz. Kod içindeki fallback'ler yerel geliştirme
 uyumluluğu içindir, production güvenlik sözleşmesinin yerine geçmez.
 
+Public uygulamanın Shopify Admin API bağlantısı süreli offline token kullanır. OAuth
+authorization-code değişiminde `expiring=1` istenir; dönen erişim tokenı, yenileme tokenı
+ve iki son kullanma zamanı `private.shopify_credentials` içinde tutulur. Erişim ve
+yenileme tokenları uygulama seviyesinde ayrı ayrı şifrelenir. Backend, Admin API çağrısı
+öncesinde erişim süresini kontrol eder, bitime yaklaşmışsa Shopify `refresh_token`
+grant'iyle yeni çifti alıp veritabanına birlikte yazar. Yenileme reddedilirse gizlice eski
+tokena dönülmez; mağazanın yeniden yetkilendirilmesi gerekir.
+
 ## Yayın öncesi test düzeni
 
 Ürün henüz gerçek kullanıcı kabul etmediği ve Shopify App Store'da yayımlanmadığı için
@@ -135,7 +143,7 @@ App Store incelemesine gönderim birbirinden ayrı açık kullanıcı onayları 
 | Sepet ve checkout | Shopify Storefront API |
 | Sipariş ve Shopify müşterisi | Shopify |
 | YourProStore.ai kullanıcısı ve ekip üyeliği | Supabase Auth + PostgreSQL |
-| Shopify bağlantısı ve şifreli Admin tokenı | PostgreSQL `private` şeması |
+| Shopify bağlantısı, şifreli süreli Admin ve yenileme tokenları | PostgreSQL `private` şeması |
 | Domain → storefront eşleştirmesi | PostgreSQL |
 | Kurulum ilerlemesi ve mağaza aboneliği | PostgreSQL |
 | Tasarım ayarı, yayınlanmış sürüm ve geçmiş | PostgreSQL |
@@ -264,7 +272,8 @@ public yanıta eklenmez. Production ortamında query-string ile host değiştirm
 
 ## Güvenlik sınırları
 
-- Shopify Admin API tokenı yalnızca backend'in eriştiği `private` şemada şifreli tutulur.
+- Shopify süreli Admin API erişim ve yenileme tokenları yalnızca backend'in eriştiği
+  `private` şemada şifreli tutulur; tarayıcıya veya public runtime yanıtına verilmez.
 - `yourprostore-ai` ve `storefront-admin` erişimi Supabase oturumu ve workspace üyeliğiyle doğrulanır.
 - `storefront-admin` yazma matrisi API ve Storage RLS katmanında uygulanır: owner/admin
   tasarım, içerik ve domaini; editor yalnız içeriği düzenler; viewer salt okunurdur.

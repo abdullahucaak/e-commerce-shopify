@@ -44,7 +44,7 @@ Shopify ürün, varyant, fiyat ve stok için tek kaynaktır. Müşteri workspace
 platform yöneticisi yetkisi vermez. Kalıcı mağaza kimliği Shopify shop ID ve
 `myshopify.com` alan adıdır; custom domain tenant anahtarı değildir.
 
-## Güncel durum — 4 Eylül 2026
+## Güncel durum — 5 Eylül 2026
 
 Production altyapısının ilk kurulumu tamamlandı:
 
@@ -66,16 +66,21 @@ Production altyapısının ilk kurulumu tamamlandı:
   testleri production adreslerinde yalnız test hesapları ve Shopify geliştirme mağazasıyla
   yürütülecektir.
 
-**Kaldığımız kesin nokta:** Production otomatik Shopify mağaza seçim bağlantısı,
-repo app config eşleştirmesi, webhook deployment'ı ve ayrı production güvenlik
-secret'ları tamamlandı. Ürün hâlâ kullanıcı hesabıyla uçtan uca manuel testler, Sales
+**Kaldığımız kesin nokta:** Production otomatik Shopify mağaza seçimi ve OAuth callback'i
+geliştirme mağazasında uçtan uca doğrulandı. Shopify'ın public uygulamalar için zorunlu
+süreli offline Admin API token modeli uygulandı; erişim ve yenileme tokenları şifreli
+saklanıyor ve erişim tokenı süresi dolmadan yenileniyor. Kurulum sihirbazında Shopify
+ürün kontrolü, domain senkronu ve `preview.yourprostore.ai` güvenli taslak önizlemesi
+gerçek production akışında başarıyla çalıştı. Ürün hâlâ kullanıcı hesabıyla uçtan uca
+manuel testler, Sales
 Channel sınıflandırması, yasal/destek sayfaları, listing görselleri ve inceleme
 materyalleri bakımından gönderime hazır değildir.
 
-**Bir sonraki işlem:** Production otomatik Shopify mağaza seçimini test
-kullanıcısı ve geliştirme mağazasıyla uçtan uca doğrula. Mock billing yalnız yerelde
-kalacaktır. App Pricing'i etkinleştirme ve “Submit for review” işlemleri ayrı açık kullanıcı
-onayları gerektirir.
+**Bir sonraki işlem:** Aynı production test hesabıyla kurulum sihirbazının opsiyonel
+domain adımından devam et; ödeme adımında dur. Önce yerel mock ödeme durumlarını tamamla,
+sonra Shopify geliştirme mağazasında ücretsiz App Pricing kabul testini açık kullanıcı
+onayıyla yürüt. App Pricing'i genel etkinleştirme ve “Submit for review” işlemleri ayrı
+açık kullanıcı onayları gerektirir.
 
 ### 4 Eylül 2026 durum denetimi
 
@@ -188,6 +193,8 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] OAuth başlangıç ve callback endpoint'lerini ekle
 - [x] State, HMAC, timestamp ve shop domain doğrulamasını ekle
 - [x] Admin tokenını uygulama seviyesinde şifreleyerek kaydet
+- [x] Shopify public uygulama OAuth'unda süreli offline Admin tokenı iste; şifreli
+  yenileme tokenını ve süreleri kaydet, Admin erişimini süresi dolmadan yenile (`8ab8b36`)
 - [x] Public Storefront API erişimini mağaza için oluştur/kaydet
 - [x] `shop { id myshopifyDomain primaryDomain name currencyCode }` sorgusunu çalıştır
 - [x] Mağazayı `Shop.id` ile oluştur veya güncelle
@@ -210,6 +217,8 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 - [x] Mağaza kartlarını kurulum, ödeme ve aktif yönetim durumuna göre yönlendir
 - [x] `yourprostore-ai` bağlantısından gelen storefront kimliğiyle doğru CMS mağazasını seç
 - [x] `yourprostore-ai` ile `storefront-admin` arasında güvenli ve tek kullanımlık SSO handoff ekle
+- [x] Production Shopify bağlantısı, ürün hazır olma kontrolü, domain senkronu ve
+  `preview.yourprostore.ai` taslak önizlemesini geliştirme mağazasıyla doğrula
 
 ## Faz 4 — `storefront-admin`
 
