@@ -8,7 +8,7 @@ farklı `APP` build argümanıyla kullanır; API ayrı Node image'ıdır.
 | `yourprostore-ai` | `yourprostore.ai` | `Dockerfile.web` |
 | `yourprostore-ai-admin` | `admin.yourprostore.ai` | `Dockerfile.web` |
 | `storefront-admin` | `manage.yourprostore.ai` | `Dockerfile.web` |
-| `storefront` | müşteri domainleri | `Dockerfile.web` |
+| `storefront` | `preview.yourprostore.ai` ve müşteri domainleri | `Dockerfile.web` |
 | `api` | `api.yourprostore.ai` | `Dockerfile.api` |
 
 Örnek frontend build'i:

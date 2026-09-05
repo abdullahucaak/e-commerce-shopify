@@ -10,7 +10,7 @@ yayınlanabilir.
 | --- | --- | --- | --- |
 | `apps/yourprostore-ai` | Mağaza sahibi | YourProStore.ai sitesi, hesap, Shopify bağlantısı, mağazalar, kurulum sihirbazı ve abonelikler | Aktif |
 | `apps/yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteri, mağaza, abonelik, kurulum ve sistem operasyonları | Genel durum, workspace ve mağaza operasyon listeleri aktif; geliştirme sürüyor |
-| `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Kod hazır; production hosting ve domain otomasyonu bekliyor |
+| `apps/storefront` | Mağaza ziyaretçisi | Bütün müşterilerin ortak kullandığı canlı Vue mağaza vitrini | Production hosting ve `preview.yourprostore.ai` hazır; müşteri domain otomasyonu bekliyor |
 | `apps/storefront-admin` | Mağaza sahibi | Kendi storefront'unun tasarım, içerik ve domain yönetimi | Aktif |
 | `apps/api` | Uygulamaların tamamı | Supabase, Shopify App Pricing, OAuth, webhook ve public runtime API | Aktif |
 

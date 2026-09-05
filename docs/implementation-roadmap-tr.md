@@ -49,9 +49,11 @@ platform yöneticisi yetkisi vermez. Kalıcı mağaza kimliği Shopify shop ID v
 Production altyapısının ilk kurulumu tamamlandı:
 
 - Vercel Pro takımı `yourprostore-ai` oluşturuldu ve GitHub deposu bağlandı.
-- API, platform, storefront yönetimi ve dahili admin ayrı Vercel projeleri olarak deploy edildi.
+- API, platform, ortak storefront, storefront yönetimi ve dahili admin ayrı Vercel
+  projeleri olarak deploy edildi.
 - `yourprostore.ai`, `api.yourprostore.ai`, `admin.yourprostore.ai` ve
-  `manage.yourprostore.ai` adresleri ilgili projelere bağlandı; HTTPS/TLS aktif.
+  `manage.yourprostore.ai` adresleri ilgili projelere bağlandı; ortak storefront'un
+  güvenli taslak gösterimi için `preview.yourprostore.ai` eklendi.
 - API'nin Vercel/Fastify başlangıç sorunları giderildi ve `/api/health` yanıtı doğrulandı.
 - Production ortam değişkenleri Vercel'e taşındı; secret değerleri Git'e eklenmedi.
 - Shopify Partner hesabı ve `YourProStore.ai` public uygulaması oluşturuldu.
@@ -80,7 +82,7 @@ onayları gerektirir.
 Kanıtlananlar:
 
 - 153 uygulama testi, 33 tema dosyası ve dört Vue production build'i başarılıdır.
-- Dört Vercel production projesi ve dört özel alan adı aktiftir; API health ve database
+- Beş Vercel production projesi ve beş özel alan adı aktiftir; API health ve database
   readiness kontrolleri başarılıdır.
 - Production veritabanında `0012`–`0019` değişikliklerinin tablo, fonksiyon, policy,
   katalog verisi ve constraint göstergeleri doğrulanmıştır.
@@ -111,6 +113,10 @@ Denetim sonrasında giderilenler:
   değiştirmesi kapatıldı (`0fe4bce`).
 - `yourprostore-ai-3` Shopify sürümü etkinleştirildi; beş uygulama webhook aboneliği ve
   üç zorunlu gizlilik webhook adresi production endpoint'inde doğrulandı.
+- Ortak `apps/storefront` için `yourprostore-storefront` Vercel projesi ve
+  `preview.yourprostore.ai` production domaini oluşturuldu. Production önizleme akışı
+  mağazaya bağlı beş dakikalık imzalı token kullanacak şekilde düzeltildi (`4643439`);
+  tenant seçimi için production query-string host override açılmadı.
 
 **3 Eylül 2026 listeleme ilerlemesi:** İngilizce listing'de uygulama adı,
 `Store design › Storefronts › Storefronts - Other` kategorisi, geçici İngilizce dil,
@@ -223,7 +229,7 @@ ayarlarını döndürür ve Vue gerçek Shopify ürünlerini bu mağazadan çeke
 ## Faz 5 — Domain ve hosting otomasyonu
 
 - [x] Platform, API, storefront yönetimi ve dahili admin uygulamalarını production hosting'e kur
-- [ ] Ortak `apps/storefront` vitrini için production Vercel projesini kur
+- [x] Ortak `apps/storefront` vitrini için production Vercel projesini kur
 - [x] Platform domainlerini Vercel projelerine bağla ve TLS/SSL'i etkinleştir
 - [ ] Kullanıcının domain ekleme ekranını oluştur
 - [ ] DNS doğrulama kaydını üret

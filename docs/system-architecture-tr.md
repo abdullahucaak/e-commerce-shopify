@@ -16,7 +16,7 @@ Proje beş mantıksal uygulama kümesine ve üç dış servis grubuna ayrılır:
 | --- | --- | --- | --- | --- |
 | 1 | `yourprostore-ai` | Mağaza sahibi | Tanıtım, hesap, Shopify bağlantısı, mağazalar, sihirbaz ve abonelikler | Aktif |
 | 2 | `yourprostore-ai-admin` | YourProStore.ai ekibi | Müşteriler, mağazalar, üyelikler, abonelikler, kurulumlar, hata ve işlem kayıtları | Temel oturum ve genel durum aktif; geliştirme sürüyor |
-| 3 | `storefront` | Mağaza ziyaretçisi | Müşterinin kendi domaininde çalışan canlı mağazası | Kod hazır; production hosting ve domain otomasyonu bekliyor |
+| 3 | `storefront` | Mağaza ziyaretçisi | Müşterinin kendi domaininde çalışan canlı mağazası | Production hosting ve güvenli ortak preview hazır; müşteri domain otomasyonu bekliyor |
 | 4 | `storefront-admin` | Mağaza sahibi | Kendi canlı mağazasının tasarım, içerik ve domain yönetimi | Aktif |
 | 5 | `api` | Bütün uygulamalar | Kimlik doğrulama, tenant izolasyonu ve dış servis entegrasyonları | Aktif |
 
@@ -51,7 +51,8 @@ yourprostore.ai             -> apps/yourprostore-ai
 admin.yourprostore.ai       -> apps/yourprostore-ai-admin
 manage.yourprostore.ai      -> apps/storefront-admin
 api.yourprostore.ai         -> apps/api
-müşterinin-domaini.com      -> apps/storefront (production hosting/domain otomasyonu henüz kurulmadı)
+preview.yourprostore.ai     -> apps/storefront (kısa ömürlü imzalı taslak önizleme)
+müşterinin-domaini.com      -> apps/storefront (müşteri domain otomasyonu henüz kurulmadı)
 ```
 
 Uygulama adı ile domain adının aynı olması zorunlu değildir. `manage.yourprostore.ai`,
