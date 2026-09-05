@@ -42,9 +42,7 @@ async function connectShopify(shop = null) {
 
 onMounted(() => {
   const selectedShop = selectedShopFromSearch(window.location.search)
-  if (selectedShop && !stores.value.some(store => store.myshopifyDomain === selectedShop)) {
-    connectShopify(selectedShop)
-  }
+  if (selectedShop) connectShopify(selectedShop)
 })
 </script>
 
