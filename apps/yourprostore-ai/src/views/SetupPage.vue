@@ -213,6 +213,8 @@ async function openStorefrontPreview() {
   openingStorefrontPreview.value = true
   error.value = ''
   try {
+    const syncedDomains = await syncDomains(true)
+    if (!syncedDomains) throw new Error('domain_sync_failed')
     const preview = await createStorefrontPreview({
       accessToken: account.session.access_token,
       storefrontId: route.params.storefrontId
@@ -250,9 +252,11 @@ async function syncDomains(silent = false) {
     } else if (!silent) {
       message.value = 'No active custom domain was found yet.'
     }
+    return payload
   } catch (cause) {
     console.error('Domain check failed', cause)
     if (!silent) error.value = 'The domain could not be checked through Shopify. Please try again.'
+    return null
   } finally {
     checkingDomains.value = false
   }
