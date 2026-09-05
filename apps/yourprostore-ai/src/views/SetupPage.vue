@@ -10,6 +10,7 @@ import {
 } from '../services/storefrontAssets.js'
 import { calculateSetupProgress, SETUP_STEP_KEYS } from '../services/onboardingPresentation.js'
 import { openStorefrontAdmin } from '../services/adminHandoff.js'
+import { buildStorefrontPreviewUrl, createStorefrontPreview } from '../services/storefrontPreview.js'
 
 const REQUIRED_SETUP_STEP_KEYS = SETUP_STEP_KEYS.filter(stepKey => stepKey !== 'publish')
 
@@ -35,6 +36,7 @@ const simulatingBilling = ref(false)
 const selectedPlanKey = ref('')
 const completingSetup = ref(false)
 const openingStorefrontAdmin = ref(false)
+const openingStorefrontPreview = ref(false)
 const brand = reactive({
   name: '', logoUrl: '', logoSize: 180, primary: '#303841', secondary: '#007dcc',
   announcementEnabled: true,
@@ -75,11 +77,9 @@ const shopifyProductsUrl = computed(() => {
   const handle = myshopifyDomain.value.replace(/\.myshopify\.com$/i, '')
   return handle ? `https://admin.shopify.com/store/${handle}/products` : 'https://admin.shopify.com/'
 })
-const storefrontPreviewUrl = computed(() => {
-  const url = new URL(import.meta.env.VITE_STOREFRONT_PREVIEW_URL || 'http://127.0.0.1:5173/')
-  if (data.value?.storefront.myshopifyDomain) url.searchParams.set('previewHost', data.value.storefront.myshopifyDomain)
-  return url.toString()
-})
+const storefrontPreviewBaseUrl = (
+  import.meta.env.VITE_STOREFRONT_PREVIEW_URL || 'http://127.0.0.1:5173/'
+).trim()
 async function manageStorefront() {
   openingStorefrontAdmin.value = true
   error.value = ''
@@ -206,6 +206,31 @@ async function markPreviewOpened() {
     if (response.ok) await load()
   } catch (cause) {
     console.error('Store preview completion failed', cause)
+  }
+}
+async function openStorefrontPreview() {
+  const previewWindow = window.open('', '_blank')
+  openingStorefrontPreview.value = true
+  error.value = ''
+  try {
+    const preview = await createStorefrontPreview({
+      accessToken: account.session.access_token,
+      storefrontId: route.params.storefrontId
+    })
+    const previewUrl = buildStorefrontPreviewUrl({
+      baseUrl: storefrontPreviewBaseUrl,
+      token: preview.token
+    })
+    if (!previewWindow) throw new Error('preview_window_blocked')
+    previewWindow.opener = null
+    previewWindow.location.replace(previewUrl)
+    await markPreviewOpened()
+  } catch (cause) {
+    previewWindow?.close()
+    console.error('Storefront preview could not be opened', cause)
+    error.value = 'The storefront preview could not be opened. Please try again.'
+  } finally {
+    openingStorefrontPreview.value = false
   }
 }
 async function syncDomains(silent = false) {
@@ -463,7 +488,7 @@ onMounted(async () => {
       <p class="muted">Review your saved brand and banner settings in the real storefront.</p>
       <p class="muted">We do not manage Shopify products here or copy them into our database.</p>
       <div class="wizard-actions">
-        <a :href="storefrontPreviewUrl" target="_blank" rel="noopener" @click="markPreviewOpened">Preview store</a>
+        <button :disabled="openingStorefrontPreview" @click="openStorefrontPreview">{{ openingStorefrontPreview ? 'Opening preview…' : 'Preview store' }}</button>
         <button class="secondary-button" :disabled="openingStorefrontAdmin" @click="manageStorefront">{{ openingStorefrontAdmin ? 'Opening management…' : 'Go to storefront management' }}</button>
       </div>
       <p v-if="previewCompleted" class="success-text">The storefront preview was opened. This step is complete.</p>
@@ -539,7 +564,7 @@ onMounted(async () => {
         <h2>Setup complete</h2>
         <p class="success-text">Your store is active and ready to use.</p>
         <div class="wizard-actions">
-          <a :href="storefrontPreviewUrl" target="_blank" rel="noopener">View store</a>
+          <button :disabled="openingStorefrontPreview" @click="openStorefrontPreview">{{ openingStorefrontPreview ? 'Opening preview…' : 'View store' }}</button>
           <button class="secondary-button" :disabled="openingStorefrontAdmin" @click="manageStorefront">{{ openingStorefrontAdmin ? 'Opening management…' : 'Go to storefront management' }}</button>
         </div>
       </template>
